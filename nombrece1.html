@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Adaptnombre : le rituel des nombres</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papier:#F4F8FC; --tableau:#FFFFFF; --encre:#1D2B4F; --doux:#5B6785; --trait:#C9D4E6; --ombre:#D6DEEB;
+  --bleu:#2F63D6; --diz:#8FB0F5; --diz2:#5A84E0; --uni:#F9D66B; --uni2:#DDA91C;
+  --vert:#1F8A52; --vertclair:#DDF3E6; --rouge:#C23A4E; --rougeclair:#FBE3E7; --orange:#C9771A;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --papier:#121B30; --tableau:#1B2742; --encre:#E7EDF8; --doux:#A7B3CC; --trait:#34456B; --ombre:#2C3B5E;
+    --bleu:#6E98F2; --vert:#4CC585; --vertclair:#173A2A; --rouge:#F07489; --rougeclair:#3F1D25; --orange:#F0A24A;
+  }
+}
+:root[data-theme="dark"]{
+  --papier:#121B30; --tableau:#1B2742; --encre:#E7EDF8; --doux:#A7B3CC; --trait:#34456B; --ombre:#2C3B5E;
+  --bleu:#6E98F2; --vert:#4CC585; --vertclair:#173A2A; --rouge:#F07489; --rougeclair:#3F1D25; --orange:#F0A24A;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;min-height:100%;background:var(--papier);color:var(--encre);
+  font-family:Andika,"Trebuchet MS","Segoe UI",system-ui,sans-serif;font-size:20px;line-height:1.4}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--bleu);outline-offset:3px}
+.ecran{display:none;max-width:1180px;margin:0 auto;padding:16px}
+.ecran.actif{display:block}
+
+/* Accueil */
+.entete{display:flex;align-items:center;gap:18px;margin:12px 0 22px}
+.entete svg{width:74px;height:74px;flex:none}
+h1{font-size:2.6rem;margin:0;line-height:1;letter-spacing:.5px}
+.entete p{margin:6px 0 0;color:var(--doux)}
+.accueil-col{max-width:760px;margin:0 auto}
+.bloc{background:var(--tableau);border:2px solid var(--trait);border-radius:14px;padding:14px 16px;margin-bottom:16px}
+.eleve{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.eleve label{font-weight:700}
+select,input[type=text]{padding:8px 10px;border:2px solid var(--trait);border-radius:10px;background:var(--papier);min-height:48px}
+.sec{background:var(--papier);border:2px solid var(--trait);border-radius:10px;padding:8px 14px;min-height:48px}
+.choix{display:grid;gap:12px;margin-bottom:16px}
+.grand{display:block;width:100%;text-align:left;padding:16px 20px;border-radius:14px;border:2px solid var(--trait);
+  background:var(--tableau);font-size:1.35rem;font-weight:700;min-height:72px}
+.grand small{display:block;font-weight:400;font-size:1rem;color:var(--doux)}
+.grand.principal{background:var(--bleu);border-color:var(--bleu);color:#fff}
+.grand.principal small{color:#E3EBFF}
+details summary{font-weight:700;cursor:pointer;min-height:36px}
+.reglage{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0}
+.reglage > span:first-child{min-width:210px}
+.reglage input[type=checkbox]{width:26px;height:26px}
+table{border-collapse:collapse;width:100%;font-size:1rem}
+th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
+.defile{overflow-x:auto}
+.note{color:var(--doux);font-size:1rem}
+
+/* Jeu */
+.barre{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.rond{width:52px;height:52px;border-radius:50%;border:2px solid var(--trait);background:var(--tableau);font-size:1.4rem;flex:none}
+#progres{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.point{width:22px;height:22px;border-radius:50%;border:2px solid var(--trait);background:var(--tableau);display:grid;place-items:center;font-size:.8rem}
+.point.courant{border-color:var(--bleu);border-width:3px}
+.point.etoile{background:var(--uni);border-color:var(--uni2)}
+.point.ok{background:var(--vertclair);border-color:var(--vert)}
+.point.rate{background:var(--ombre)}
+#score{font-weight:700;font-size:1.3rem;white-space:nowrap}
+.consigne{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.consigne p{margin:0;font-size:1.35rem;font-weight:700}
+.jeu-grille{display:grid;gap:14px}
+@media (min-width:1000px){ .jeu-grille{grid-template-columns:1fr 330px;align-items:start} }
+.plateau{background:var(--tableau);border:2px solid var(--trait);border-radius:16px;overflow:hidden}
+.plateau svg{display:block;width:100%;height:auto}
+.cote{display:flex;flex-direction:column;gap:12px}
+.phrase{font-size:1.3rem;margin:0;text-align:center}
+.saisie{display:inline-block;min-width:92px;padding:2px 10px;border-bottom:4px dotted var(--encre);font-size:2.2rem;font-weight:700;text-align:center;vertical-align:middle;min-height:56px}
+.pave{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:320px;margin:0 auto;width:100%}
+.pave button{min-height:64px;border-radius:12px;border:2px solid var(--trait);background:var(--tableau);font-size:1.8rem;font-weight:700}
+.pave button.ok{background:var(--vert);border-color:var(--vert);color:#fff;font-size:1.4rem}
+.outils{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.outil{min-height:54px;padding:8px 16px;border-radius:12px;border:2px solid var(--bleu);background:var(--tableau);color:var(--bleu);font-weight:700}
+.outil:disabled{opacity:.45;cursor:default}
+#retour{min-height:2.8em;margin:4px 0;font-size:1.2rem;text-align:center;font-weight:700}
+#retour.bien{color:var(--vert)} #retour.mal{color:var(--rouge)} #retour.info{color:var(--doux)}
+#btnSuivant{text-align:center;max-width:320px;margin:0 auto}
+
+/* Cubes */
+.obj{transition:transform .9s cubic-bezier(.5,0,.2,1)}
+.obj .avant{fill:var(--tableau);stroke:var(--encre);stroke-width:1.4}
+.obj .face{fill:var(--ombre);stroke:var(--encre);stroke-width:1.2}
+.couleurs .bar .avant{fill:var(--diz)} .couleurs .bar .face{fill:var(--diz2)}
+.couleurs .cube .avant{fill:var(--uni)} .couleurs .cube .face{fill:var(--uni2)}
+.obj.compte .avant{stroke:var(--vert);stroke-width:3}
+.table-rangement{opacity:0;transition:opacity .6s}
+.range .table-rangement{opacity:1}
+.sep{stroke:var(--trait);stroke-width:3;stroke-dasharray:8 6}
+.titre-col{font-size:26px;font-weight:700;fill:var(--doux);text-anchor:middle}
+.bulle circle{fill:var(--vert)} .bulle text{fill:#fff;font-size:17px;font-weight:700;text-anchor:middle;dominant-baseline:central}
+.paquet{fill:none;stroke:var(--orange);stroke-width:3;stroke-dasharray:7 5}
+.paquet-txt{fill:var(--orange);font-size:18px;font-weight:700;text-anchor:middle}
+
+/* Droite */
+.axe{stroke:var(--encre);stroke-width:4;stroke-linecap:round}
+.grad{stroke:var(--encre);stroke-width:3}
+.borne{font-size:32px;font-weight:700;fill:var(--encre);text-anchor:middle}
+.losange{fill:var(--tableau);stroke:var(--doux);stroke-width:2.5}
+.losange.trouve{fill:var(--vertclair);stroke:var(--vert);stroke-width:3.5}
+.rep{font-size:30px;font-weight:700;fill:var(--encre);text-anchor:middle;dominant-baseline:central}
+.fleche{stroke:var(--doux);stroke-width:2.5}
+.bond{fill:none;stroke:var(--vert);stroke-width:3}
+.val{font-size:22px;font-weight:700;fill:var(--vert);text-anchor:middle}
+.cible-grad{stroke:var(--vert);stroke-width:6}
+.losanges{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:330px;margin:0 auto}
+.losange-btn{position:relative;width:96px;height:96px;border:0;padding:0;background:var(--doux);
+  clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.losange-btn span{position:absolute;inset:3px;background:var(--tableau);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
+  display:grid;place-items:center;font-size:1.7rem;font-weight:700}
+.losange-btn:focus-visible{outline:none;background:var(--bleu)}
+.losange-btn.bon{background:var(--vert)} .losange-btn.bon span{background:var(--vertclair)}
+.losange-btn.faux{background:var(--rouge);cursor:default} .losange-btn.faux span{background:var(--rougeclair);text-decoration:line-through}
+.secoue{animation:secoue .35s}
+@keyframes secoue{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* Fin */
+#fin{text-align:center}
+#finEtoiles{font-size:2.6rem;letter-spacing:4px;margin:10px 0}
+#finDetail{font-size:1.2rem}
+.fin-boutons{display:grid;gap:12px;max-width:420px;margin:20px auto}
+.fin-boutons .grand{text-align:center}
+
+@media (prefers-reduced-motion: reduce){
+  .obj,.table-rangement{transition:none}
+  .secoue{animation:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ACCUEIL -->
+<main id="accueil" class="ecran actif">
+  <div class="accueil-col">
+    <header class="entete">
+      <svg viewBox="0 0 74 74" aria-hidden="true">
+        <g stroke="currentColor" stroke-width="1.5">
+          <rect x="10" y="4" width="12" height="60" fill="#8FB0F5"/>
+          <line x1="10" y1="16" x2="22" y2="16"/><line x1="10" y1="28" x2="22" y2="28"/><line x1="10" y1="40" x2="22" y2="40"/><line x1="10" y1="52" x2="22" y2="52"/>
+          <rect x="30" y="4" width="12" height="60" fill="#8FB0F5"/>
+          <line x1="30" y1="16" x2="42" y2="16"/><line x1="30" y1="28" x2="42" y2="28"/><line x1="30" y1="40" x2="42" y2="40"/><line x1="30" y1="52" x2="42" y2="52"/>
+          <rect x="52" y="40" width="12" height="12" fill="#F9D66B"/>
+          <rect x="52" y="54" width="12" height="12" fill="#F9D66B"/>
+        </g>
+      </svg>
+      <div>
+        <h1>Adaptnombre</h1>
+        <p>Le rituel des nombres : compter les cubes, placer un nombre sur la droite graduée.</p>
+      </div>
+    </header>
+
+    <section class="bloc eleve">
+      <label for="choixEleve">Élève</label>
+      <select id="choixEleve"></select>
+      <button class="sec" id="btnAjout">Ajouter un élève</button>
+    </section>
+
+    <section class="choix">
+      <button class="grand principal" data-mode="rituel">Rituel du jour<small>cubes et droite graduée, en alternance</small></button>
+      <button class="grand" data-mode="cubes">Compter les cubes<small>niveau <span id="nivC">1</span> : <span id="descC"></span></small></button>
+      <button class="grand" data-mode="droite">Placer sur la droite<small>niveau <span id="nivD">1</span> : <span id="descD"></span></small></button>
+    </section>
+
+    <details class="bloc">
+      <summary>Réglages de l'enseignant</summary>
+      <div class="reglage"><span>Niveau des cubes</span><select id="selC"></select></div>
+      <div class="reglage"><span>Niveau de la droite</span><select id="selD"></select></div>
+      <div class="reglage"><span>Questions par séance</span>
+        <select id="selNq"><option value="6">6</option><option value="8">8</option><option value="10">10</option><option value="12">12</option></select></div>
+      <div class="reglage"><span>Couleurs des cubes</span>
+        <select id="selCoul">
+          <option value="auto">Auto (couleurs aux niveaux 1 et 2)</option>
+          <option value="toujours">Toujours</option>
+          <option value="jamais">Jamais (comme l'évaluation)</option>
+        </select></div>
+      <div class="reglage"><span>Lecture à voix haute</span><input type="checkbox" id="chkVoix"></div>
+      <div class="reglage"><span>Ajuster le niveau seul</span><input type="checkbox" id="chkAuto">
+        <span class="note">monte si 80 % de réussite du premier coup, descend sous 35 %</span></div>
+    </details>
+
+    <details class="bloc" id="blocSuivi">
+      <summary>Suivi de l'élève</summary>
+      <div id="suivi" class="defile"></div>
+      <p><button class="sec" id="btnSuppr">Supprimer cet élève</button></p>
+      <p class="note">Les résultats restent sur cet appareil, dans ce navigateur.</p>
+    </details>
+  </div>
+</main>
+
+<!-- JEU -->
+<main id="jeu" class="ecran">
+  <div class="barre">
+    <button class="rond" id="btnMaison" aria-label="Retour à l'accueil">⌂</button>
+    <div id="progres"></div>
+    <div id="score">⭐ 0</div>
+  </div>
+  <div class="consigne">
+    <button class="rond" id="btnLire" aria-label="Écouter la consigne">🔊</button>
+    <p id="txtConsigne"></p>
+  </div>
+  <div class="jeu-grille">
+    <div class="plateau" id="plateau"><svg id="svg" viewBox="0 0 720 400" role="img" aria-label="Plateau"></svg></div>
+    <div class="cote">
+      <div id="zoneReponse"></div>
+      <div class="outils">
+        <button class="outil" id="btnAide">Compter avec moi</button>
+        <button class="outil" id="btnRanger">Ranger les cubes</button>
+      </div>
+      <p id="retour" aria-live="polite"></p>
+      <button id="btnSuivant" class="grand principal" hidden>Suivant</button>
+    </div>
+  </div>
+</main>
+
+<!-- FIN -->
+<main id="fin" class="ecran">
+  <h1 id="finTitre">Bravo !</h1>
+  <div id="finEtoiles"></div>
+  <p id="finDetail"></p>
+  <div class="fin-boutons">
+    <button class="grand principal" id="btnRejouer">Refaire une séance</button>
+    <button class="grand" id="btnAccueil">Accueil</button>
+  </div>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const k in (attrs||{})) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+function melanger(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const attendre=ms=>new Promise(r=>setTimeout(r,ms));
+const pl=(n,m)=> n>1 ? m+'s' : m;
+
+const DESC_C={1:"jusqu'à 29, cubes rangés",2:"jusqu'à 59, barres debout",3:"jusqu'à 99, barres penchées ou couchées",4:"défi : plus de 10 cubes seuls"};
+const DESC_D={1:"2 bonds de 1",2:"4 bonds de 1",3:"10 bonds de 1",4:"bonds de 5 ou de 10",5:"tout mélangé, jusqu'à 30 bonds"};
+
+/* ---------- Données ---------- */
+const CLE='adaptnombre-v1';
+let data={eleves:{},courant:'',reglages:{nq:8,voix:true,couleurs:'auto',auto:true}};
+try{ const s=localStorage.getItem(CLE); if(s){ const d=JSON.parse(s); if(d&&d.eleves) data=Object.assign(data,d); data.reglages=Object.assign({nq:8,voix:true,couleurs:'auto',auto:true},d.reglages||{}); } }catch(e){}
+function sauver(){ try{ localStorage.setItem(CLE,JSON.stringify(data)); }catch(e){} }
+function eleve(){
+  if(!data.courant || !data.eleves[data.courant]){
+    const noms=Object.keys(data.eleves);
+    if(noms.length) data.courant=noms[0];
+    else { data.courant='Élève'; data.eleves['Élève']={nc:1,nd:1,hist:[]}; }
+  }
+  return data.eleves[data.courant];
+}
+
+/* ---------- Voix ---------- */
+let voixFr=null;
+function chargerVoix(){ if(!('speechSynthesis' in window)) return; const v=speechSynthesis.getVoices(); voixFr=v.find(x=>/fr[-_]FR/i.test(x.lang))||v.find(x=>/^fr/i.test(x.lang))||null; }
+if('speechSynthesis' in window){ chargerVoix(); speechSynthesis.onvoiceschanged=chargerVoix; }
+function dire(t){
+  if(!data.reglages.voix || !('speechSynthesis' in window)) return;
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(String(t)); u.lang='fr-FR'; if(voixFr) u.voice=voixFr; u.rate=.9; speechSynthesis.speak(u); }catch(e){}
+}
+
+/* ---------- Accueil ---------- */
+function majAccueil(){
+  const e=eleve();
+  const sel=$('#choixEleve'); sel.innerHTML='';
+  Object.keys(data.eleves).sort((a,b)=>a.localeCompare(b,'fr')).forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; if(n===data.courant) o.selected=true; sel.appendChild(o); });
+  $('#nivC').textContent=e.nc; $('#descC').textContent=DESC_C[e.nc];
+  $('#nivD').textContent=e.nd; $('#descD').textContent=DESC_D[e.nd];
+  $('#selC').innerHTML=[1,2,3,4].map(n=>`<option value="${n}" ${n===e.nc?'selected':''}>${n} : ${DESC_C[n]}</option>`).join('');
+  $('#selD').innerHTML=[1,2,3,4,5].map(n=>`<option value="${n}" ${n===e.nd?'selected':''}>${n} : ${DESC_D[n]}</option>`).join('');
+  $('#selNq').value=String(data.reglages.nq); $('#selCoul').value=data.reglages.couleurs;
+  $('#chkVoix').checked=data.reglages.voix; $('#chkAuto').checked=data.reglages.auto;
+  const h=e.hist.slice().reverse();
+  $('#suivi').innerHTML = h.length
+    ? `<table><thead><tr><th>Date</th><th>Cubes</th><th>Droite</th></tr></thead><tbody>${h.map(r=>`<tr><td>${r.d}</td><td>${r.c?r.c+' (niv. '+r.nc+')':'–'}</td><td>${r.dr?r.dr+' (niv. '+r.nd+')':'–'}</td></tr>`).join('')}</tbody></table><p class="note">Score = réussites du premier coup / questions.</p>`
+    : '<p class="note">Aucune séance pour le moment.</p>';
+  sauver();
+}
+$('#choixEleve').addEventListener('change',e=>{ data.courant=e.target.value; majAccueil(); });
+$('#btnAjout').addEventListener('click',()=>{
+  const n=(prompt("Prénom de l'élève :")||'').trim(); if(!n) return;
+  if(!data.eleves[n]) data.eleves[n]={nc:1,nd:1,hist:[]};
+  data.courant=n; majAccueil();
+});
+$('#btnSuppr').addEventListener('click',()=>{
+  if(!confirm(`Supprimer ${data.courant} et ses résultats ?`)) return;
+  delete data.eleves[data.courant]; data.courant=''; majAccueil();
+});
+$('#selC').addEventListener('change',e=>{ eleve().nc=+e.target.value; majAccueil(); });
+$('#selD').addEventListener('change',e=>{ eleve().nd=+e.target.value; majAccueil(); });
+$('#selNq').addEventListener('change',e=>{ data.reglages.nq=+e.target.value; sauver(); });
+$('#selCoul').addEventListener('change',e=>{ data.reglages.couleurs=e.target.value; sauver(); });
+$('#chkVoix').addEventListener('change',e=>{ data.reglages.voix=e.target.checked; sauver(); });
+$('#chkAuto').addEventListener('change',e=>{ data.reglages.auto=e.target.checked; sauver(); });
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>demarrer(b.dataset.mode)));
+
+function montrer(id){ document.querySelectorAll('.ecran').forEach(s=>s.classList.toggle('actif',s.id===id)); window.scrollTo(0,0); }
+
+/* ---------- Séance ---------- */
+let S=null;
+const svg=$('#svg'), plateau=$('#plateau'), zone=$('#zoneReponse'), retour=$('#retour');
+
+function demarrer(mode){
+  eleve();
+  const nq=data.reglages.nq, types=[];
+  for(let i=0;i<nq;i++) types.push(mode==='rituel' ? (i%2?'droite':'cubes') : mode);
+  S={mode,types,i:-1,res:{cubes:{ok:0,tot:0},droite:{ok:0,tot:0}},etoiles:0,etats:[],sig:'',tok:0,niv:{c:eleve().nc,d:eleve().nd}};
+  $('#progres').innerHTML=types.map(()=>'<span class="point"></span>').join('');
+  montrer('jeu'); suivante();
+}
+function majProgres(){
+  const pts=[...document.querySelectorAll('#progres .point')];
+  pts.forEach((p,i)=>{ p.className='point'+(S.etats[i]?' '+S.etats[i]:'')+(i===S.i&&!S.etats[i]?' courant':''); p.textContent=S.etats[i]==='etoile'?'★':''; });
+  $('#score').textContent='⭐ '+S.etoiles;
+}
+function suivante(){
+  S.i++; S.tok++; S.busy=false;
+  if(S.i>=S.types.length) return terminer();
+  const type=S.types[S.i];
+  let q, n=0;
+  do{ q = type==='cubes' ? genCubes(S.niv.c) : genDroite(S.niv.d); n++; } while(q.sig===S.sig && n<15);
+  S.sig=q.sig; q.essais=0; q.fini=false; S.q=q;
+  retour.textContent=''; retour.className='';
+  $('#btnSuivant').hidden=true; $('#btnAide').disabled=false;
+  if(type==='cubes') afficherCubes(); else afficherDroite();
+  majProgres();
+  dire($('#txtConsigne').textContent);
+}
+function message(t,c){ retour.textContent=t; retour.className=c||''; }
+
+function reussite(phrase){
+  const q=S.q; q.fini=true;
+  const r=S.res[q.type]; r.tot++;
+  if(q.essais===0 && !q.aide){ r.ok++; S.etoiles++; S.etats[S.i]='etoile'; message('Bravo ! '+phrase,'bien'); dire('Bravo ! '+phrase); }
+  else { S.etats[S.i]='ok'; message('Oui ! '+phrase,'bien'); dire('Oui ! '+phrase); }
+  finQuestion();
+}
+async function echec(){
+  const q=S.q; q.fini=true; S.res[q.type].tot++; S.etats[S.i]='rate';
+  majProgres();
+  message('Regarde bien, on compte ensemble.','info');
+  await attendre(1200);
+  if(q.type==='cubes') await aideCubes(); else await aideDroite();
+  finQuestion();
+}
+function finQuestion(){ majProgres(); $('#btnAide').disabled = S.q.type==='droite' && S.q.fini; $('#btnSuivant').hidden=false; $('#btnSuivant').focus({preventScroll:true}); }
+$('#btnSuivant').addEventListener('click',suivante);
+$('#btnMaison').addEventListener('click',()=>{ S.tok++; if('speechSynthesis' in window) speechSynthesis.cancel(); majAccueil(); montrer('accueil'); });
+$('#btnLire').addEventListener('click',()=>dire($('#txtConsigne').textContent));
+$('#btnAide').addEventListener('click',()=>{ if(!S||S.busy) return; if(S.q.type==='cubes') aideCubes(); else aideDroite(); });
+$('#btnRanger').addEventListener('click',()=>{ if(S&&!S.busy) ranger(); });
+
+function terminer(){
+  const e=eleve(), r=S.res, msgs=[];
+  const fmt=o=>o.tot?`${o.ok}/${o.tot}`:'';
+  e.hist.push({d:new Date().toLocaleDateString('fr-FR'),c:fmt(r.cubes),nc:S.niv.c,dr:fmt(r.droite),nd:S.niv.d});
+  if(e.hist.length>80) e.hist=e.hist.slice(-80);
+  if(data.reglages.auto){
+    [['cubes','nc',4,'cubes'],['droite','nd',5,'droite graduée']].forEach(([k,champ,max,nom])=>{
+      const o=r[k]; if(o.tot<3) return; const t=o.ok/o.tot;
+      if(t>=.8 && e[champ]<max){ e[champ]++; msgs.push(`Niveau ${e[champ]} débloqué pour la ${nom==='cubes'?'partie cubes':nom} !`); }
+      else if(t<.35 && e[champ]>1){ e[champ]--; msgs.push(`La prochaine fois, on s'entraîne au niveau ${e[champ]} (${nom}).`); }
+    });
+  }
+  sauver();
+  const tot=S.types.length;
+  $('#finTitre').textContent = S.etoiles>=tot*.8 ? 'Superbe séance !' : S.etoiles>=tot*.5 ? 'Bien joué !' : 'Tu as bien travaillé !';
+  $('#finEtoiles').textContent='⭐'.repeat(S.etoiles)+'☆'.repeat(tot-S.etoiles);
+  const parts=[];
+  if(r.cubes.tot) parts.push(`Cubes : ${r.cubes.ok} sur ${r.cubes.tot} du premier coup.`);
+  if(r.droite.tot) parts.push(`Droite : ${r.droite.ok} sur ${r.droite.tot} du premier coup.`);
+  $('#finDetail').innerHTML=parts.join('<br>')+(msgs.length?'<br><br>'+msgs.join('<br>'):'');
+  montrer('fin');
+  dire($('#finTitre').textContent+' Tu as '+S.etoiles+' '+pl(S.etoiles,'étoile')+'.');
+}
+$('#btnRejouer').addEventListener('click',()=>demarrer(S.mode));
+$('#btnAccueil').addEventListener('click',()=>{ majAccueil(); montrer('accueil'); });
+
+/* ================= CUBES ================= */
+function genCubes(niv){
+  let t,u;
+  if(niv===1){ t=rnd(1,2); u=rnd(0,9); }
+  else if(niv===2){ t=rnd(1,5); u=rnd(0,9); }
+  else if(niv===3){ t=rnd(2,9); u=Math.random()<.15?0:rnd(1,9); }
+  else { t=rnd(2,8); u=Math.random()<.5?rnd(10,14):(Math.random()<.2?0:rnd(1,9)); while(t*10+u>99) t--; }
+  if(t*10+u===0) u=1;
+  return {type:'cubes',t,u,total:t*10+u,sig:'c'+t+'-'+u};
+}
+function ext(kind,a){
+  if(kind==='cube') return [16,16];
+  const r=a*Math.PI/180, c=Math.abs(Math.cos(r)), s=Math.abs(Math.sin(r));
+  return [12*c+104*s, 12*s+104*c];
+}
+const ZONE={x0:18,y0:18,x1:702,y1:382};
+function placerBoite(it,hw,hh,placed){
+  for(let k=0;k<300;k++){
+    const x=rnd(ZONE.x0+hw,ZONE.x1-hw), y=rnd(ZONE.y0+hh,ZONE.y1-hh);
+    if(placed.every(p=>Math.abs(p.x-x)>p.hw+hw+10 || Math.abs(p.y-y)>p.hh+hh+10)){ it.x=x; it.y=y; placed.push({x,y,hw,hh}); return true; }
+  }
+  return false;
+}
+function motif(n){
+  const d=22;
+  return {1:[[0,0]],2:[[-d,-d],[d,d]],3:[[-d,-d],[0,0],[d,d]],4:[[-d,-d],[d,-d],[-d,d],[d,d]],5:[[-d,-d],[d,-d],[0,0],[-d,d],[d,d]]}[n];
+}
+function essayer(items,niv){
+  const placed=[];
+  const bars=items.filter(i=>i.kind==='bar'), cubes=items.filter(i=>i.kind==='cube');
+  for(const b of bars){
+    b.a = niv===2 ? 0 : pick([0,0,90,90,30,-30,-60]);
+    const [hw,hh]=ext('bar',b.a); if(!placerBoite(b,hw,hh,placed)) return false;
+  }
+  const des = niv===2 || (niv===3 && Math.random()<.5);
+  if(des){
+    let idx=0;
+    while(idx<cubes.length){
+      const n=Math.min(5,cubes.length-idx), g={};
+      if(!placerBoite(g,36,36,placed)) return false;
+      motif(n).forEach(([dx,dy])=>{ const c=cubes[idx++]; c.x=g.x+dx; c.y=g.y+dy; c.a=0; });
+    }
+  } else {
+    for(const c of cubes){ c.a=0; if(!placerBoite(c,16,16,placed)) return false; }
+  }
+  return true;
+}
+function disposer(q,niv){
+  const items=[];
+  for(let i=0;i<q.t;i++) items.push({kind:'bar',a:0});
+  for(let j=0;j<q.u;j++) items.push({kind:'cube',a:0});
+  if(niv>1){ for(let e=0;e<60;e++){ if(essayer(items,niv)) return items; } }
+  let bi=0,ui=0;
+  items.forEach(it=>{ if(it.kind==='bar'){ it.x=60+bi*40; it.y=240; bi++; } else { it.x=480+(ui%5)*44; it.y=150+Math.floor(ui/5)*56; ui++; } it.a=0; });
+  return items;
+}
+function dessiner(it,parent){
+  const g=el('g',{class:'obj '+it.kind},parent);
+  if(it.kind==='cube'){
+    el('polygon',{points:'-10,-10 -5,-15 15,-15 10,-10',class:'face'},g);
+    el('polygon',{points:'10,-10 15,-15 15,5 10,10',class:'face'},g);
+    el('rect',{x:-10,y:-10,width:20,height:20,class:'avant'},g);
+  } else {
+    el('polygon',{points:'-10,-100 -5,-105 15,-105 10,-100',class:'face'},g);
+    el('polygon',{points:'10,-100 15,-105 15,95 10,100',class:'face'},g);
+    for(let i=0;i<10;i++) el('rect',{x:-10,y:-100+i*20,width:20,height:20,class:'avant'},g);
+  }
+  return g;
+}
+function poser(it,x,y,a){ it.g.style.transform=`translate(${x}px,${y}px) rotate(${a}deg)`; }
+
+let couchEtiq=null, couchPaquet=null;
+function afficherCubes(){
+  const q=S.q, niv=S.niv.c, c=data.reglages.couleurs;
+  const coul = c==='toujours' || (c==='auto' && niv<=2);
+  plateau.classList.toggle('couleurs',coul);
+  plateau.classList.remove('range');
+  svg.setAttribute('viewBox','0 0 720 400'); svg.innerHTML='';
+  const fond=el('g',{class:'table-rangement'},svg);
+  el('line',{x1:440,y1:24,x2:440,y2:376,class:'sep'},fond);
+  el('text',{x:230,y:60,class:'titre-col'},fond).textContent='dizaines';
+  el('text',{x:568,y:60,class:'titre-col'},fond).textContent='unités';
+  const couche=el('g',{},svg);
+  couchPaquet=el('g',{},svg);
+  couchEtiq=el('g',{},svg);
+  q.items=disposer(q,niv);
+  q.items.forEach(it=>{ it.g=dessiner(it,couche); poser(it,it.x,it.y,it.a); });
+  q.range=false;
+  $('#txtConsigne').textContent='Combien de cubes y a-t-il en tout ?';
+  $('#btnRanger').hidden=false; $('#btnRanger').disabled=false;
+  $('#btnAide').textContent='Compter avec moi';
+  zone.innerHTML=`<p class="phrase">Il y a <output id="saisie" class="saisie"></output> cubes en tout.</p>
+  <div class="pave">${[7,8,9,4,5,6,1,2,3].map(n=>`<button data-n="${n}">${n}</button>`).join('')}
+  <button data-n="eff" aria-label="Effacer">⌫</button><button data-n="0">0</button><button data-n="ok" class="ok">OK</button></div>`;
+  zone.querySelectorAll('.pave button').forEach(b=>b.addEventListener('click',()=>touche(b.dataset.n)));
+}
+function touche(k){
+  if(!S||!S.q||S.q.type!=='cubes'||S.q.fini||S.busy) return;
+  const s=$('#saisie'); if(!s) return;
+  if(k==='eff') s.textContent=s.textContent.slice(0,-1);
+  else if(k==='ok') validerCubes();
+  else if(s.textContent.length<3) s.textContent+=k;
+}
+document.addEventListener('keydown',e=>{
+  if(!$('#jeu').classList.contains('actif')||!S||!S.q) return;
+  if(S.q.type==='cubes' && !S.q.fini){
+    if(/^[0-9]$/.test(e.key)) touche(e.key);
+    else if(e.key==='Backspace'){ e.preventDefault(); touche('eff'); }
+    else if(e.key==='Enter'){ e.preventDefault(); touche('ok'); }
+  } else if(S.q.fini && e.key==='Enter' && document.activeElement!==$('#btnSuivant')){ suivante(); }
+});
+function ranger(){
+  const q=S.q; if(!q||q.type!=='cubes'||q.range) return;
+  q.range=true; plateau.classList.add('range'); $('#btnRanger').disabled=true;
+  const bars=q.items.filter(i=>i.kind==='bar').sort((a,b)=>a.x-b.x);
+  const cubes=q.items.filter(i=>i.kind==='cube').sort((a,b)=>(a.y-b.y)||(a.x-b.x));
+  bars.forEach((b,i)=>{ b.rx=60+i*40; b.ry=240; });
+  cubes.forEach((c,j)=>{ c.rx=480+(j%5)*44; c.ry=150+Math.floor(j/5)*56; });
+  q.bars=bars; q.cubes=cubes;
+  q.items.forEach(it=>poser(it,it.rx,it.ry,0));
+}
+function bulle(x,y,n){ const g=el('g',{class:'bulle'},couchEtiq); el('circle',{cx:x,cy:y,r:n>9?16:14},g); el('text',{x,y},g).textContent=n; }
+function phraseCubes(q){
+  const {t,u,total}=q;
+  if(u===0) return `${t} ${pl(t,'dizaine')}, ça fait ${total}.`;
+  if(t===0) return `${u} ${pl(u,'unité')}, ça fait ${total}.`;
+  if(u>=10) return `${t} ${pl(t,'dizaine')} et ${u} unités. ${u} unités, c'est 1 dizaine et ${u-10} ${pl(u-10,'unité')}. En tout : ${total}.`;
+  return `${t} ${pl(t,'dizaine')} et ${u} ${pl(u,'unité')}, ça fait ${total}.`;
+}
+async function aideCubes(){
+  if(S.busy) return; S.busy=true; const tok=S.tok, q=S.q; if(!q.fini) q.aide=true;
+  $('#btnAide').disabled=true;
+  plateau.classList.add('couleurs');
+  if(!q.range){ ranger(); await attendre(1100); }
+  if(tok!==S.tok) return;
+  couchEtiq.innerHTML=''; couchPaquet.innerHTML='';
+  q.items.forEach(it=>it.g.classList.remove('compte'));
+  let n=0;
+  message('On compte les barres de 10, puis les cubes seuls.','info');
+  for(const b of q.bars){ n+=10; b.g.classList.add('compte'); bulle(b.rx,b.ry-124,n); dire(n); await attendre(1050); if(tok!==S.tok) return; }
+  for(const c of q.cubes){ n+=1; c.g.classList.add('compte'); bulle(c.rx,c.ry-30,n); dire(n); await attendre(800); if(tok!==S.tok) return; }
+  if(q.u>=10){
+    el('rect',{x:460,y:124,width:218,height:104,rx:10,class:'paquet'},couchPaquet);
+    el('text',{x:569,y:352,class:'paquet-txt'},couchPaquet).textContent='10 unités = 1 dizaine';
+  }
+  const p=phraseCubes(q);
+  if(!q.fini) { message(p+' Écris le nombre.','info'); }
+  else message(p,'info');
+  dire(p);
+  await attendre(Math.min(6000,1500+p.length*55));
+  if(tok!==S.tok) return;
+  S.busy=false; $('#btnAide').disabled=false;
+}
+function validerCubes(){
+  const q=S.q, s=$('#saisie'), v=parseInt(s.textContent,10);
+  if(isNaN(v)) { message('Écris un nombre avec les touches.','info'); return; }
+  if(v===q.total){ plateau.classList.add('couleurs'); return reussite(phraseCubes(q)); }
+  q.essais++;
+  s.classList.remove('secoue'); void s.offsetWidth; s.classList.add('secoue');
+  let m;
+  if(q.t>0 && v===q.t+q.u) m='Attention : une barre, c\'est 10 cubes.';
+  else if(q.u>0 && q.u<10 && v===q.u*10+q.t) m='Tu as inversé les dizaines et les unités.';
+  else if(Math.abs(v-q.total)<=2) m='Presque ! Recompte les cubes seuls.';
+  else m='Ce n\'est pas le bon nombre.';
+  if(q.essais>=2){ message(m,'mal'); dire(m); setTimeout(()=>{ s.textContent=''; echec(); },1400); }
+  else { message(m+' Essaie encore, ou touche « Compter avec moi ».','mal'); dire(m+' Essaie encore.'); s.textContent=''; }
+}
+
+/* ================= DROITE ================= */
+function cfgDroite(niv){
+  if(niv===1){ const a=rnd(0,40); return {a,b:a+2,n:2}; }
+  if(niv===2){ const a=rnd(5,94); return {a,b:a+4,n:4}; }
+  if(niv===3){ const a=rnd(0,17)*5; return {a,b:a+10,n:10}; }
+  if(niv===4){ return pick([
+    ()=>{ const a=rnd(0,8)*10; return {a,b:a+20,n:2}; },
+    ()=>{ const a=rnd(0,6)*10; return {a,b:a+40,n:4}; },
+    ()=>({a:0,b:80,n:8}),
+    ()=>({a:0,b:100,n:10}),
+    ()=>{ const a=rnd(0,12)*5; return {a,b:a+20,n:4}; },
+    ()=>{ const a=rnd(0,5)*10; return {a,b:a+50,n:10}; }
+  ])(); }
+  return pick([
+    ()=>{ const a=rnd(0,7)*10; return {a,b:a+30,n:30}; },
+    ()=>{ const a=rnd(0,7)*10; return {a,b:a+30,n:30}; },
+    ()=>cfgDroite(2), ()=>cfgDroite(3), ()=>cfgDroite(4), ()=>cfgDroite(4)
+  ])();
+}
+function genDroite(niv){
+  const c=cfgDroite(niv); c.pas=(c.b-c.a)/c.n;
+  c.k = c.n===30 ? pick([5,10,15,20,25]) : rnd(1,c.n-1);
+  c.cible=c.a+c.k*c.pas; c.type='droite'; c.sig='d'+c.a+'-'+c.b+'-'+c.k;
+  c.choix=leurres(c); return c;
+}
+function leurres(q){
+  const {a,b,pas,cible}=q, set=new Set([cible]), out=[];
+  const ajoute=v=>{ if(Number.isInteger(v)&&v>=0&&v<=110&&!set.has(v)&&out.length<5){ set.add(v); out.push(v); } };
+  melanger([cible-pas,cible+pas,cible-1,cible+1]).slice(0,2).forEach(ajoute);
+  const d=String(cible); const inv = d.length===2&&d[0]!==d[1]&&d[1]!=='0' ? +(d[1]+d[0]) : -1;
+  melanger([inv,a,b,a-1,b+1,cible+10,cible-10,cible+pas*2,cible-pas*2]).forEach(ajoute);
+  while(out.length<5) ajoute(rnd(0,99));
+  return melanger([cible,...out]);
+}
+let couchAide=null;
+const X0=80,X1=640,Y=180;
+function afficherDroite(){
+  const q=S.q;
+  plateau.classList.remove('couleurs','range');
+  svg.setAttribute('viewBox','0 0 720 300'); svg.innerHTML='';
+  const X=i=>X0+(X1-X0)*i/q.n; q.X=X;
+  const defs=el('defs',{},svg);
+  const mk=el('marker',{id:'pointe',viewBox:'0 0 10 10',refX:'5',refY:'8',markerWidth:'8',markerHeight:'8',orient:'auto-start-reverse'},defs);
+  el('path',{d:'M0,0 L10,0 L5,10 z',fill:'currentColor',style:'color:var(--doux)'},mk);
+  el('line',{x1:X0,y1:Y,x2:X1,y2:Y,class:'axe'},svg);
+  for(let i=0;i<=q.n;i++){
+    const x=X(i), bout=i===0||i===q.n;
+    el('line',{x1:x,y1:bout?Y-30:Y-(q.n>12?9:14),x2:x,y2:bout?Y+30:Y,class:bout?'axe':'grad','data-i':i},svg);
+  }
+  el('text',{x:X(0),y:Y-42,class:'borne'},svg).textContent=q.a;
+  el('text',{x:X(q.n),y:Y-42,class:'borne'},svg).textContent=q.b;
+  const xt=X(q.k);
+  q.los=el('polygon',{points:`${xt},26 ${xt+36},62 ${xt},98 ${xt-36},62`,class:'losange'},svg);
+  q.rep=el('text',{x:xt,y:62,class:'rep'},svg); q.rep.textContent='?';
+  el('line',{x1:xt,y1:100,x2:xt,y2:Y-18,class:'fleche','marker-end':'url(#pointe)'},svg);
+  couchAide=el('g',{},svg);
+  $('#txtConsigne').textContent='Quel nombre est caché sous la flèche ?';
+  $('#btnRanger').hidden=true;
+  $('#btnAide').textContent='Compter les bonds avec moi';
+  zone.innerHTML=`<div class="losanges">${q.choix.map(v=>`<button class="losange-btn" data-v="${v}" aria-label="${v}"><span>${v}</span></button>`).join('')}</div>`;
+  zone.querySelectorAll('.losange-btn').forEach(b=>b.addEventListener('click',()=>validerDroite(+b.dataset.v,b)));
+}
+function validerDroite(v,btn){
+  const q=S.q; if(q.fini||S.busy||btn.classList.contains('faux')) return;
+  if(v===q.cible){
+    btn.classList.add('bon'); q.rep.textContent=v; q.los.classList.add('trouve');
+    return reussite(`Le nombre sous la flèche est ${v}.`);
+  }
+  q.essais++; btn.classList.add('faux','secoue'); btn.setAttribute('aria-disabled','true');
+  let m;
+  if(v===q.a||v===q.b) m=`${v} est déjà écrit au bout de la droite.`;
+  else if(v<q.a||v>q.b) m=`Le nombre caché est entre ${q.a} et ${q.b}.`;
+  else if(Math.abs(v-q.cible)===q.pas) m=`Presque ! Compte les bonds un par un depuis ${q.a}.`;
+  else m=`Ce n'est pas ça. Compte les bonds depuis ${q.a}.`;
+  if(q.essais>=2){ message(m,'mal'); dire(m); setTimeout(echec,1400); }
+  else { message(m+' Essaie encore.','mal'); dire(m+' Essaie encore.'); }
+}
+async function aideDroite(){
+  if(S.busy) return; S.busy=true; const tok=S.tok, q=S.q, X=q.X; if(!q.fini) q.aide=true;
+  $('#btnAide').disabled=true;
+  couchAide.innerHTML='';
+  let intro=`De ${q.a} à ${q.b}, il y a ${q.n} bonds.`;
+  if(q.pas!==1) intro+=` Chaque bond vaut ${q.pas}.`;
+  else if(q.n>10) intro+=` On avance de 5 en 5, puis de 1 en 1.`;
+  message(intro,'info'); dire(intro);
+  await attendre(q.pas!==1||q.n>10 ? 3600 : 2400); if(tok!==S.tok) return;
+  const lab=(i,v)=>{ el('text',{x:X(i),y:Y+66,class:'val'},couchAide).textContent=v; };
+  lab(0,q.a); dire(q.a); await attendre(900); if(tok!==S.tok) return;
+  let i=0; const saut = q.n>10 ? 5 : 1;
+  while(i<q.k){
+    const j = i+saut<=q.k ? i+saut : i+1;
+    const xa=X(i), xb=X(j), v=q.a+j*q.pas;
+    el('path',{d:`M${xa},${Y+8} Q${(xa+xb)/2},${Y+46} ${xb},${Y+8}`,class:'bond'},couchAide);
+    lab(j,v); dire(v);
+    await attendre(950); if(tok!==S.tok) return;
+    i=j;
+  }
+  el('line',{x1:X(q.k),y1:Y-14,x2:X(q.k),y2:Y+2,class:'cible-grad'},couchAide);
+  if(q.fini){ q.rep.textContent=q.cible; q.los.classList.add('trouve'); const p=`Le nombre sous la flèche est ${q.cible}.`; message(p,'info'); dire(p); await attendre(2200); }
+  else { message(`La flèche montre ${q.cible}. Touche le bon losange.`,'info'); }
+  if(tok!==S.tok) return;
+  S.busy=false; $('#btnAide').disabled = q.fini;
+}
+
+majAccueil();
+})();
+</script>
+</body>
+</html>
