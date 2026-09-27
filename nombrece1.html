@@ -134,6 +134,27 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 .fin-boutons{display:grid;gap:12px;max-width:420px;margin:20px auto}
 .fin-boutons .grand{text-align:center}
 
+/* Fabriquer / monnaie */
+.cible{text-align:center;font-size:3.6rem;font-weight:700;line-height:1.1;margin:0}
+.cible small{display:block;font-size:1.1rem;font-weight:400;color:var(--doux)}
+.cible .lettres{font-size:2rem;display:block}
+.compteur{text-align:center;margin:0;font-size:1.2rem;color:var(--doux)}
+.compteur b{font-size:1.8rem;color:var(--encre)}
+.ajouts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ajout{min-height:88px;border-radius:14px;border:2px solid var(--trait);background:var(--tableau);font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px}
+.ajout svg{height:46px;width:auto}
+.tiroir{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tiroir .ajout{min-height:76px}
+.valider{text-align:center}
+.acts{display:flex;flex-wrap:wrap;gap:12px}
+.acts label{display:flex;align-items:center;gap:6px}
+.acts input{width:24px;height:24px}
+.retirable{cursor:pointer}
+.vide-txt{font-size:24px;fill:var(--doux);text-anchor:middle}
+.val-billet{font-size:24px;font-weight:700;fill:#1D2B4F;text-anchor:middle;dominant-baseline:central}
+.val-piece{font-size:15px;font-weight:700;fill:#1D2B4F;text-anchor:middle;dominant-baseline:central}
+.num-cible .diz{color:var(--diz2)} .num-cible .uni{color:var(--uni2)}
+
 @media (prefers-reduced-motion: reduce){
   .obj,.table-rangement{transition:none}
   .secoue{animation:none}
@@ -169,15 +190,14 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
     </section>
 
     <section class="choix">
-      <button class="grand principal" data-mode="rituel">Rituel du jour<small>cubes et droite graduée, en alternance</small></button>
-      <button class="grand" data-mode="cubes">Compter les cubes<small>niveau <span id="nivC">1</span> : <span id="descC"></span></small></button>
-      <button class="grand" data-mode="droite">Placer sur la droite<small>niveau <span id="nivD">1</span> : <span id="descD"></span></small></button>
+      <button class="grand principal" data-mode="rituel">Rituel du jour<small id="descRituel">les activités choisies, en alternance</small></button>
+      <div id="boutonsActs" class="choix"></div>
     </section>
 
     <details class="bloc">
       <summary>Réglages de l'enseignant</summary>
-      <div class="reglage"><span>Niveau des cubes</span><select id="selC"></select></div>
-      <div class="reglage"><span>Niveau de la droite</span><select id="selD"></select></div>
+      <div id="niveaux"></div>
+      <div class="reglage"><span>Activités du rituel</span><span id="acts" class="acts"></span></div>
       <div class="reglage"><span>Questions par séance</span>
         <select id="selNq"><option value="6">6</option><option value="8">8</option><option value="10">10</option><option value="12">12</option></select></div>
       <div class="reglage"><span>Couleurs des cubes</span>
@@ -248,13 +268,20 @@ function melanger(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.ran
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 const pl=(n,m)=> n>1 ? m+'s' : m;
 
-const DESC_C={1:"jusqu'à 29, cubes rangés",2:"jusqu'à 59, barres debout",3:"jusqu'à 99, barres penchées ou couchées",4:"défi : plus de 10 cubes seuls"};
-const DESC_D={1:"2 bonds de 1",2:"4 bonds de 1",3:"10 bonds de 1",4:"bonds de 5 ou de 10",5:"tout mélangé, jusqu'à 30 bonds"};
+const ACTS={
+  cubes:{nom:'Compter les cubes',court:'Compter',champ:'nc',desc:{1:"jusqu'à 29, cubes rangés",2:"jusqu'à 59, barres debout",3:"jusqu'à 99, barres penchées ou couchées",4:"défi : plus de 10 cubes seuls"}},
+  fabriquer:{nom:'Fabriquer le nombre avec les cubes',court:'Fabriquer',champ:'nf',desc:{1:"jusqu'à 50, compteur visible",2:"jusqu'à 99, sans compteur",3:"nombre dicté et écrit en lettres"}},
+  droite:{nom:'Placer sur la droite',court:'Droite',champ:'nd',desc:{1:"2 bonds de 1",2:"4 bonds de 1",3:"10 bonds de 1",4:"bonds de 5 ou de 10",5:"tout mélangé, jusqu'à 30 bonds"}},
+  monnaie:{nom:'Payer avec les euros',court:'Monnaie',champ:'nm',desc:{1:"billets de 10 € et pièces de 1 €, compteur visible",2:"pièces de 1 et 2 €, billets de 5 et 10 €",3:"toutes les pièces et billets jusqu'à 50 €",4:"payer avec le moins de pièces et billets possible"}}
+};
+const ORDRE=['cubes','fabriquer','droite','monnaie'];
+const MAXN=k=>Object.keys(ACTS[k].desc).length;
 
 /* ---------- Données ---------- */
 const CLE='adaptnombre-v1';
-let data={eleves:{},courant:'',reglages:{nq:8,voix:true,couleurs:'auto',auto:true}};
-try{ const s=localStorage.getItem(CLE); if(s){ const d=JSON.parse(s); if(d&&d.eleves) data=Object.assign(data,d); data.reglages=Object.assign({nq:8,voix:true,couleurs:'auto',auto:true},d.reglages||{}); } }catch(e){}
+const REG0=()=>({nq:8,voix:true,couleurs:'auto',auto:true,acts:ORDRE.slice()});
+let data={eleves:{},courant:'',reglages:REG0()};
+try{ const s=localStorage.getItem(CLE); if(s){ const d=JSON.parse(s); if(d&&d.eleves) data=Object.assign(data,d); data.reglages=Object.assign(REG0(),d.reglages||{}); } }catch(e){}
 function sauver(){ try{ localStorage.setItem(CLE,JSON.stringify(data)); }catch(e){} }
 function eleve(){
   if(!data.courant || !data.eleves[data.courant]){
@@ -262,7 +289,9 @@ function eleve(){
     if(noms.length) data.courant=noms[0];
     else { data.courant='Élève'; data.eleves['Élève']={nc:1,nd:1,hist:[]}; }
   }
-  return data.eleves[data.courant];
+  const e=data.eleves[data.courant];
+  ORDRE.forEach(k=>{ if(!e[ACTS[k].champ]) e[ACTS[k].champ]=1; });
+  return e;
 }
 
 /* ---------- Voix ---------- */
@@ -276,38 +305,40 @@ function dire(t){
 
 /* ---------- Accueil ---------- */
 function majAccueil(){
-  const e=eleve();
+  const e=eleve(), R=data.reglages;
   const sel=$('#choixEleve'); sel.innerHTML='';
   Object.keys(data.eleves).sort((a,b)=>a.localeCompare(b,'fr')).forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; if(n===data.courant) o.selected=true; sel.appendChild(o); });
-  $('#nivC').textContent=e.nc; $('#descC').textContent=DESC_C[e.nc];
-  $('#nivD').textContent=e.nd; $('#descD').textContent=DESC_D[e.nd];
-  $('#selC').innerHTML=[1,2,3,4].map(n=>`<option value="${n}" ${n===e.nc?'selected':''}>${n} : ${DESC_C[n]}</option>`).join('');
-  $('#selD').innerHTML=[1,2,3,4,5].map(n=>`<option value="${n}" ${n===e.nd?'selected':''}>${n} : ${DESC_D[n]}</option>`).join('');
-  $('#selNq').value=String(data.reglages.nq); $('#selCoul').value=data.reglages.couleurs;
-  $('#chkVoix').checked=data.reglages.voix; $('#chkAuto').checked=data.reglages.auto;
+  $('#boutonsActs').innerHTML=ORDRE.map(k=>`<button class="grand" data-mode="${k}">${ACTS[k].nom}<small>niveau ${e[ACTS[k].champ]} : ${ACTS[k].desc[e[ACTS[k].champ]]}</small></button>`).join('');
+  $('#descRituel').textContent=(R.acts.length?R.acts.map(k=>ACTS[k].court.toLowerCase()).join(', '):'aucune activité choisie')+', en alternance';
+  $('#niveaux').innerHTML=ORDRE.map(k=>`<div class="reglage"><span>Niveau : ${ACTS[k].court.toLowerCase()}</span><select data-niv="${k}">${Object.keys(ACTS[k].desc).map(n=>`<option value="${n}" ${+n===e[ACTS[k].champ]?'selected':''}>${n} : ${ACTS[k].desc[n]}</option>`).join('')}</select></div>`).join('');
+  $('#acts').innerHTML=ORDRE.map(k=>`<label><input type="checkbox" data-act="${k}" ${R.acts.includes(k)?'checked':''}>${ACTS[k].court}</label>`).join('');
+  $('#selNq').value=String(R.nq); $('#selCoul').value=R.couleurs;
+  $('#chkVoix').checked=R.voix; $('#chkAuto').checked=R.auto;
   const h=e.hist.slice().reverse();
+  const cel=(sc,nv)=>sc?`${sc} (niv. ${nv})`:'–';
   $('#suivi').innerHTML = h.length
-    ? `<table><thead><tr><th>Date</th><th>Cubes</th><th>Droite</th></tr></thead><tbody>${h.map(r=>`<tr><td>${r.d}</td><td>${r.c?r.c+' (niv. '+r.nc+')':'–'}</td><td>${r.dr?r.dr+' (niv. '+r.nd+')':'–'}</td></tr>`).join('')}</tbody></table><p class="note">Score = réussites du premier coup / questions.</p>`
+    ? `<table><thead><tr><th>Date</th>${ORDRE.map(k=>`<th>${ACTS[k].court}</th>`).join('')}</tr></thead><tbody>${h.map(r=>`<tr><td>${r.d}</td><td>${cel(r.c,r.nc)}</td><td>${cel(r.f,r.nf)}</td><td>${cel(r.dr,r.nd)}</td><td>${cel(r.m,r.nm)}</td></tr>`).join('')}</tbody></table><p class="note">Score = réussites du premier coup, sans aide / questions.</p>`
     : '<p class="note">Aucune séance pour le moment.</p>';
   sauver();
 }
+$('#niveaux').addEventListener('change',ev=>{ const k=ev.target.dataset.niv; if(!k) return; eleve()[ACTS[k].champ]=+ev.target.value; majAccueil(); });
+$('#acts').addEventListener('change',ev=>{ const k=ev.target.dataset.act; if(!k) return; data.reglages.acts=ORDRE.filter(x=>x===k?ev.target.checked:data.reglages.acts.includes(x)); majAccueil(); });
+$('#boutonsActs').addEventListener('click',ev=>{ const b=ev.target.closest('[data-mode]'); if(b) demarrer(b.dataset.mode); });
 $('#choixEleve').addEventListener('change',e=>{ data.courant=e.target.value; majAccueil(); });
 $('#btnAjout').addEventListener('click',()=>{
   const n=(prompt("Prénom de l'élève :")||'').trim(); if(!n) return;
-  if(!data.eleves[n]) data.eleves[n]={nc:1,nd:1,hist:[]};
+  if(!data.eleves[n]) data.eleves[n]={nc:1,nf:1,nd:1,nm:1,hist:[]};
   data.courant=n; majAccueil();
 });
 $('#btnSuppr').addEventListener('click',()=>{
   if(!confirm(`Supprimer ${data.courant} et ses résultats ?`)) return;
   delete data.eleves[data.courant]; data.courant=''; majAccueil();
 });
-$('#selC').addEventListener('change',e=>{ eleve().nc=+e.target.value; majAccueil(); });
-$('#selD').addEventListener('change',e=>{ eleve().nd=+e.target.value; majAccueil(); });
 $('#selNq').addEventListener('change',e=>{ data.reglages.nq=+e.target.value; sauver(); });
 $('#selCoul').addEventListener('change',e=>{ data.reglages.couleurs=e.target.value; sauver(); });
 $('#chkVoix').addEventListener('change',e=>{ data.reglages.voix=e.target.checked; sauver(); });
 $('#chkAuto').addEventListener('change',e=>{ data.reglages.auto=e.target.checked; sauver(); });
-document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>demarrer(b.dataset.mode)));
+document.querySelector('[data-mode="rituel"]').addEventListener('click',()=>demarrer('rituel'));
 
 function montrer(id){ document.querySelectorAll('.ecran').forEach(s=>s.classList.toggle('actif',s.id===id)); window.scrollTo(0,0); }
 
@@ -317,9 +348,12 @@ const svg=$('#svg'), plateau=$('#plateau'), zone=$('#zoneReponse'), retour=$('#r
 
 function demarrer(mode){
   eleve();
-  const nq=data.reglages.nq, types=[];
-  for(let i=0;i<nq;i++) types.push(mode==='rituel' ? (i%2?'droite':'cubes') : mode);
-  S={mode,types,i:-1,res:{cubes:{ok:0,tot:0},droite:{ok:0,tot:0}},etoiles:0,etats:[],sig:'',tok:0,niv:{c:eleve().nc,d:eleve().nd}};
+  const nq=data.reglages.nq, types=[], e=eleve();
+  let acts=mode==='rituel'?data.reglages.acts.slice():[mode];
+  if(!acts.length){ alert("Choisissez au moins une activité du rituel dans les réglages."); return; }
+  for(let i=0;i<nq;i++) types.push(acts[i%acts.length]);
+  const res={}, niv={}; ORDRE.forEach(k=>{ res[k]={ok:0,tot:0}; niv[k]=e[ACTS[k].champ]; });
+  S={mode,types,i:-1,res,etoiles:0,etats:[],sig:'',tok:0,niv};
   $('#progres').innerHTML=types.map(()=>'<span class="point"></span>').join('');
   montrer('jeu'); suivante();
 }
@@ -333,13 +367,13 @@ function suivante(){
   if(S.i>=S.types.length) return terminer();
   const type=S.types[S.i];
   let q, n=0;
-  do{ q = type==='cubes' ? genCubes(S.niv.c) : genDroite(S.niv.d); n++; } while(q.sig===S.sig && n<15);
+  do{ q = GEN[type](S.niv[type]); n++; } while(q.sig===S.sig && n<15);
   S.sig=q.sig; q.essais=0; q.fini=false; S.q=q;
   retour.textContent=''; retour.className='';
   $('#btnSuivant').hidden=true; $('#btnAide').disabled=false;
-  if(type==='cubes') afficherCubes(); else afficherDroite();
+  AFF[type]();
   majProgres();
-  dire($('#txtConsigne').textContent);
+  direConsigne();
 }
 function message(t,c){ retour.textContent=t; retour.className=c||''; }
 
@@ -355,25 +389,27 @@ async function echec(){
   majProgres();
   message('Regarde bien, on compte ensemble.','info');
   await attendre(1200);
-  if(q.type==='cubes') await aideCubes(); else await aideDroite();
+  await AIDE[q.type]();
   finQuestion();
 }
-function finQuestion(){ majProgres(); $('#btnAide').disabled = S.q.type==='droite' && S.q.fini; $('#btnSuivant').hidden=false; $('#btnSuivant').focus({preventScroll:true}); }
+function finQuestion(){ majProgres(); $('#btnAide').disabled = S.q.type==='droite' && S.q.fini; const v=$('#btnValider'); if(v) v.hidden=true; $('#btnSuivant').hidden=false; $('#btnSuivant').focus({preventScroll:true}); }
 $('#btnSuivant').addEventListener('click',suivante);
 $('#btnMaison').addEventListener('click',()=>{ S.tok++; if('speechSynthesis' in window) speechSynthesis.cancel(); majAccueil(); montrer('accueil'); });
-$('#btnLire').addEventListener('click',()=>dire($('#txtConsigne').textContent));
-$('#btnAide').addEventListener('click',()=>{ if(!S||S.busy) return; if(S.q.type==='cubes') aideCubes(); else aideDroite(); });
+function direConsigne(){ dire($('#txtConsigne').textContent+(S&&S.q&&S.q.dire?' '+S.q.dire:'')); }
+$('#btnLire').addEventListener('click',direConsigne);
+$('#btnAide').addEventListener('click',()=>{ if(!S||S.busy) return; AIDE[S.q.type](); });
 $('#btnRanger').addEventListener('click',()=>{ if(S&&!S.busy) ranger(); });
 
 function terminer(){
   const e=eleve(), r=S.res, msgs=[];
   const fmt=o=>o.tot?`${o.ok}/${o.tot}`:'';
-  e.hist.push({d:new Date().toLocaleDateString('fr-FR'),c:fmt(r.cubes),nc:S.niv.c,dr:fmt(r.droite),nd:S.niv.d});
+  e.hist.push({d:new Date().toLocaleDateString('fr-FR'),c:fmt(r.cubes),nc:S.niv.cubes,f:fmt(r.fabriquer),nf:S.niv.fabriquer,dr:fmt(r.droite),nd:S.niv.droite,m:fmt(r.monnaie),nm:S.niv.monnaie});
   if(e.hist.length>80) e.hist=e.hist.slice(-80);
   if(data.reglages.auto){
-    [['cubes','nc',4,'cubes'],['droite','nd',5,'droite graduée']].forEach(([k,champ,max,nom])=>{
-      const o=r[k]; if(o.tot<3) return; const t=o.ok/o.tot;
-      if(t>=.8 && e[champ]<max){ e[champ]++; msgs.push(`Niveau ${e[champ]} débloqué pour la ${nom==='cubes'?'partie cubes':nom} !`); }
+    ORDRE.forEach(k=>{
+      const champ=ACTS[k].champ, nom=ACTS[k].court.toLowerCase();
+      const o=r[k]; if(o.tot<2) return; const t=o.ok/o.tot;
+      if(t>=.8 && e[champ]<MAXN(k)){ e[champ]++; msgs.push(`Niveau ${e[champ]} débloqué (${nom}) !`); }
       else if(t<.35 && e[champ]>1){ e[champ]--; msgs.push(`La prochaine fois, on s'entraîne au niveau ${e[champ]} (${nom}).`); }
     });
   }
@@ -382,8 +418,7 @@ function terminer(){
   $('#finTitre').textContent = S.etoiles>=tot*.8 ? 'Superbe séance !' : S.etoiles>=tot*.5 ? 'Bien joué !' : 'Tu as bien travaillé !';
   $('#finEtoiles').textContent='⭐'.repeat(S.etoiles)+'☆'.repeat(tot-S.etoiles);
   const parts=[];
-  if(r.cubes.tot) parts.push(`Cubes : ${r.cubes.ok} sur ${r.cubes.tot} du premier coup.`);
-  if(r.droite.tot) parts.push(`Droite : ${r.droite.ok} sur ${r.droite.tot} du premier coup.`);
+  ORDRE.forEach(k=>{ if(r[k].tot) parts.push(`${ACTS[k].court} : ${r[k].ok} sur ${r[k].tot} du premier coup.`); });
   $('#finDetail').innerHTML=parts.join('<br>')+(msgs.length?'<br><br>'+msgs.join('<br>'):'');
   montrer('fin');
   dire($('#finTitre').textContent+' Tu as '+S.etoiles+' '+pl(S.etoiles,'étoile')+'.');
@@ -464,7 +499,7 @@ function poser(it,x,y,a){ it.g.style.transform=`translate(${x}px,${y}px) rotate(
 
 let couchEtiq=null, couchPaquet=null;
 function afficherCubes(){
-  const q=S.q, niv=S.niv.c, c=data.reglages.couleurs;
+  const q=S.q, niv=S.niv.cubes, c=data.reglages.couleurs;
   const coul = c==='toujours' || (c==='auto' && niv<=2);
   plateau.classList.toggle('couleurs',coul);
   plateau.classList.remove('range');
@@ -662,6 +697,240 @@ async function aideDroite(){
   if(tok!==S.tok) return;
   S.busy=false; $('#btnAide').disabled = q.fini;
 }
+
+/* ================= FABRIQUER ================= */
+const MOTS=['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix','onze','douze','treize','quatorze','quinze','seize'];
+const DIZ={2:'vingt',3:'trente',4:'quarante',5:'cinquante',6:'soixante'};
+function lettres(n){
+  if(n<17) return MOTS[n];
+  if(n<20) return 'dix-'+MOTS[n-10];
+  const d=Math.floor(n/10), u=n%10;
+  if(d<=6) return DIZ[d]+(u===0?'':u===1?' et un':'-'+MOTS[u]);
+  if(d===7) return 'soixante'+(u===1?' et onze':'-'+lettres(10+u));
+  if(d===8) return 'quatre-vingt'+(u===0?'s':'-'+MOTS[u]);
+  return 'quatre-vingt-'+lettres(10+u);
+}
+function phraseFab(t,u){
+  if(u===0) return `${t} ${pl(t,'barre')} de 10`;
+  if(t===0) return `${u} ${pl(u,'cube')}`;
+  return `${t} ${pl(t,'barre')} de 10 et ${u} ${pl(u,'cube')}`;
+}
+function genFab(niv){ const n=niv===1?rnd(11,50):rnd(11,99); return {type:'fabriquer',cible:n,t:Math.floor(n/10),u:n%10,sig:'f'+n,dire:niv===3?String(n):''}; }
+let couchFab=null;
+function iconeSvg(kind){
+  return kind==='bar'
+    ? `<svg viewBox="-14 -108 32 216" aria-hidden="true"><g class="couleurs-ico">${Array.from({length:10},(_,i)=>`<rect x="-10" y="${-100+i*20}" width="20" height="20" fill="#8FB0F5" stroke="#1D2B4F" stroke-width="2"/>`).join('')}</g></svg>`
+    : `<svg viewBox="-14 -14 32 32" aria-hidden="true"><rect x="-10" y="-10" width="20" height="20" fill="#F9D66B" stroke="#1D2B4F" stroke-width="2"/></svg>`;
+}
+function afficherFab(){
+  const q=S.q, niv=S.niv.fabriquer; q.nb=0; q.nc=0;
+  plateau.classList.toggle('couleurs',data.reglages.couleurs!=='jamais');
+  plateau.classList.add('range');
+  svg.setAttribute('viewBox','0 0 720 400'); svg.innerHTML='';
+  const fond=el('g',{class:'table-rangement'},svg);
+  el('line',{x1:440,y1:24,x2:440,y2:376,class:'sep'},fond);
+  el('text',{x:230,y:60,class:'titre-col'},fond).textContent='dizaines';
+  el('text',{x:568,y:60,class:'titre-col'},fond).textContent='unités';
+  couchFab=el('g',{},svg); couchPaquet=el('g',{},svg); couchEtiq=el('g',{},svg);
+  $('#txtConsigne').textContent = niv===3 ? 'Écoute le nombre et fabrique-le avec les barres et les cubes.' : 'Fabrique ce nombre avec les barres et les cubes.';
+  $('#btnRanger').hidden=true; $('#btnAide').textContent='Compter avec moi';
+  zone.innerHTML=`
+    <p class="cible num-cible" id="cible">${niv===3?`<span class="lettres">${lettres(q.cible)}</span>`:q.cible}</p>
+    ${niv===1?'<p class="compteur">J\'ai mis : <b id="compteur">0</b></p>':''}
+    <div class="ajouts">
+      <button class="ajout" data-a="bar">${iconeSvg('bar')}+ 1 barre de 10</button>
+      <button class="ajout" data-a="cube">${iconeSvg('cube')}+ 1 cube</button>
+    </div>
+    <button class="outil" id="btnEchange" hidden>Échanger 10 cubes contre 1 barre</button>
+    <p class="note" style="text-align:center;margin:0">Touche une barre ou un cube pour l'enlever.</p>
+    <button class="grand principal valider" id="btnValider">C'est fait</button>`;
+  zone.querySelectorAll('.ajout').forEach(b=>b.addEventListener('click',()=>ajouterFab(b.dataset.a)));
+  $('#btnEchange').addEventListener('click',echangerFab);
+  $('#btnValider').addEventListener('click',validerFab);
+  dessinerFab();
+}
+function dessinerFab(){
+  const q=S.q; couchFab.innerHTML=''; couchEtiq.innerHTML='';
+  q.pos=[];
+  for(let i=0;i<q.nb;i++){ const it={kind:'bar'}; it.g=dessiner(it,couchFab); it.g.classList.add('retirable'); poser(it,60+i*40,240,0); q.pos.push({kind:'bar',x:60+i*40,y:240,g:it.g}); it.g.addEventListener('click',()=>retirerFab('bar')); }
+  for(let j=0;j<q.nc;j++){ const it={kind:'cube'}; it.g=dessiner(it,couchFab); it.g.classList.add('retirable'); const x=480+(j%5)*44, y=150+Math.floor(j/5)*56; poser(it,x,y,0); q.pos.push({kind:'cube',x,y,g:it.g}); it.g.addEventListener('click',()=>retirerFab('cube')); }
+  const c=$('#compteur'); if(c) c.textContent=q.nb*10+q.nc;
+  const ech=$('#btnEchange'); if(ech) ech.hidden=q.nc<10;
+}
+function ajouterFab(k){
+  const q=S.q; if(q.fini||S.busy) return;
+  if(k==='bar'){ if(q.nb>=10) return message('Il n\'y a plus de place pour les barres.','info'); q.nb++; }
+  else { if(q.nc>=20) return message('Il n\'y a plus de place pour les cubes.','info'); q.nc++; }
+  message(''); dessinerFab();
+}
+function retirerFab(k){ const q=S.q; if(q.fini||S.busy) return; if(k==='bar'&&q.nb>0) q.nb--; if(k==='cube'&&q.nc>0) q.nc--; dessinerFab(); }
+function echangerFab(){
+  const q=S.q; if(q.fini||S.busy||q.nc<10) return;
+  if(q.nb>=10) return message('Il n\'y a plus de place pour une barre.','info');
+  q.nc-=10; q.nb++; dessinerFab();
+  message('10 cubes, c\'est 1 barre de 10.','info'); dire('10 cubes, c\'est une barre de 10.');
+}
+function bullesFab(q){ couchEtiq.innerHTML=''; let n=0; q.pos.forEach(p=>{ n+=p.kind==='bar'?10:1; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y-30,n); }); }
+function validerFab(){
+  const q=S.q; if(q.fini||S.busy) return;
+  const tot=q.nb*10+q.nc;
+  if(tot===0) return message('Ajoute des barres et des cubes.','info');
+  if(tot===q.cible){
+    if(q.nc>=10){ const m=`Tu as bien ${tot}, mais 10 cubes seuls font 1 barre : échange-les.`; message(m,'info'); dire(m); return; }
+    bullesFab(q);
+    return reussite(`${q.cible}, c'est ${phraseFab(q.t,q.u)}.`);
+  }
+  q.essais++;
+  let m;
+  if(q.t!==q.u && q.nb===q.u && q.nc===q.t) m='Tu as inversé : le chiffre des dizaines dit combien de barres.';
+  else if(tot<q.cible) m='Il manque des cubes.';
+  else m='Il y a trop de cubes.';
+  if(q.essais>=2){ message(m,'mal'); dire(m); setTimeout(echec,1400); }
+  else { message(m+' Essaie encore, ou touche « Compter avec moi ».','mal'); dire(m+' Essaie encore.'); }
+}
+async function aideFab(){
+  if(S.busy) return; S.busy=true; const tok=S.tok, q=S.q; if(!q.fini) q.aide=true;
+  $('#btnAide').disabled=true;
+  const phr=`${q.cible}, c'est ${phraseFab(q.t,q.u)}.`;
+  if(q.fini){
+    q.nb=0; q.nc=0; dessinerFab(); await attendre(500); if(tok!==S.tok) return;
+    let n=0;
+    for(let i=0;i<q.t;i++){ q.nb++; n+=10; dessinerFab(); bullesFab(q); dire(n); await attendre(950); if(tok!==S.tok) return; }
+    for(let j=0;j<q.u;j++){ q.nc++; n++; dessinerFab(); bullesFab(q); dire(n); await attendre(750); if(tok!==S.tok) return; }
+    message(phr,'info'); dire(phr); await attendre(2500);
+  } else {
+    dessinerFab(); let n=0;
+    if(q.pos.length){
+      couchEtiq.innerHTML='';
+      for(const p of q.pos){ n+=p.kind==='bar'?10:1; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y-30,n); dire(n); await attendre(p.kind==='bar'?950:750); if(tok!==S.tok) return; }
+    }
+    let m=`Tu as mis ${n}. ${phr}`;
+    if(S.niv.fabriquer<3) m=`Tu as mis ${n}. Dans ${q.cible}, le ${q.t} dit ${q.t} ${pl(q.t,'barre')}, le ${q.u} dit ${q.u} ${pl(q.u,'cube')}.`;
+    if(q.t===0) m=`Tu as mis ${n}. ${phr}`;
+    message(m,'info'); dire(m); await attendre(Math.min(7000,1500+m.length*55));
+  }
+  if(tok!==S.tok) return;
+  S.busy=false; $('#btnAide').disabled=false;
+}
+
+/* ================= MONNAIE ================= */
+const VALS={1:[10,1],2:[10,5,2,1],3:[50,20,10,5,2,1],4:[50,20,10,5,2,1]};
+function decomposer(n,vals){ const out=[]; for(const v of vals){ while(n>=v){ out.push(v); n-=v; } } return out; }
+function genMon(niv){
+  const n= niv===1?rnd(11,59) : niv===2?rnd(6,99) : rnd(12,99);
+  return {type:'monnaie',cible:n,sig:'m'+n,vals:VALS[niv],min:decomposer(n,VALS[niv]).length};
+}
+function dessinerArgent(v,parent){
+  const g=el('g',{},parent);
+  if(v>=5){
+    const col={5:'#AEB5B9',10:'#E88A93',20:'#86A9E6',50:'#F2AE5E'}[v];
+    el('rect',{x:-58,y:-30,width:116,height:60,rx:6,fill:col,stroke:'#1D2B4F','stroke-width':1.5},g);
+    el('rect',{x:-50,y:-22,width:34,height:44,rx:4,fill:'#FFFFFF','fill-opacity':.5},g);
+    el('text',{x:20,y:1,class:'val-billet'},g).textContent=v+' €';
+  } else {
+    const r=v===2?30:27, ext=v===1?'#D9B53E':'#C9CED6', int=v===1?'#C9CED6':'#D9B53E';
+    el('circle',{r,fill:ext,stroke:'#1D2B4F','stroke-width':1.5},g);
+    el('circle',{r:r-8,fill:int,stroke:'#1D2B4F','stroke-width':.8},g);
+    el('text',{x:0,y:1,class:'val-piece'},g).textContent=v+' €';
+  }
+  return g;
+}
+function iconeArgent(v){
+  const box=v>=5?'-60 -32 120 64':'-32 -32 64 64';
+  const s=document.createElementNS(NS,'svg'); s.setAttribute('viewBox',box); s.setAttribute('aria-hidden','true');
+  dessinerArgent(v,s); return s;
+}
+let couchMon=null;
+function afficherMon(){
+  const q=S.q, niv=S.niv.monnaie; q.pay=[];
+  plateau.classList.remove('couleurs','range');
+  svg.setAttribute('viewBox','0 0 720 400'); svg.innerHTML='';
+  couchMon=el('g',{},svg); couchEtiq=el('g',{},svg);
+  $('#txtConsigne').textContent = niv===4 ? 'Paie le prix avec le moins possible de pièces et de billets.' : 'Paie le prix avec les pièces et les billets.';
+  $('#btnRanger').hidden=true; $('#btnAide').textContent='Compter avec moi';
+  zone.innerHTML=`
+    <p class="cible">${q.cible} €<small>à payer</small></p>
+    ${niv===1?'<p class="compteur">J\'ai mis : <b id="compteur">0</b> €</p>':''}
+    <div class="tiroir" id="tiroir"></div>
+    <p class="note" style="text-align:center;margin:0">Touche une pièce ou un billet posé pour le reprendre.</p>
+    <button class="grand principal valider" id="btnValider">C'est payé</button>`;
+  const t=$('#tiroir');
+  q.vals.slice().reverse().forEach(v=>{
+    const b=document.createElement('button'); b.className='ajout'; b.setAttribute('aria-label','Ajouter '+v+' euros');
+    b.appendChild(iconeArgent(v)); b.addEventListener('click',()=>ajouterMon(v)); t.appendChild(b);
+  });
+  $('#btnValider').addEventListener('click',validerMon);
+  dessinerMon();
+}
+function dessinerMon(){
+  const q=S.q; couchMon.innerHTML=''; couchEtiq.innerHTML='';
+  const tri=q.pay.slice().sort((a,b)=>b-a), notes=tri.filter(v=>v>=5), coins=tri.filter(v=>v<5);
+  q.pos=[];
+  if(!tri.length) el('text',{x:360,y:205,class:'vide-txt'},couchMon).textContent='Pose ici les pièces et les billets.';
+  notes.forEach((v,i)=>q.pos.push({v,x:80+(i%5)*136,y:62+Math.floor(i/5)*74}));
+  const y0 = notes.length ? 62+Math.ceil(notes.length/5)*74+10 : 50;
+  coins.forEach((v,j)=>q.pos.push({v,x:50+(j%10)*68,y:y0+Math.floor(j/10)*68}));
+  q.pos.forEach(p=>{
+    const g=dessinerArgent(p.v,couchMon); g.setAttribute('transform',`translate(${p.x},${p.y})`); g.classList.add('retirable');
+    g.addEventListener('click',()=>{ if(q.fini||S.busy) return; q.pay.splice(q.pay.indexOf(p.v),1); dessinerMon(); });
+  });
+  const c=$('#compteur'); if(c) c.textContent=q.pay.reduce((a,b)=>a+b,0);
+}
+function ajouterMon(v){
+  const q=S.q; if(q.fini||S.busy) return;
+  const nn=q.pay.filter(x=>x>=5).length, nc=q.pay.length-nn;
+  if((v>=5&&nn>=10)||(v<5&&nc>=30)) return message('Il n\'y a plus de place.','info');
+  q.pay.push(v); message(''); dessinerMon();
+}
+function phraseArgent(list){
+  const c={}; list.forEach(v=>c[v]=(c[v]||0)+1);
+  return Object.keys(c).map(Number).sort((a,b)=>b-a).map(v=>`${c[v]} ${v>=5?pl(c[v],'billet'):pl(c[v],'pièce')} de ${v} €`).join(', ');
+}
+function validerMon(){
+  const q=S.q; if(q.fini||S.busy) return;
+  const tot=q.pay.reduce((a,b)=>a+b,0);
+  if(!tot) return message('Pose des pièces ou des billets.','info');
+  if(tot===q.cible){
+    if(S.niv.monnaie===4 && q.pay.length>q.min){
+      q.aide=true;
+      const m=`Tu paies bien ${tot} €, mais tu peux utiliser moins de pièces et de billets. Échange-en.`;
+      message(m,'info'); dire(m); return;
+    }
+    return reussite(`Tu as payé ${q.cible} € : ${phraseArgent(q.pay)}.`);
+  }
+  q.essais++;
+  const dz=q.pay.filter(v=>v===10).length, un=q.pay.filter(v=>v===1).length, t=Math.floor(q.cible/10), u=q.cible%10;
+  let m;
+  if(S.niv.monnaie===1 && t!==u && dz===u && un===t) m='Tu as inversé : le chiffre des dizaines dit combien de billets de 10 €.';
+  else if(tot<q.cible) m='Il manque de l\'argent.';
+  else m='Tu as mis trop d\'argent.';
+  if(q.essais>=2){ message(m,'mal'); dire(m); setTimeout(echec,1400); }
+  else { message(m+' Essaie encore, ou touche « Compter avec moi ».','mal'); dire(m+' Essaie encore.'); }
+}
+async function aideMon(){
+  if(S.busy) return; S.busy=true; const tok=S.tok, q=S.q; if(!q.fini) q.aide=true;
+  $('#btnAide').disabled=true;
+  if(q.fini){ q.pay=decomposer(q.cible,q.vals); }
+  dessinerMon(); await attendre(400); if(tok!==S.tok) return;
+  let n=0;
+  for(const p of q.pos){
+    n+=p.v; bulle(p.x+(p.v>=5?48:22),p.y-(p.v>=5?24:22),n); dire(n+' euros');
+    await attendre(p.v>=5?1100:950); if(tok!==S.tok) return;
+  }
+  let m;
+  if(q.fini) m=`${q.cible} €, c'est ${phraseArgent(q.pay)}.`;
+  else {
+    m=`Tu as mis ${n} €. Il faut ${q.cible} €.`;
+    if(n<q.cible) m+=` Il manque ${q.cible-n} €.`; else if(n>q.cible) m+=` Il y a ${n-q.cible} € de trop.`;
+  }
+  message(m,'info'); dire(m); await attendre(Math.min(7000,1500+m.length*55));
+  if(tok!==S.tok) return;
+  S.busy=false; $('#btnAide').disabled=false;
+}
+
+const GEN={cubes:genCubes,fabriquer:genFab,droite:genDroite,monnaie:genMon};
+const AFF={cubes:afficherCubes,fabriquer:afficherFab,droite:afficherDroite,monnaie:afficherMon};
+const AIDE={cubes:aideCubes,fabriquer:aideFab,droite:aideDroite,monnaie:aideMon};
 
 majAccueil();
 })();
