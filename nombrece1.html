@@ -149,7 +149,13 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 .acts{display:flex;flex-wrap:wrap;gap:12px}
 .acts label{display:flex;align-items:center;gap:6px}
 .acts input{width:24px;height:24px}
-.retirable{cursor:pointer}
+.retirable{cursor:grab}
+.mode-monnaie svg,.tiroir .ajout{touch-action:none;-webkit-user-select:none;user-select:none}
+.tiroir .ajout,.tiroir-fab .ajout{cursor:grab}
+.tiroir-fab .ajout{touch-action:none;-webkit-user-select:none;user-select:none}
+.tiroir-fab .ajout svg{height:70px}
+.fantome{position:fixed;left:0;top:0;z-index:50;pointer-events:none;filter:drop-shadow(0 6px 8px rgba(0,0,0,.3))}
+.fantome svg{display:block}
 .vide-txt{font-size:24px;fill:var(--doux);text-anchor:middle}
 .val-billet{font-size:24px;font-weight:700;fill:#1D2B4F;text-anchor:middle;dominant-baseline:central}
 .val-piece{font-size:15px;font-weight:700;fill:#1D2B4F;text-anchor:middle;dominant-baseline:central}
@@ -363,6 +369,7 @@ function majProgres(){
   $('#score').textContent='⭐ '+S.etoiles;
 }
 function suivante(){
+  plateau.classList.remove('mode-monnaie');
   S.i++; S.tok++; S.busy=false;
   if(S.i>=S.types.length) return terminer();
   const type=S.types[S.i];
@@ -398,7 +405,7 @@ $('#btnMaison').addEventListener('click',()=>{ S.tok++; if('speechSynthesis' in 
 function direConsigne(){ dire($('#txtConsigne').textContent+(S&&S.q&&S.q.dire?' '+S.q.dire:'')); }
 $('#btnLire').addEventListener('click',direConsigne);
 $('#btnAide').addEventListener('click',()=>{ if(!S||S.busy) return; AIDE[S.q.type](); });
-$('#btnRanger').addEventListener('click',()=>{ if(S&&!S.busy) ranger(); });
+$('#btnRanger').addEventListener('click',()=>{ if(!S||S.busy||!S.q) return; if(S.q.type==='monnaie'){ if(!S.q.fini) rangerMon(); } else if(S.q.type==='fabriquer'){ if(!S.q.fini) rangerFab(); } else ranger(); });
 
 function terminer(){
   const e=eleve(), r=S.res, msgs=[];
@@ -515,7 +522,7 @@ function afficherCubes(){
   q.items.forEach(it=>{ it.g=dessiner(it,couche); poser(it,it.x,it.y,it.a); });
   q.range=false;
   $('#txtConsigne').textContent='Combien de cubes y a-t-il en tout ?';
-  $('#btnRanger').hidden=false; $('#btnRanger').disabled=false;
+  $('#btnRanger').hidden=false; $('#btnRanger').disabled=false; $('#btnRanger').textContent='Ranger les cubes';
   $('#btnAide').textContent='Compter avec moi';
   zone.innerHTML=`<p class="phrase">Il y a <output id="saisie" class="saisie"></output> cubes en tout.</p>
   <div class="pave">${[7,8,9,4,5,6,1,2,3].map(n=>`<button data-n="${n}">${n}</button>`).join('')}
@@ -716,16 +723,44 @@ function phraseFab(t,u){
   return `${t} ${pl(t,'barre')} de 10 et ${u} ${pl(u,'cube')}`;
 }
 function genFab(niv){ const n=niv===1?rnd(11,50):rnd(11,99); return {type:'fabriquer',cible:n,t:Math.floor(n/10),u:n%10,sig:'f'+n,dire:niv===3?String(n):''}; }
-let couchFab=null;
+let couchFab=null, gl=null;
 function iconeSvg(kind){
   return kind==='bar'
-    ? `<svg viewBox="-14 -108 32 216" aria-hidden="true"><g class="couleurs-ico">${Array.from({length:10},(_,i)=>`<rect x="-10" y="${-100+i*20}" width="20" height="20" fill="#8FB0F5" stroke="#1D2B4F" stroke-width="2"/>`).join('')}</g></svg>`
+    ? `<svg viewBox="-14 -108 32 216" aria-hidden="true">${Array.from({length:10},(_,i)=>`<rect x="-10" y="${-100+i*20}" width="20" height="20" fill="#8FB0F5" stroke="#1D2B4F" stroke-width="2"/>`).join('')}</svg>`
     : `<svg viewBox="-14 -14 32 32" aria-hidden="true"><rect x="-10" y="-10" width="20" height="20" fill="#F9D66B" stroke="#1D2B4F" stroke-width="2"/></svg>`;
 }
+/* glisser-déposer générique : fantôme qui suit le doigt */
+function glisser(ev,fantome,fin){
+  if(gl) return; if(ev.button!==undefined && ev.button!==0) return;
+  ev.preventDefault();
+  const gh=document.createElement('div'); gh.className='fantome'; gh.appendChild(fantome); document.body.appendChild(gh);
+  gl={gh,fin,x0:ev.clientX,y0:ev.clientY,moved:false};
+  glBouge(ev);
+  window.addEventListener('pointermove',glBouge); window.addEventListener('pointerup',glFin); window.addEventListener('pointercancel',glFin);
+}
+function glBouge(ev){ if(!gl) return; if(Math.hypot(ev.clientX-gl.x0,ev.clientY-gl.y0)>6) gl.moved=true; gl.gh.style.transform=`translate(${ev.clientX}px,${ev.clientY}px) translate(-50%,-50%)`; }
+function glFin(ev){
+  if(!gl) return;
+  window.removeEventListener('pointermove',glBouge); window.removeEventListener('pointerup',glFin); window.removeEventListener('pointercancel',glFin);
+  const g=gl; gl=null; g.gh.remove();
+  const r=svg.getBoundingClientRect();
+  const dedans=ev.type!=='pointercancel' && ev.clientX>=r.left && ev.clientX<=r.right && ev.clientY>=r.top && ev.clientY<=r.bottom;
+  g.fin(dedans,g.moved,ev.clientX,ev.clientY);
+}
+function fantomeFab(kind){
+  const k=svg.getBoundingClientRect().width/720;
+  const w=document.createElement('div'); w.innerHTML=iconeSvg(kind);
+  const s=w.firstChild; s.style.width=(32*k)+'px'; s.style.height='auto'; return s;
+}
+const nbFab=q=>q.items.filter(i=>i.kind==='bar').length;
+const ncFab=q=>q.items.filter(i=>i.kind==='cube').length;
+function bornerFab(kind,x,y){ const [hw,hh]=kind==='bar'?[16,106]:[16,16]; return {x:Math.max(hw,Math.min(720-hw,x)),y:Math.max(hh,Math.min(400-hh,y))}; }
+function caseFab(kind,i){ return kind==='bar' ? {x:60+i*40,y:240} : {x:480+(i%5)*44,y:150+Math.floor(i/5)*56}; }
+
 function afficherFab(){
-  const q=S.q, niv=S.niv.fabriquer; q.nb=0; q.nc=0;
+  const q=S.q, niv=S.niv.fabriquer; q.items=[];
   plateau.classList.toggle('couleurs',data.reglages.couleurs!=='jamais');
-  plateau.classList.add('range');
+  plateau.classList.add('range','mode-monnaie');
   svg.setAttribute('viewBox','0 0 720 400'); svg.innerHTML='';
   const fond=el('g',{class:'table-rangement'},svg);
   el('line',{x1:440,y1:24,x2:440,y2:376,class:'sep'},fond);
@@ -733,56 +768,90 @@ function afficherFab(){
   el('text',{x:568,y:60,class:'titre-col'},fond).textContent='unités';
   couchFab=el('g',{},svg); couchPaquet=el('g',{},svg); couchEtiq=el('g',{},svg);
   $('#txtConsigne').textContent = niv===3 ? 'Écoute le nombre et fabrique-le avec les barres et les cubes.' : 'Fabrique ce nombre avec les barres et les cubes.';
-  $('#btnRanger').hidden=true; $('#btnAide').textContent='Compter avec moi';
+  $('#btnRanger').hidden=false; $('#btnRanger').disabled=false; $('#btnRanger').textContent='Ranger les cubes';
+  $('#btnAide').textContent='Compter avec moi';
   zone.innerHTML=`
     <p class="cible num-cible" id="cible">${niv===3?`<span class="lettres">${lettres(q.cible)}</span>`:q.cible}</p>
     ${niv===1?'<p class="compteur">J\'ai mis : <b id="compteur">0</b></p>':''}
-    <div class="ajouts">
-      <button class="ajout" data-a="bar">${iconeSvg('bar')}+ 1 barre de 10</button>
-      <button class="ajout" data-a="cube">${iconeSvg('cube')}+ 1 cube</button>
+    <div class="ajouts tiroir-fab">
+      <button class="ajout" data-a="bar" aria-label="Ajouter une barre de 10">${iconeSvg('bar')}barre de 10</button>
+      <button class="ajout" data-a="cube" aria-label="Ajouter un cube">${iconeSvg('cube')}cube</button>
     </div>
     <button class="outil" id="btnEchange" hidden>Échanger 10 cubes contre 1 barre</button>
-    <p class="note" style="text-align:center;margin:0">Touche une barre ou un cube pour l'enlever.</p>
+    <p class="note" style="text-align:center;margin:0">Fais glisser les barres et les cubes sur le plateau. Pour en enlever un, fais-le glisser hors du plateau.</p>
     <button class="grand principal valider" id="btnValider">C'est fait</button>`;
-  zone.querySelectorAll('.ajout').forEach(b=>b.addEventListener('click',()=>ajouterFab(b.dataset.a)));
+  zone.querySelectorAll('.ajout').forEach(b=>{
+    const k=b.dataset.a;
+    b.addEventListener('pointerdown',ev=>{
+      if(S.q.fini||S.busy) return;
+      glisser(ev,fantomeFab(k),(dedans,moved,cx,cy)=>{
+        if(!moved) return ajouterFab(k);
+        if(dedans){ const p=versSvg(cx,cy); ajouterFab(k,bornerFab(k,p.x,p.y)); }
+      });
+    });
+    b.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); ajouterFab(k); } });
+  });
   $('#btnEchange').addEventListener('click',echangerFab);
   $('#btnValider').addEventListener('click',validerFab);
   dessinerFab();
 }
 function dessinerFab(){
   const q=S.q; couchFab.innerHTML=''; couchEtiq.innerHTML='';
-  q.pos=[];
-  for(let i=0;i<q.nb;i++){ const it={kind:'bar'}; it.g=dessiner(it,couchFab); it.g.classList.add('retirable'); poser(it,60+i*40,240,0); q.pos.push({kind:'bar',x:60+i*40,y:240,g:it.g}); it.g.addEventListener('click',()=>retirerFab('bar')); }
-  for(let j=0;j<q.nc;j++){ const it={kind:'cube'}; it.g=dessiner(it,couchFab); it.g.classList.add('retirable'); const x=480+(j%5)*44, y=150+Math.floor(j/5)*56; poser(it,x,y,0); q.pos.push({kind:'cube',x,y,g:it.g}); it.g.addEventListener('click',()=>retirerFab('cube')); }
-  const c=$('#compteur'); if(c) c.textContent=q.nb*10+q.nc;
-  const ech=$('#btnEchange'); if(ech) ech.hidden=q.nc<10;
+  q.items.forEach(it=>{
+    it.g=dessiner(it,couchFab); it.g.classList.add('retirable'); poser(it,it.x,it.y,0);
+    it.g.style.transition='none';
+    it.g.addEventListener('pointerdown',ev=>{
+      if(q.fini||S.busy) return;
+      it.g.style.opacity=.25;
+      glisser(ev,fantomeFab(it.kind),(dedans,moved,cx,cy)=>{
+        if(moved && dedans){ const p=versSvg(cx,cy), b=bornerFab(it.kind,p.x,p.y); it.x=b.x; it.y=b.y; q.items.splice(q.items.indexOf(it),1); q.items.push(it); }
+        else if(moved){ q.items.splice(q.items.indexOf(it),1); message(''); }
+        dessinerFab();
+      });
+    });
+  });
+  const c=$('#compteur'); if(c) c.textContent=nbFab(q)*10+ncFab(q);
+  const ech=$('#btnEchange'); if(ech) ech.hidden=ncFab(q)<10;
 }
-function ajouterFab(k){
+function ajouterFab(k,pos){
   const q=S.q; if(q.fini||S.busy) return;
-  if(k==='bar'){ if(q.nb>=10) return message('Il n\'y a plus de place pour les barres.','info'); q.nb++; }
-  else { if(q.nc>=20) return message('Il n\'y a plus de place pour les cubes.','info'); q.nc++; }
-  message(''); dessinerFab();
+  const n=k==='bar'?nbFab(q):ncFab(q);
+  if(k==='bar'&&n>=10) return message('Il n\'y a plus de place pour les barres.','info');
+  if(k==='cube'&&n>=20) return message('Il n\'y a plus de place pour les cubes.','info');
+  const p=pos||caseFab(k,n);
+  q.items.push({kind:k,x:p.x,y:p.y}); message(''); dessinerFab();
 }
-function retirerFab(k){ const q=S.q; if(q.fini||S.busy) return; if(k==='bar'&&q.nb>0) q.nb--; if(k==='cube'&&q.nc>0) q.nc--; dessinerFab(); }
+function rangerFab(){
+  const q=S.q;
+  const bars=q.items.filter(i=>i.kind==='bar').sort((a,b)=>a.x-b.x);
+  const cubes=q.items.filter(i=>i.kind==='cube').sort((a,b)=>(a.y-b.y)||(a.x-b.x));
+  bars.forEach((b,i)=>Object.assign(b,caseFab('bar',i)));
+  cubes.forEach((c,j)=>Object.assign(c,caseFab('cube',j)));
+  q.items=bars.concat(cubes); dessinerFab();
+}
 function echangerFab(){
-  const q=S.q; if(q.fini||S.busy||q.nc<10) return;
-  if(q.nb>=10) return message('Il n\'y a plus de place pour une barre.','info');
-  q.nc-=10; q.nb++; dessinerFab();
+  const q=S.q; if(q.fini||S.busy||ncFab(q)<10) return;
+  if(nbFab(q)>=10) return message('Il n\'y a plus de place pour une barre.','info');
+  let n=0; q.items=q.items.filter(i=>!(i.kind==='cube' && n++<10));
+  rangerFab(); ajouterFab('bar'); rangerFab();
   message('10 cubes, c\'est 1 barre de 10.','info'); dire('10 cubes, c\'est une barre de 10.');
 }
-function bullesFab(q){ couchEtiq.innerHTML=''; let n=0; q.pos.forEach(p=>{ n+=p.kind==='bar'?10:1; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y-30,n); }); }
+function bullesFab(q){
+  couchEtiq.innerHTML=''; let n=0;
+  q.items.forEach(p=>{ n+=p.kind==='bar'?10:1; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y-30,n); });
+}
 function validerFab(){
   const q=S.q; if(q.fini||S.busy) return;
-  const tot=q.nb*10+q.nc;
+  const nb=nbFab(q), nc=ncFab(q), tot=nb*10+nc;
   if(tot===0) return message('Ajoute des barres et des cubes.','info');
   if(tot===q.cible){
-    if(q.nc>=10){ const m=`Tu as bien ${tot}, mais 10 cubes seuls font 1 barre : échange-les.`; message(m,'info'); dire(m); return; }
-    bullesFab(q);
+    if(nc>=10){ const m=`Tu as bien ${tot}, mais 10 cubes seuls font 1 barre : échange-les.`; message(m,'info'); dire(m); return; }
+    rangerFab(); bullesFab(q);
     return reussite(`${q.cible}, c'est ${phraseFab(q.t,q.u)}.`);
   }
   q.essais++;
   let m;
-  if(q.t!==q.u && q.nb===q.u && q.nc===q.t) m='Tu as inversé : le chiffre des dizaines dit combien de barres.';
+  if(q.t!==q.u && nb===q.u && nc===q.t) m='Tu as inversé : le chiffre des dizaines dit combien de barres.';
   else if(tot<q.cible) m='Il manque des cubes.';
   else m='Il y a trop de cubes.';
   if(q.essais>=2){ message(m,'mal'); dire(m); setTimeout(echec,1400); }
@@ -793,20 +862,17 @@ async function aideFab(){
   $('#btnAide').disabled=true;
   const phr=`${q.cible}, c'est ${phraseFab(q.t,q.u)}.`;
   if(q.fini){
-    q.nb=0; q.nc=0; dessinerFab(); await attendre(500); if(tok!==S.tok) return;
+    q.items=[]; dessinerFab(); await attendre(500); if(tok!==S.tok) return;
     let n=0;
-    for(let i=0;i<q.t;i++){ q.nb++; n+=10; dessinerFab(); bullesFab(q); dire(n); await attendre(950); if(tok!==S.tok) return; }
-    for(let j=0;j<q.u;j++){ q.nc++; n++; dessinerFab(); bullesFab(q); dire(n); await attendre(750); if(tok!==S.tok) return; }
+    for(let i=0;i<q.t;i++){ q.items.push(Object.assign({kind:'bar'},caseFab('bar',i))); n+=10; dessinerFab(); bullesFab(q); dire(n); await attendre(950); if(tok!==S.tok) return; }
+    for(let j=0;j<q.u;j++){ q.items.push(Object.assign({kind:'cube'},caseFab('cube',j))); n++; dessinerFab(); bullesFab(q); dire(n); await attendre(750); if(tok!==S.tok) return; }
     message(phr,'info'); dire(phr); await attendre(2500);
   } else {
-    dessinerFab(); let n=0;
-    if(q.pos.length){
-      couchEtiq.innerHTML='';
-      for(const p of q.pos){ n+=p.kind==='bar'?10:1; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y-30,n); dire(n); await attendre(p.kind==='bar'?950:750); if(tok!==S.tok) return; }
-    }
+    rangerFab(); await attendre(300); if(tok!==S.tok) return;
+    let n=0; couchEtiq.innerHTML='';
+    for(const p of q.items){ n+=p.kind==='bar'?10:1; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y-30,n); dire(n); await attendre(p.kind==='bar'?950:750); if(tok!==S.tok) return; }
     let m=`Tu as mis ${n}. ${phr}`;
-    if(S.niv.fabriquer<3) m=`Tu as mis ${n}. Dans ${q.cible}, le ${q.t} dit ${q.t} ${pl(q.t,'barre')}, le ${q.u} dit ${q.u} ${pl(q.u,'cube')}.`;
-    if(q.t===0) m=`Tu as mis ${n}. ${phr}`;
+    if(S.niv.fabriquer<3 && q.t>0) m=`Tu as mis ${n}. Dans ${q.cible}, le ${q.t} dit ${q.t} ${pl(q.t,'barre')}, le ${q.u} dit ${q.u} ${pl(q.u,'cube')}.`;
     message(m,'info'); dire(m); await attendre(Math.min(7000,1500+m.length*55));
   }
   if(tok!==S.tok) return;
@@ -840,47 +906,107 @@ function iconeArgent(v){
   const s=document.createElementNS(NS,'svg'); s.setAttribute('viewBox',box); s.setAttribute('aria-hidden','true');
   dessinerArgent(v,s); return s;
 }
-let couchMon=null;
+let couchMon=null, drag=null;
+const valeurs=q=>q.pay.map(p=>p.v);
+const demi=v=>v>=5?[58,30]:[30,30];
 function afficherMon(){
   const q=S.q, niv=S.niv.monnaie; q.pay=[];
-  plateau.classList.remove('couleurs','range');
+  plateau.classList.remove('couleurs','range'); plateau.classList.add('mode-monnaie');
   svg.setAttribute('viewBox','0 0 720 400'); svg.innerHTML='';
   couchMon=el('g',{},svg); couchEtiq=el('g',{},svg);
   $('#txtConsigne').textContent = niv===4 ? 'Paie le prix avec le moins possible de pièces et de billets.' : 'Paie le prix avec les pièces et les billets.';
-  $('#btnRanger').hidden=true; $('#btnAide').textContent='Compter avec moi';
+  $('#btnRanger').hidden=false; $('#btnRanger').disabled=false; $('#btnRanger').textContent="Ranger l'argent";
+  $('#btnAide').textContent='Compter avec moi';
   zone.innerHTML=`
     <p class="cible">${q.cible} €<small>à payer</small></p>
     ${niv===1?'<p class="compteur">J\'ai mis : <b id="compteur">0</b> €</p>':''}
     <div class="tiroir" id="tiroir"></div>
-    <p class="note" style="text-align:center;margin:0">Touche une pièce ou un billet posé pour le reprendre.</p>
+    <p class="note" style="text-align:center;margin:0">Fais glisser les pièces et les billets sur le plateau. Pour en reprendre un, fais-le glisser hors du plateau.</p>
     <button class="grand principal valider" id="btnValider">C'est payé</button>`;
   const t=$('#tiroir');
   q.vals.slice().reverse().forEach(v=>{
     const b=document.createElement('button'); b.className='ajout'; b.setAttribute('aria-label','Ajouter '+v+' euros');
-    b.appendChild(iconeArgent(v)); b.addEventListener('click',()=>ajouterMon(v)); t.appendChild(b);
+    b.appendChild(iconeArgent(v));
+    b.addEventListener('pointerdown',ev=>debutDrag(ev,v,null));
+    b.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); ajouterMon(v); } });
+    t.appendChild(b);
   });
   $('#btnValider').addEventListener('click',validerMon);
   dessinerMon();
 }
 function dessinerMon(){
   const q=S.q; couchMon.innerHTML=''; couchEtiq.innerHTML='';
-  const tri=q.pay.slice().sort((a,b)=>b-a), notes=tri.filter(v=>v>=5), coins=tri.filter(v=>v<5);
-  q.pos=[];
-  if(!tri.length) el('text',{x:360,y:205,class:'vide-txt'},couchMon).textContent='Pose ici les pièces et les billets.';
-  notes.forEach((v,i)=>q.pos.push({v,x:80+(i%5)*136,y:62+Math.floor(i/5)*74}));
-  const y0 = notes.length ? 62+Math.ceil(notes.length/5)*74+10 : 50;
-  coins.forEach((v,j)=>q.pos.push({v,x:50+(j%10)*68,y:y0+Math.floor(j/10)*68}));
-  q.pos.forEach(p=>{
+  if(!q.pay.length) el('text',{x:360,y:205,class:'vide-txt'},couchMon).textContent='Fais glisser ici les pièces et les billets.';
+  q.pay.forEach(p=>{
     const g=dessinerArgent(p.v,couchMon); g.setAttribute('transform',`translate(${p.x},${p.y})`); g.classList.add('retirable');
-    g.addEventListener('click',()=>{ if(q.fini||S.busy) return; q.pay.splice(q.pay.indexOf(p.v),1); dessinerMon(); });
+    if(drag&&drag.item===p) g.style.opacity=.25;
+    g.addEventListener('pointerdown',ev=>debutDrag(ev,p.v,p));
+    p.g=g;
   });
-  const c=$('#compteur'); if(c) c.textContent=q.pay.reduce((a,b)=>a+b,0);
+  const c=$('#compteur'); if(c) c.textContent=valeurs(q).reduce((a,b)=>a+b,0);
 }
-function ajouterMon(v){
+function versSvg(cx,cy){ const pt=svg.createSVGPoint(); pt.x=cx; pt.y=cy; const m=svg.getScreenCTM(); return m?pt.matrixTransform(m.inverse()):{x:360,y:200}; }
+function borner(v,x,y){ const [hw,hh]=demi(v); return {x:Math.max(hw+4,Math.min(716-hw,x)), y:Math.max(hh+4,Math.min(396-hh,y))}; }
+function placeLibre(v){
+  const q=S.q, [hw,hh]=demi(v);
+  const libre=(x,y)=>q.pay.every(p=>{ const [pw,ph]=demi(p.v); return Math.abs(p.x-x)>pw+hw+4 || Math.abs(p.y-y)>ph+hh+4; });
+  const pasX=v>=5?128:66, pasY=v>=5?68:66;
+  for(let y=hh+10;y<=396-hh;y+=pasY) for(let x=hw+12;x<=716-hw;x+=pasX) if(libre(x,y)) return {x,y};
+  return borner(v,rnd(80,640),rnd(60,340));
+}
+function debutDrag(ev,v,item){
+  const q=S.q; if(!q||q.type!=='monnaie'||q.fini||S.busy||drag) return;
+  if(ev.button!==undefined && ev.button!==0) return;
+  ev.preventDefault();
+  const r=svg.getBoundingClientRect(), k=r.width/720;
+  const gh=document.createElement('div'); gh.className='fantome';
+  const ic=iconeArgent(v); ic.style.width=((v>=5?120:64)*k)+'px'; ic.style.height='auto'; gh.appendChild(ic);
+  document.body.appendChild(gh);
+  drag={v,item,gh,x0:ev.clientX,y0:ev.clientY,moved:false};
+  if(item&&item.g) item.g.style.opacity=.25;
+  bougerDrag(ev);
+  window.addEventListener('pointermove',bougerDrag);
+  window.addEventListener('pointerup',finDrag);
+  window.addEventListener('pointercancel',finDrag);
+}
+function bougerDrag(ev){
+  if(!drag) return;
+  if(Math.hypot(ev.clientX-drag.x0,ev.clientY-drag.y0)>6) drag.moved=true;
+  drag.gh.style.transform=`translate(${ev.clientX}px,${ev.clientY}px) translate(-50%,-50%)`;
+}
+function finDrag(ev){
+  if(!drag) return;
+  window.removeEventListener('pointermove',bougerDrag);
+  window.removeEventListener('pointerup',finDrag);
+  window.removeEventListener('pointercancel',finDrag);
+  const d=drag; drag=null; d.gh.remove();
+  const q=S.q, r=svg.getBoundingClientRect();
+  const dedans=ev.type!=='pointercancel' && ev.clientX>=r.left && ev.clientX<=r.right && ev.clientY>=r.top && ev.clientY<=r.bottom;
+  if(!d.item){
+    if(dedans && d.moved){ const p=versSvg(ev.clientX,ev.clientY); ajouterMon(d.v,borner(d.v,p.x,p.y)); }
+    else if(!d.moved) ajouterMon(d.v);
+    else dessinerMon();
+  } else {
+    if(!d.moved){ dessinerMon(); return; }
+    if(dedans){ const p=versSvg(ev.clientX,ev.clientY), b=borner(d.v,p.x,p.y); d.item.x=b.x; d.item.y=b.y;
+      q.pay.splice(q.pay.indexOf(d.item),1); q.pay.push(d.item); }
+    else { q.pay.splice(q.pay.indexOf(d.item),1); message(''); }
+    dessinerMon();
+  }
+}
+function ajouterMon(v,pos){
   const q=S.q; if(q.fini||S.busy) return;
-  const nn=q.pay.filter(x=>x>=5).length, nc=q.pay.length-nn;
-  if((v>=5&&nn>=10)||(v<5&&nc>=30)) return message('Il n\'y a plus de place.','info');
-  q.pay.push(v); message(''); dessinerMon();
+  if(q.pay.length>=40) return message('Il n\'y a plus de place.','info');
+  const p=pos||placeLibre(v);
+  q.pay.push({v,x:p.x,y:p.y}); message(''); dessinerMon();
+}
+function rangerMon(){
+  const q=S.q; if(!q||q.type!=='monnaie') return;
+  const tri=q.pay.slice().sort((a,b)=>b.v-a.v), notes=tri.filter(p=>p.v>=5), coins=tri.filter(p=>p.v<5);
+  notes.forEach((p,i)=>{ p.x=80+(i%5)*136; p.y=62+Math.floor(i/5)*74; });
+  const y0 = notes.length ? 62+Math.ceil(notes.length/5)*74+10 : 50;
+  coins.forEach((p,j)=>{ p.x=50+(j%10)*68; p.y=Math.min(370,y0+Math.floor(j/10)*68); });
+  q.pay=tri; dessinerMon();
 }
 function phraseArgent(list){
   const c={}; list.forEach(v=>c[v]=(c[v]||0)+1);
@@ -888,18 +1014,18 @@ function phraseArgent(list){
 }
 function validerMon(){
   const q=S.q; if(q.fini||S.busy) return;
-  const tot=q.pay.reduce((a,b)=>a+b,0);
+  const vs=valeurs(q), tot=vs.reduce((a,b)=>a+b,0);
   if(!tot) return message('Pose des pièces ou des billets.','info');
   if(tot===q.cible){
-    if(S.niv.monnaie===4 && q.pay.length>q.min){
+    if(S.niv.monnaie===4 && vs.length>q.min){
       q.aide=true;
       const m=`Tu paies bien ${tot} €, mais tu peux utiliser moins de pièces et de billets. Échange-en.`;
       message(m,'info'); dire(m); return;
     }
-    return reussite(`Tu as payé ${q.cible} € : ${phraseArgent(q.pay)}.`);
+    return reussite(`Tu as payé ${q.cible} € : ${phraseArgent(vs)}.`);
   }
   q.essais++;
-  const dz=q.pay.filter(v=>v===10).length, un=q.pay.filter(v=>v===1).length, t=Math.floor(q.cible/10), u=q.cible%10;
+  const dz=vs.filter(v=>v===10).length, un=vs.filter(v=>v===1).length, t=Math.floor(q.cible/10), u=q.cible%10;
   let m;
   if(S.niv.monnaie===1 && t!==u && dz===u && un===t) m='Tu as inversé : le chiffre des dizaines dit combien de billets de 10 €.';
   else if(tot<q.cible) m='Il manque de l\'argent.';
@@ -910,15 +1036,16 @@ function validerMon(){
 async function aideMon(){
   if(S.busy) return; S.busy=true; const tok=S.tok, q=S.q; if(!q.fini) q.aide=true;
   $('#btnAide').disabled=true;
-  if(q.fini){ q.pay=decomposer(q.cible,q.vals); }
-  dessinerMon(); await attendre(400); if(tok!==S.tok) return;
+  if(q.fini){ q.pay=decomposer(q.cible,q.vals).map(v=>({v,x:0,y:0})); }
+  rangerMon();
+  q.pos=q.pay.slice(); await attendre(400); if(tok!==S.tok) return;
   let n=0;
   for(const p of q.pos){
     n+=p.v; bulle(p.x+(p.v>=5?48:22),p.y-(p.v>=5?24:22),n); dire(n+' euros');
     await attendre(p.v>=5?1100:950); if(tok!==S.tok) return;
   }
   let m;
-  if(q.fini) m=`${q.cible} €, c'est ${phraseArgent(q.pay)}.`;
+  if(q.fini) m=`${q.cible} €, c'est ${phraseArgent(valeurs(q))}.`;
   else {
     m=`Tu as mis ${n} €. Il faut ${q.cible} €.`;
     if(n<q.cible) m+=` Il manque ${q.cible-n} €.`; else if(n>q.cible) m+=` Il y a ${n-q.cible} € de trop.`;
