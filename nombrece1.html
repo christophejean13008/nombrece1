@@ -161,6 +161,40 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 .val-piece{font-size:15px;font-weight:700;fill:#1D2B4F;text-anchor:middle;dominant-baseline:central}
 .num-cible .diz{color:var(--diz2)} .num-cible .uni{color:var(--uni2)}
 
+/* Atelier */
+.atelier-btn{border-color:var(--bleu);border-style:dashed}
+.titre-atelier{margin:0;flex:1;font-size:1.5rem}
+.onglets{display:flex;border:2px solid var(--bleu);border-radius:12px;overflow:hidden}
+.onglet{min-height:50px;padding:6px 18px;border:0;background:var(--tableau);color:var(--bleu);font-weight:700}
+.onglet.actif{background:var(--bleu);color:#fff}
+.atelier-grille{display:grid;gap:14px}
+@media (min-width:1000px){ .atelier-grille{grid-template-columns:1fr 340px;align-items:start} }
+.atelier-gauche{display:flex;flex-direction:column;gap:10px}
+.tiroir-a{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.tiroir-a .ajout{min-width:78px;min-height:78px;touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;font-size:.9rem}
+.tiroir-a .ajout svg{height:50px;width:auto;max-width:110px}
+.tiroir-a .ajout-cube svg{height:56px}
+.outil.enfonce,.outil[aria-pressed="true"]#aCasser{background:var(--bleu);color:#fff}
+.etiq{margin:10px 0 2px;font-size:1rem;color:var(--doux);font-weight:700;display:flex;align-items:center;gap:8px}
+.panneau-a p{margin-top:0}
+.gros-nombre{font-size:3.4rem;font-weight:700;line-height:1.1;margin:0;letter-spacing:1px}
+.gros-nombre .esp{font-size:.5em}
+.lettres-a{font-size:1.4rem;font-weight:700;margin:0}
+.rond.petit{width:40px;height:40px;font-size:1.1rem}
+.case{display:flex;gap:8px;align-items:center;font-size:1rem;margin-top:10px}
+.case input{width:24px;height:24px}
+#aSaisie{width:100%;font-size:1.3rem;margin:6px 0}
+.boutons-a{display:flex;flex-wrap:wrap;gap:8px}
+#aRetour{min-height:1.5em;font-weight:700;margin:8px 0 0}
+#aRetour.bien{color:var(--vert)} #aRetour.mal{color:var(--rouge)} #aRetour.info{color:var(--doux)}
+.blk .avant,.blk .face{stroke:#1D2B4F;stroke-width:1.2}
+.blk .grille{stroke:#1D2B4F;stroke-width:.7;opacity:.6}
+.k-u .avant{fill:#F9D66B} .k-u .face{fill:#DDA91C}
+.k-d .avant{fill:#8FB0F5} .k-d .face{fill:#5A84E0}
+.k-c .avant{fill:#9FD8A8} .k-c .face{fill:#5DAF6E}
+.k-m .avant{fill:#C9B0F2} .k-m .face{fill:#9272D8}
+.r-m{color:#8C63D9} .r-c{color:#3E9150} .r-d{color:#3D6FD6} .r-u{color:#C48E0E}
+
 @media (prefers-reduced-motion: reduce){
   .obj,.table-rangement{transition:none}
   .secoue{animation:none}
@@ -198,6 +232,7 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
     <section class="choix">
       <button class="grand principal" data-mode="rituel">Rituel du jour<small id="descRituel">les activités choisies, en alternance</small></button>
       <div id="boutonsActs" class="choix"></div>
+      <button class="grand atelier-btn" id="btnAtelier">Atelier libre des nombres<small>placer librement cubes (unité, dizaine, centaine, millier) ou monnaie, écrire la quantité, transformer chiffres, lettres, cubes et monnaie</small></button>
     </section>
 
     <details class="bloc">
@@ -247,6 +282,52 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
       </div>
       <p id="retour" aria-live="polite"></p>
       <button id="btnSuivant" class="grand principal" hidden>Suivant</button>
+    </div>
+  </div>
+</main>
+
+<!-- ATELIER -->
+<main id="atelier" class="ecran">
+  <div class="barre">
+    <button class="rond" id="aMaison" aria-label="Retour à l'accueil">⌂</button>
+    <h2 class="titre-atelier">Atelier des nombres</h2>
+    <div class="onglets" role="group" aria-label="Représentation">
+      <button class="onglet actif" id="aOngCubes" aria-pressed="true">Cubes</button>
+      <button class="onglet" id="aOngMon" aria-pressed="false">Monnaie</button>
+    </div>
+  </div>
+  <div class="atelier-grille">
+    <div class="atelier-gauche">
+      <div class="plateau mode-monnaie"><svg id="asvg" viewBox="0 0 1000 620" role="img" aria-label="Plateau libre"></svg></div>
+      <div class="tiroir-a" id="aTiroir"></div>
+      <div class="outils">
+        <button class="outil" id="aRanger">Ranger</button>
+        <button class="outil" id="aEchanger">Échanger par 10</button>
+        <button class="outil" id="aCasser" aria-pressed="false">Casser</button>
+        <button class="outil" id="aTableauBtn" aria-pressed="true">Tableau</button>
+        <button class="outil" id="aEffacer">Tout effacer</button>
+      </div>
+    </div>
+    <div class="cote">
+      <div class="bloc panneau-a">
+        <p class="etiq">En chiffres <button class="rond petit" id="aLire" aria-label="Lire le nombre">🔊</button></p>
+        <p id="aNombre" class="gros-nombre">0</p>
+        <p class="etiq">En lettres</p>
+        <p id="aLettres" class="lettres-a">zéro</p>
+        <p class="etiq">Décomposition</p>
+        <p id="aDecomp">–</p>
+        <label class="case"><input type="checkbox" id="aCache"> Cacher le nombre : l'élève l'écrit</label>
+      </div>
+      <div class="bloc">
+        <label for="aSaisie" class="etiq">Écris un nombre, en chiffres ou en lettres</label>
+        <input type="text" id="aSaisie" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="345 ou trois cent quarante-cinq">
+        <div class="boutons-a">
+          <button class="outil" id="aVerifier">Vérifier</button>
+          <button class="outil" id="aMontrerC">Montrer en cubes</button>
+          <button class="outil" id="aMontrerM">Montrer en monnaie</button>
+        </div>
+        <p id="aRetour" aria-live="polite"></p>
+      </div>
     </div>
   </div>
 </main>
@@ -730,11 +811,11 @@ function iconeSvg(kind){
     : `<svg viewBox="-14 -14 32 32" aria-hidden="true"><rect x="-10" y="-10" width="20" height="20" fill="#F9D66B" stroke="#1D2B4F" stroke-width="2"/></svg>`;
 }
 /* glisser-déposer générique : fantôme qui suit le doigt */
-function glisser(ev,fantome,fin){
+function glisser(ev,fantome,fin,cible){
   if(gl) return; if(ev.button!==undefined && ev.button!==0) return;
   ev.preventDefault();
   const gh=document.createElement('div'); gh.className='fantome'; gh.appendChild(fantome); document.body.appendChild(gh);
-  gl={gh,fin,x0:ev.clientX,y0:ev.clientY,moved:false};
+  gl={gh,fin,cible:cible||svg,x0:ev.clientX,y0:ev.clientY,moved:false};
   glBouge(ev);
   window.addEventListener('pointermove',glBouge); window.addEventListener('pointerup',glFin); window.addEventListener('pointercancel',glFin);
 }
@@ -743,7 +824,7 @@ function glFin(ev){
   if(!gl) return;
   window.removeEventListener('pointermove',glBouge); window.removeEventListener('pointerup',glFin); window.removeEventListener('pointercancel',glFin);
   const g=gl; gl=null; g.gh.remove();
-  const r=svg.getBoundingClientRect();
+  const r=g.cible.getBoundingClientRect();
   const dedans=ev.type!=='pointercancel' && ev.clientX>=r.left && ev.clientX<=r.right && ev.clientY>=r.top && ev.clientY<=r.bottom;
   g.fin(dedans,g.moved,ev.clientX,ev.clientY);
 }
@@ -889,7 +970,7 @@ function genMon(niv){
 function dessinerArgent(v,parent){
   const g=el('g',{},parent);
   if(v>=5){
-    const col={5:'#AEB5B9',10:'#E88A93',20:'#86A9E6',50:'#F2AE5E'}[v];
+    const col={5:'#AEB5B9',10:'#E88A93',20:'#86A9E6',50:'#F2AE5E',100:'#86C98A',200:'#E6C85E',500:'#B794E0'}[v];
     el('rect',{x:-58,y:-30,width:116,height:60,rx:6,fill:col,stroke:'#1D2B4F','stroke-width':1.5},g);
     el('rect',{x:-50,y:-22,width:34,height:44,rx:4,fill:'#FFFFFF','fill-opacity':.5},g);
     el('text',{x:20,y:1,class:'val-billet'},g).textContent=v+' €';
@@ -1058,6 +1139,241 @@ async function aideMon(){
 const GEN={cubes:genCubes,fabriquer:genFab,droite:genDroite,monnaie:genMon};
 const AFF={cubes:afficherCubes,fabriquer:afficherFab,droite:afficherDroite,monnaie:afficherMon};
 const AIDE={cubes:aideCubes,fabriquer:aideFab,droite:aideDroite,monnaie:aideMon};
+
+/* ================= ATELIER LIBRE ================= */
+const asvg=$('#asvg');
+let A={mode:'cubes',items:[],cache:false,casser:false,tableau:true};
+const VALEUR={u:1,d:10,c:100,m:1000};
+const NOMS={u:['unité','unités'],d:['dizaine','dizaines'],c:['centaine','centaines'],m:['millier','milliers']};
+const MONNAIE=[500,200,100,50,20,10,5,2,1];
+const MAXA=9999;
+const valItem=it=>it.k?VALEUR[it.k]:it.v;
+const totalA=()=>A.items.reduce((s,it)=>s+valItem(it),0);
+const VB={u:'-9 -14 23 23',d:'-9 -77 23 149',c:'-72 -80 152 152',m:'-72 -102 174 174'};
+function extA(it){ if(it.k) return {u:[9,13],d:[9,76],c:[80,80],m:[88,88]}[it.k]; return it.v>=5?[58,30]:[30,30]; }
+function ligne(g,x1,y1,x2,y2){ el('line',{x1,y1,x2,y2,class:'grille'},g); }
+function dessinerBloc(k,p){
+  const g=el('g',{class:'blk k-'+k},p);
+  if(k==='u'){
+    el('polygon',{points:'-7,-7 -2,-12 12,-12 7,-7',class:'face'},g);
+    el('polygon',{points:'7,-7 12,-12 12,2 7,7',class:'face'},g);
+    el('rect',{x:-7,y:-7,width:14,height:14,class:'avant'},g);
+  } else if(k==='d'){
+    el('polygon',{points:'-7,-70 -2,-75 12,-75 7,-70',class:'face'},g);
+    el('polygon',{points:'7,-70 12,-75 12,65 7,70',class:'face'},g);
+    el('rect',{x:-7,y:-70,width:14,height:140,class:'avant'},g);
+    for(let i=1;i<10;i++) ligne(g,-7,-70+14*i,7,-70+14*i);
+  } else if(k==='c'){
+    el('polygon',{points:'-70,-70 -62,-78 78,-78 70,-70',class:'face'},g);
+    el('polygon',{points:'70,-70 78,-78 78,62 70,70',class:'face'},g);
+    for(let i=1;i<10;i++){ ligne(g,-70+14*i,-70,-62+14*i,-78); ligne(g,70,-70+14*i,78,-78+14*i); }
+    el('rect',{x:-70,y:-70,width:140,height:140,class:'avant'},g);
+    for(let i=1;i<10;i++){ ligne(g,-70+14*i,-70,-70+14*i,70); ligne(g,-70,-70+14*i,70,-70+14*i); }
+  } else {
+    el('polygon',{points:'-70,-70 -40,-100 100,-100 70,-70',class:'face'},g);
+    el('polygon',{points:'70,-70 100,-100 100,40 70,70',class:'face'},g);
+    for(let i=1;i<10;i++){
+      ligne(g,-70+14*i,-70,-40+14*i,-100); ligne(g,-70+3*i,-70-3*i,70+3*i,-70-3*i);
+      ligne(g,70,-70+14*i,100,-100+14*i); ligne(g,70+3*i,-70-3*i,70+3*i,70-3*i);
+    }
+    el('rect',{x:-70,y:-70,width:140,height:140,class:'avant'},g);
+    for(let i=1;i<10;i++){ ligne(g,-70+14*i,-70,-70+14*i,70); ligne(g,-70,-70+14*i,70,-70+14*i); }
+  }
+  return g;
+}
+function iconeA(spec,largeur){
+  const s=document.createElementNS(NS,'svg'); s.setAttribute('aria-hidden','true');
+  if(spec.k){ s.setAttribute('viewBox',VB[spec.k]); dessinerBloc(spec.k,s); }
+  else { s.setAttribute('viewBox',spec.v>=5?'-60 -32 120 64':'-32 -32 64 64'); dessinerArgent(spec.v,s); }
+  if(largeur){ s.style.width=largeur+'px'; s.style.height='auto'; }
+  return s;
+}
+function fantomeA(spec){
+  const k=asvg.getBoundingClientRect().width/1000;
+  const w=spec.k?+VB[spec.k].split(' ')[2]:(spec.v>=5?120:64);
+  return iconeA(spec,w*k);
+}
+function versSvgDe(s,cx,cy){ const pt=s.createSVGPoint(); pt.x=cx; pt.y=cy; const m=s.getScreenCTM(); return m?pt.matrixTransform(m.inverse()):{x:500,y:300}; }
+function bornerA(it,x,y){ const [hw,hh]=extA(it); return {x:Math.max(hw,Math.min(1000-hw,x)),y:Math.max(hh+10,Math.min(620-hh,y))}; }
+function slotA(spec,i){
+  if(spec.k==='m') return {x:100+(i%10)*14,y:200+(i%10)*34};
+  if(spec.k==='c') return {x:370+(i%10)*12,y:150+(i%10)*34};
+  if(spec.k==='d') return {x:605+(i%9)*22,y:210+Math.floor(i/9)%3*160};
+  if(spec.k==='u') return {x:825+(i%5)*32,y:90+Math.floor(i/5)%16*32};
+  return null;
+}
+function placeLibreA(spec){
+  const [hw,hh]=extA(spec);
+  const libre=(x,y)=>A.items.every(p=>{ const [pw,ph]=extA(p); return Math.abs(p.x-x)>pw+hw+4||Math.abs(p.y-y)>ph+hh+4; });
+  const px=spec.v>=5?128:66, py=spec.v>=5?68:66;
+  for(let y=hh+12;y<=620-hh;y+=py) for(let x=hw+12;x<=1000-hw;x+=px) if(libre(x,y)) return {x,y};
+  return bornerA(spec,rnd(100,900),rnd(80,540));
+}
+function msgA(t,c){ const r=$('#aRetour'); r.textContent=t; r.className=c||''; }
+function ajouterA(spec,pos){
+  if(A.items.length>=150) return msgA('Le plateau est plein.','info');
+  if(totalA()+valItem(spec)>MAXA) return msgA('On s\'arrête à 9 999.','info');
+  const n=A.items.filter(i=>spec.k?i.k===spec.k:false).length;
+  const p=pos||(spec.k?slotA(spec,n):placeLibreA(spec));
+  A.items.push(Object.assign({},spec,{x:p.x,y:p.y}));
+  dessinerAtelier();
+}
+function rangerA(){
+  if(A.mode==='cubes'){
+    const out=[];
+    ['m','c','d','u'].forEach(k=>{ A.items.filter(i=>i.k===k).sort((a,b)=>(a.x-b.x)||(a.y-b.y)).forEach((it,i)=>{ Object.assign(it,slotA(it,i)); out.push(it); }); });
+    A.items=out;
+  } else {
+    const tri=A.items.slice().sort((a,b)=>b.v-a.v), b=tri.filter(i=>i.v>=5), c=tri.filter(i=>i.v<5);
+    b.forEach((it,i)=>{ it.x=70+(i%7)*134; it.y=Math.min(588,46+Math.floor(i/7)*70); });
+    const y0=b.length?46+Math.ceil(b.length/7)*70+6:40;
+    c.forEach((it,j)=>{ it.x=40+(j%14)*68; it.y=Math.min(588,y0+Math.floor(j/14)*66); });
+    A.items=tri;
+  }
+  dessinerAtelier();
+}
+function itemsPour(n,mode){
+  if(mode==='cubes'){
+    const out=[]; const cnt={m:Math.floor(n/1000),c:Math.floor(n/100)%10,d:Math.floor(n/10)%10,u:n%10};
+    ['m','c','d','u'].forEach(k=>{ for(let i=0;i<cnt[k];i++) out.push({k}); }); return out;
+  }
+  return decomposer(n,MONNAIE).map(v=>({v}));
+}
+function montrerA(n,mode){
+  if(mode!==A.mode) changerMode(mode,false);
+  A.items=itemsPour(n,mode); rangerA();
+}
+function echangerA(){
+  if(!A.items.length) return;
+  const avant=A.items.length; montrerA(totalA(),A.mode);
+  msgA(A.items.length<avant ? (A.mode==='cubes'?'Échange fait : chaque paquet de 10 devient 1 du rang suivant.':'Échange fait : le moins possible de pièces et de billets.') : 'Il n\'y a rien à échanger.','info');
+}
+function casserA(it){
+  const i=A.items.indexOf(it); if(i<0) return;
+  let neufs;
+  if(it.k){ if(it.k==='u') return msgA('Une unité ne se casse pas.','info'); const bas={m:'c',c:'d',d:'u'}[it.k]; neufs=Array.from({length:10},()=>({k:bas})); }
+  else { if(it.v===1) return msgA('Une pièce de 1 € ne se casse pas ici.','info'); neufs=decomposer(it.v,MONNAIE.filter(v=>v<it.v)).map(v=>({v})); }
+  A.items.splice(i,1);
+  neufs.forEach(s=>{ const n=A.items.filter(x=>s.k?x.k===s.k:false).length; const p=s.k?slotA(s,n):placeLibreA(s); A.items.push(Object.assign(s,p)); });
+  const nom=it.k?`1 ${NOMS[it.k][0]} = 10 ${NOMS[{m:'c',c:'d',d:'u'}[it.k]][1]}`:`${it.v} € = ${neufs.map(s=>s.v+' €').join(' + ')}`;
+  msgA(nom,'info'); dire(nom.replace(/=/,'égale').replace(/\+/g,'plus'));
+  dessinerAtelier();
+}
+function changerMode(mode,transformer){
+  const n=totalA();
+  A.mode=mode;
+  $('#aOngCubes').classList.toggle('actif',mode==='cubes'); $('#aOngMon').classList.toggle('actif',mode==='monnaie');
+  $('#aOngCubes').setAttribute('aria-pressed',mode==='cubes'); $('#aOngMon').setAttribute('aria-pressed',mode==='monnaie');
+  $('#aTableauBtn').hidden=mode!=='cubes';
+  construireTiroirA();
+  if(transformer){ A.items=itemsPour(n,mode); rangerA(); if(n) msgA(`${n.toLocaleString('fr-FR')} transformé en ${mode==='cubes'?'cubes':'monnaie'}.`,'info'); }
+}
+function construireTiroirA(){
+  const t=$('#aTiroir'); t.innerHTML='';
+  const specs = A.mode==='cubes' ? [{k:'m'},{k:'c'},{k:'d'},{k:'u'}] : MONNAIE.slice().reverse().map(v=>({v}));
+  specs.forEach(spec=>{
+    const b=document.createElement('button'); b.className='ajout'+(spec.k?' ajout-cube':'');
+    const nom=spec.k?`1 ${NOMS[spec.k][0]}`:`${spec.v} €`;
+    b.setAttribute('aria-label','Ajouter '+nom);
+    b.appendChild(iconeA(spec));
+    if(spec.k){ const s=document.createElement('span'); s.textContent=NOMS[spec.k][0]; b.appendChild(s); }
+    b.addEventListener('pointerdown',ev=>glisser(ev,fantomeA(spec),(dedans,moved,cx,cy)=>{
+      if(!moved) return ajouterA(spec);
+      if(dedans){ const p=versSvgDe(asvg,cx,cy); ajouterA(spec,bornerA(spec,p.x,p.y)); }
+    },asvg));
+    b.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); ajouterA(spec); } });
+    t.appendChild(b);
+  });
+}
+function dessinerAtelier(){
+  asvg.innerHTML='';
+  if(A.mode==='cubes' && A.tableau){
+    const f=el('g',{},asvg);
+    [280,580,800].forEach(x=>el('line',{x1:x,y1:10,x2:x,y2:610,class:'sep'},f));
+    [['milliers',140],['centaines',430],['dizaines',690],['unités',900]].forEach(([t,x])=>{ el('text',{x,y:40,class:'titre-col'},f).textContent=t; });
+  }
+  const couche=el('g',{},asvg);
+  if(!A.items.length) el('text',{x:500,y:320,class:'vide-txt'},couche).textContent = A.mode==='cubes'?'Fais glisser ici les cubes.':'Fais glisser ici les pièces et les billets.';
+  A.items.forEach(it=>{
+    const g=it.k?dessinerBloc(it.k,couche):dessinerArgent(it.v,couche);
+    g.setAttribute('transform',`translate(${it.x},${it.y})`); g.classList.add('retirable');
+    g.addEventListener('pointerdown',ev=>{
+      if(A.casser){ ev.preventDefault(); return casserA(it); }
+      g.style.opacity=.25;
+      glisser(ev,fantomeA(it),(dedans,moved,cx,cy)=>{
+        if(moved&&dedans){ const p=versSvgDe(asvg,cx,cy); Object.assign(it,bornerA(it,p.x,p.y)); A.items.splice(A.items.indexOf(it),1); A.items.push(it); }
+        else if(moved) A.items.splice(A.items.indexOf(it),1);
+        dessinerAtelier();
+      },asvg);
+    });
+  });
+  majPanneauA();
+}
+function lettres3(n){ if(n<100) return lettres(n); const c=Math.floor(n/100), r=n%100; return (c>1?lettres(c)+' ':'')+'cent'+(c>1&&r===0?'s':'')+(r?' '+lettres(r):''); }
+function lettresN(n){ if(n<1000) return lettres3(n); const m=Math.floor(n/1000), r=n%1000; return (m>1?lettres3(m).replace(/vingts$/,'vingt').replace(/cents$/,'cent')+' ':'')+'mille'+(r?' '+lettres3(r):''); }
+function chiffresColores(n){
+  const s=String(n), rangs=['u','d','c','m'];
+  return s.split('').map((ch,i)=>{ const r=s.length-1-i; return `<span class="r-${rangs[Math.min(r,3)]}">${ch}</span>${r===3?'<span class="esp"> </span>':''}`; }).join('');
+}
+function majPanneauA(){
+  const tot=totalA();
+  $('#aNombre').innerHTML = A.cache ? '?' : chiffresColores(tot);
+  $('#aLettres').textContent = A.cache ? '…' : lettresN(tot);
+  let dec='';
+  if(!A.cache && tot){
+    if(A.mode==='cubes'){
+      const cnt={}; ['m','c','d','u'].forEach(k=>cnt[k]=A.items.filter(i=>i.k===k).length);
+      dec=['m','c','d','u'].filter(k=>cnt[k]).map(k=>`<span class="r-${k}">${cnt[k]} ${cnt[k]>1?NOMS[k][1]:NOMS[k][0]}</span>`).join(', ');
+      const plein=['u','d','c'].find(k=>cnt[k]>=10);
+      if(plein) dec+=`<br><small>Tu peux échanger 10 ${NOMS[plein][1]} contre 1 ${NOMS[{u:'d',d:'c',c:'m'}[plein]][0]}.</small>`;
+    } else dec=phraseArgent(A.items.map(i=>i.v));
+    const s=String(tot), parts=s.split('').map((ch,i)=>+ch*Math.pow(10,s.length-1-i)).filter(v=>v);
+    if(parts.length>1) dec+=`<br>${parts.map(v=>v.toLocaleString('fr-FR')).join(' + ')}`;
+  }
+  $('#aDecomp').innerHTML=dec||'–';
+}
+function lireNombre(txt){
+  const s=txt.trim().toLowerCase(); if(!s) return null;
+  if(/^[\d\s\u202f\u00a0.]+$/.test(s)){ const n=parseInt(s.replace(/[\s\u202f\u00a0.]/g,''),10); return isNaN(n)?null:n; }
+  const V={'zéro':0,zero:0,un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10,onze:11,douze:12,treize:13,quatorze:14,quinze:15,seize:16,trente:30,quarante:40,cinquante:50,soixante:60};
+  const toks=s.replace(/[’']/g,' ').split(/[\s-]+/).filter(t=>t&&t!=='et');
+  let tot=0,cur=0,prec='';
+  for(const t of toks){
+    if(t==='cent'||t==='cents') cur=(cur||1)*100;
+    else if(t==='mille') { tot+=(cur||1)*1000; cur=0; }
+    else if(t==='vingt'||t==='vingts') cur += (prec==='quatre' && cur%100===4) ? 76 : 20;
+    else if(t in V) cur+=V[t];
+    else return null;
+    prec=t;
+  }
+  return tot+cur;
+}
+function saisieA(){
+  const n=lireNombre($('#aSaisie').value);
+  if(n===null){ msgA('Je ne reconnais pas ce nombre. Écris-le en chiffres ou en lettres.','mal'); return null; }
+  if(n>MAXA){ msgA('Choisis un nombre jusqu\'à 9 999.','mal'); return null; }
+  return n;
+}
+$('#aVerifier').addEventListener('click',()=>{
+  const n=saisieA(); if(n===null) return; const tot=totalA();
+  if(n===tot){ const m=`Oui ! Il y a bien ${lettresN(tot)}.`; msgA(m,'bien'); dire(m); }
+  else { const m='Ce n\'est pas ça. Recompte en commençant par les plus grands.'; msgA(m,'mal'); dire(m); }
+});
+$('#aMontrerC').addEventListener('click',()=>{ const n=saisieA(); if(n===null) return; montrerA(n,'cubes'); msgA(`${n.toLocaleString('fr-FR')} en cubes.`,'info'); });
+$('#aMontrerM').addEventListener('click',()=>{ const n=saisieA(); if(n===null) return; montrerA(n,'monnaie'); msgA(`${n.toLocaleString('fr-FR')} € en monnaie.`,'info'); });
+$('#aSaisie').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('#aVerifier').click(); } });
+$('#aOngCubes').addEventListener('click',()=>{ if(A.mode!=='cubes') changerMode('cubes',true); });
+$('#aOngMon').addEventListener('click',()=>{ if(A.mode!=='monnaie') changerMode('monnaie',true); });
+$('#aRanger').addEventListener('click',rangerA);
+$('#aEchanger').addEventListener('click',echangerA);
+$('#aCasser').addEventListener('click',()=>{ A.casser=!A.casser; $('#aCasser').setAttribute('aria-pressed',A.casser); $('#aCasser').classList.toggle('enfonce',A.casser); msgA(A.casser?'Touche un cube ou un billet pour le casser en plus petits.':'',A.casser?'info':''); });
+$('#aTableauBtn').addEventListener('click',()=>{ A.tableau=!A.tableau; $('#aTableauBtn').setAttribute('aria-pressed',A.tableau); dessinerAtelier(); });
+$('#aEffacer').addEventListener('click',()=>{ A.items=[]; msgA(''); dessinerAtelier(); });
+$('#aCache').addEventListener('change',e=>{ A.cache=e.target.checked; majPanneauA(); });
+$('#aLire').addEventListener('click',()=>{ if(A.cache) return; const t=totalA(); dire(lettresN(t)+(A.mode==='monnaie'?' euros':'')); });
+$('#aMaison').addEventListener('click',()=>{ majAccueil(); montrer('accueil'); });
+$('#btnAtelier').addEventListener('click',()=>{ montrer('atelier'); changerMode(A.mode,false); dessinerAtelier(); });
+
 
 majAccueil();
 })();
