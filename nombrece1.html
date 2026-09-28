@@ -193,6 +193,11 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 .k-d .avant{fill:#8FB0F5} .k-d .face{fill:#5A84E0}
 .k-c .avant{fill:#9FD8A8} .k-c .face{fill:#5DAF6E}
 .k-m .avant{fill:#C9B0F2} .k-m .face{fill:#9272D8}
+.numeration{font-size:1.6rem;font-weight:700;margin:0}
+.numeration small{font-size:.9rem;font-weight:400;color:var(--doux)}
+.lasso{fill:#2F63D6;fill-opacity:.1;stroke:#2F63D6;stroke-width:4;stroke-dasharray:10 7;stroke-linejoin:round}
+.lasso.ok-lasso{fill:#1F8A52;stroke:#1F8A52;fill-opacity:.15}
+#aEntourer.enfonce{background:var(--bleu);color:#fff}
 .r-m{color:#8C63D9} .r-c{color:#3E9150} .r-d{color:#3D6FD6} .r-u{color:#C48E0E}
 
 @media (prefers-reduced-motion: reduce){
@@ -303,6 +308,7 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
       <div class="outils">
         <button class="outil" id="aRanger">Ranger</button>
         <button class="outil" id="aEchanger">Échanger par 10</button>
+        <button class="outil" id="aEntourer" aria-pressed="false">Entourer pour échanger</button>
         <button class="outil" id="aCasser" aria-pressed="false">Casser</button>
         <button class="outil" id="aTableauBtn" aria-pressed="true">Tableau</button>
         <button class="outil" id="aEffacer">Tout effacer</button>
@@ -316,11 +322,13 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
         <p id="aLettres" class="lettres-a">zéro</p>
         <p class="etiq">Décomposition</p>
         <p id="aDecomp">–</p>
+        <p class="etiq">En unités de numération</p>
+        <p id="aNumeration" class="numeration">0u</p>
         <label class="case"><input type="checkbox" id="aCache"> Cacher le nombre : l'élève l'écrit</label>
       </div>
       <div class="bloc">
-        <label for="aSaisie" class="etiq">Écris un nombre, en chiffres ou en lettres</label>
-        <input type="text" id="aSaisie" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="345 ou trois cent quarante-cinq">
+        <label for="aSaisie" class="etiq">Écris un nombre : en chiffres, en lettres ou 3d 8u</label>
+        <input type="text" id="aSaisie" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="345, 3d 8u ou trois cent quarante-cinq">
         <div class="boutons-a">
           <button class="outil" id="aVerifier">Vérifier</button>
           <button class="outil" id="aMontrerC">Montrer en cubes</button>
@@ -1298,6 +1306,7 @@ function dessinerAtelier(){
     const g=it.k?dessinerBloc(it.k,couche):dessinerArgent(it.v,couche);
     g.setAttribute('transform',`translate(${it.x},${it.y})`); g.classList.add('retirable');
     g.addEventListener('pointerdown',ev=>{
+      if(A.entourer) return;
       if(A.casser){ ev.preventDefault(); return casserA(it); }
       g.style.opacity=.25;
       glisser(ev,fantomeA(it),(dedans,moved,cx,cy)=>{
@@ -1331,9 +1340,17 @@ function majPanneauA(){
     if(parts.length>1) dec+=`<br>${parts.map(v=>v.toLocaleString('fr-FR')).join(' + ')}`;
   }
   $('#aDecomp').innerHTML=dec||'–';
+  let nu='…';
+  if(!A.cache){
+    nu=numeration(comptesCanon(tot));
+    if(A.mode==='cubes'){ const cnt={}; ['m','c','d','u'].forEach(k=>cnt[k]=A.items.filter(i=>i.k===k).length);
+      const c0=comptesCanon(tot); if(['m','c','d','u'].some(k=>cnt[k]!==c0[k])) nu=`${numeration(cnt)} <small>sur le plateau</small><br>= ${numeration(c0)}`; }
+  }
+  $('#aNumeration').innerHTML=nu;
 }
 function lireNombre(txt){
-  const s=txt.trim().toLowerCase(); if(!s) return null;
+  const s=txt.trim().toLowerCase(); A.comptesSaisis=null; if(!s) return null;
+  const cn=lireNumeration(s); if(cn){ A.comptesSaisis=cn; return cn.m*1000+cn.c*100+cn.d*10+cn.u; }
   if(/^[\d\s\u202f\u00a0.]+$/.test(s)){ const n=parseInt(s.replace(/[\s\u202f\u00a0.]/g,''),10); return isNaN(n)?null:n; }
   const V={'zéro':0,zero:0,un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10,onze:11,douze:12,treize:13,quatorze:14,quinze:15,seize:16,trente:30,quarante:40,cinquante:50,soixante:60};
   const toks=s.replace(/[’']/g,' ').split(/[\s-]+/).filter(t=>t&&t!=='et');
@@ -1359,19 +1376,110 @@ $('#aVerifier').addEventListener('click',()=>{
   if(n===tot){ const m=`Oui ! Il y a bien ${lettresN(tot)}.`; msgA(m,'bien'); dire(m); }
   else { const m='Ce n\'est pas ça. Recompte en commençant par les plus grands.'; msgA(m,'mal'); dire(m); }
 });
-$('#aMontrerC').addEventListener('click',()=>{ const n=saisieA(); if(n===null) return; montrerA(n,'cubes'); msgA(`${n.toLocaleString('fr-FR')} en cubes.`,'info'); });
+$('#aMontrerC').addEventListener('click',()=>{
+  const n=saisieA(); if(n===null) return; const cn=A.comptesSaisis;
+  if(cn && cn.u<=80 && cn.d<=27 && cn.c<=10 && cn.m<=10){
+    if(A.mode!=='cubes') changerMode('cubes',false);
+    A.items=[]; ['m','c','d','u'].forEach(k=>{ for(let i=0;i<cn[k];i++) A.items.push({k}); }); rangerA();
+    msgA(`${numeration(cn).replace(/<[^>]+>/g,'')} = ${n.toLocaleString('fr-FR')}`,'info');
+  } else { montrerA(n,'cubes'); msgA(`${n.toLocaleString('fr-FR')} en cubes.`,'info'); }
+});
 $('#aMontrerM').addEventListener('click',()=>{ const n=saisieA(); if(n===null) return; montrerA(n,'monnaie'); msgA(`${n.toLocaleString('fr-FR')} € en monnaie.`,'info'); });
 $('#aSaisie').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('#aVerifier').click(); } });
 $('#aOngCubes').addEventListener('click',()=>{ if(A.mode!=='cubes') changerMode('cubes',true); });
 $('#aOngMon').addEventListener('click',()=>{ if(A.mode!=='monnaie') changerMode('monnaie',true); });
 $('#aRanger').addEventListener('click',rangerA);
 $('#aEchanger').addEventListener('click',echangerA);
-$('#aCasser').addEventListener('click',()=>{ A.casser=!A.casser; $('#aCasser').setAttribute('aria-pressed',A.casser); $('#aCasser').classList.toggle('enfonce',A.casser); msgA(A.casser?'Touche un cube ou un billet pour le casser en plus petits.':'',A.casser?'info':''); });
+$('#aCasser').addEventListener('click',()=>{ A.casser=!A.casser; if(A.casser&&A.entourer){ A.entourer=false; $('#aEntourer').setAttribute('aria-pressed',false); $('#aEntourer').classList.remove('enfonce'); } $('#aCasser').setAttribute('aria-pressed',A.casser); $('#aCasser').classList.toggle('enfonce',A.casser); msgA(A.casser?'Touche un cube ou un billet pour le casser en plus petits.':'',A.casser?'info':''); });
 $('#aTableauBtn').addEventListener('click',()=>{ A.tableau=!A.tableau; $('#aTableauBtn').setAttribute('aria-pressed',A.tableau); dessinerAtelier(); });
 $('#aEffacer').addEventListener('click',()=>{ A.items=[]; msgA(''); dessinerAtelier(); });
 $('#aCache').addEventListener('change',e=>{ A.cache=e.target.checked; majPanneauA(); });
 $('#aLire').addEventListener('click',()=>{ if(A.cache) return; const t=totalA(); dire(lettresN(t)+(A.mode==='monnaie'?' euros':'')); });
 $('#aMaison').addEventListener('click',()=>{ majAccueil(); montrer('accueil'); });
+/* ---- Écriture en unités de numération (3d 8u) ---- */
+function numeration(cnt){
+  const t=['m','c','d','u'].filter(k=>cnt[k]).map(k=>`<span class="r-${k}">${cnt[k]}${k}</span>`).join(' ');
+  return t||'<span class="r-u">0u</span>';
+}
+function comptesCanon(n){ return {m:Math.floor(n/1000),c:Math.floor(n/100)%10,d:Math.floor(n/10)%10,u:n%10}; }
+function lireNumeration(s){
+  const re=/(\d+)\s*(milliers?|centaines?|dizaines?|unit[ée]s?|m|c|d|u)(?![a-zéè])/g;
+  const cnt={m:0,c:0,d:0,u:0}; let trouve=false;
+  const reste=s.replace(re,(all,n,r)=>{ trouve=true; cnt[r[0]]+=parseInt(n,10); return ' '; });
+  if(!trouve || reste.replace(/\bet\b/g,'').replace(/[\s,+]/g,'')!=='') return null;
+  return cnt;
+}
+
+/* ---- Entourer pour échanger ---- */
+let lasso=null;
+function dansPolygone(x,y,pts){
+  let dedans=false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+    const [xi,yi]=pts[i],[xj,yj]=pts[j];
+    if(((yi>y)!==(yj>y)) && x<(xj-xi)*(y-yi)/(yj-yi)+xi) dedans=!dedans;
+  }
+  return dedans;
+}
+asvg.addEventListener('pointerdown',ev=>{
+  if(!A.entourer) return;
+  ev.preventDefault();
+  const p=versSvgDe(asvg,ev.clientX,ev.clientY);
+  const chemin=el('path',{class:'lasso',d:`M${p.x},${p.y}`},asvg);
+  lasso={pts:[[p.x,p.y]],chemin};
+  window.addEventListener('pointermove',lassoBouge);
+  window.addEventListener('pointerup',lassoFin);
+  window.addEventListener('pointercancel',lassoFin);
+});
+function lassoBouge(ev){
+  if(!lasso) return;
+  const p=versSvgDe(asvg,ev.clientX,ev.clientY), der=lasso.pts[lasso.pts.length-1];
+  if(Math.hypot(p.x-der[0],p.y-der[1])<5) return;
+  lasso.pts.push([p.x,p.y]);
+  lasso.chemin.setAttribute('d','M'+lasso.pts.map(q=>q.join(',')).join(' L')+' Z');
+}
+function lassoFin(){
+  window.removeEventListener('pointermove',lassoBouge);
+  window.removeEventListener('pointerup',lassoFin);
+  window.removeEventListener('pointercancel',lassoFin);
+  if(!lasso) return;
+  const L=lasso; lasso=null;
+  if(L.pts.length<4){ L.chemin.remove(); return; }
+  const choisis=A.items.filter(it=>dansPolygone(it.x,it.y,L.pts));
+  echangeEntoure(choisis,L);
+}
+function dire2(m){ msgA(m.t,m.c); dire(m.t); }
+async function echangeEntoure(sel,L){
+  const garder=()=>setTimeout(()=>{ L.chemin.remove(); },900);
+  if(!sel.length){ garder(); return dire2({t: A.mode==='cubes'?'Entoure 10 cubes pareils.':'Entoure des pièces ou des billets.',c:'info'}); }
+  let nouveau=null, phrase='';
+  if(A.mode==='cubes'){
+    const kinds=[...new Set(sel.map(i=>i.k))];
+    if(kinds.length>1){ garder(); return dire2({t:'Entoure seulement des objets pareils : que des unités, ou que des dizaines, ou que des centaines.',c:'mal'}); }
+    const k=kinds[0], n=sel.length;
+    if(k==='m'){ garder(); return dire2({t:'Les milliers ne s\'échangent pas ici.',c:'info'}); }
+    if(n!==10){ garder(); return dire2({t:`Tu as entouré ${n} ${n>1?NOMS[k][1]:NOMS[k][0]}. Il en faut exactement 10.`,c:'mal'}); }
+    const haut={u:'d',d:'c',c:'m'}[k];
+    nouveau={k:haut}; phrase=`10 ${NOMS[k][1]}, c'est 1 ${NOMS[haut][0]} !`;
+  } else {
+    const somme=sel.reduce((s,i)=>s+i.v,0), max=Math.max(...sel.map(i=>i.v));
+    if(sel.length<2){ garder(); return dire2({t:'Entoure plusieurs pièces ou billets pour les échanger.',c:'info'}); }
+    if(!MONNAIE.includes(somme) || somme<=max){ garder(); return dire2({t:`Tu as entouré ${somme} €. Il n'existe pas de pièce ou de billet de ${somme} €.`,c:'mal'}); }
+    nouveau={v:somme}; phrase=`${sel.map(i=>i.v).sort((a,b)=>b-a).join(' € + ')} €, c'est ${somme>=5?'1 billet':'1 pièce'} de ${somme} € !`;
+  }
+  L.chemin.classList.add('ok-lasso');
+  dire2({t:phrase,c:'bien'});
+  await attendre(700);
+  const cx=sel.reduce((s,i)=>s+i.x,0)/sel.length, cy=sel.reduce((s,i)=>s+i.y,0)/sel.length;
+  A.items=A.items.filter(i=>!sel.includes(i));
+  A.items.push(Object.assign(nouveau,bornerA(nouveau,cx,cy)));
+  dessinerAtelier();
+}
+$('#aEntourer').addEventListener('click',()=>{
+  A.entourer=!A.entourer; if(A.entourer&&A.casser){ A.casser=false; $('#aCasser').setAttribute('aria-pressed',false); $('#aCasser').classList.remove('enfonce'); }
+  $('#aEntourer').setAttribute('aria-pressed',A.entourer); $('#aEntourer').classList.toggle('enfonce',A.entourer);
+  msgA(A.entourer?(A.mode==='cubes'?'Entoure 10 cubes pareils avec le doigt pour les échanger.':'Entoure des pièces ou des billets pour les échanger contre un seul.'):'',A.entourer?'info':'');
+});
+
 $('#btnAtelier').addEventListener('click',()=>{ montrer('atelier'); changerMode(A.mode,false); dessinerAtelier(); });
 
 
