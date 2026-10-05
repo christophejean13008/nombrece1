@@ -194,14 +194,86 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 .k-c .avant{fill:#9FD8A8} .k-c .face{fill:#5DAF6E}
 .k-m .avant{fill:#C9B0F2} .k-m .face{fill:#9272D8}
 .numeration{font-size:1.6rem;font-weight:700;margin:0}
+.op{color:var(--doux);font-weight:700}
 .numeration small{font-size:.9rem;font-weight:400;color:var(--doux)}
 .lasso{fill:#2F63D6;fill-opacity:.1;stroke:#2F63D6;stroke-width:4;stroke-dasharray:10 7;stroke-linejoin:round}
+.choix-lasso{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:5;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;
+  background:var(--tableau);border:2px solid var(--bleu);border-radius:14px;padding:8px 12px;box-shadow:0 6px 18px rgba(0,0,0,.18);max-width:94%}
+.choix-lasso span{font-weight:700}
+.choix-lasso[hidden]{display:none}
+.outil.ok-btn{background:var(--vert);border-color:var(--vert);color:#fff}
+.outil.ok-btn:disabled{background:var(--tableau);color:var(--doux);border-color:var(--trait)}
+#aDeuxBtn.enfonce{background:var(--bleu);color:#fff}
+.ligne-addition{stroke:#E8590C;stroke-width:4;stroke-dasharray:14 10}
+.signe-plus{font-size:44px;font-weight:700;fill:#E8590C;text-anchor:middle}
+.lasso.mauvais{fill:#C23A4E;stroke:#C23A4E}
 .lasso.ok-lasso{fill:#1F8A52;stroke:#1F8A52;fill-opacity:.15}
 #aEntourer.enfonce{background:var(--bleu);color:#fff}
 .r-m{color:#8C63D9} .r-c{color:#2E8B47} .r-d{color:#C8362B} .r-u{color:#2F63D6}
 .r-m-svg{fill:#8C63D9} .r-c-svg{fill:#2E8B47} .r-d-svg{fill:#C8362B} .r-u-svg{fill:#2F63D6}
 .selec .avant{stroke:#E8590C;stroke-width:3}
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .r-u{color:#7FA6F5} :root:not([data-theme="light"]) .r-d{color:#F07A70} :root:not([data-theme="light"]) .r-c{color:#5CC97A} :root:not([data-theme="light"]) .r-m{color:#B497F0} }
+
+/* ===== Tout tient à l'écran (jeu + atelier) ===== */
+#jeu.actif,#atelier.actif{display:flex;flex-direction:column;max-width:none;overflow:hidden;padding:8px 12px;
+  height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+#jeu .barre,#atelier .barre{flex:none;margin-bottom:6px}
+#jeu .rond,#atelier .rond{width:44px;height:44px;font-size:1.2rem}
+#jeu .consigne{flex:none;margin-bottom:6px}
+#jeu .consigne p{font-size:clamp(1rem,2.6vh,1.35rem)}
+#jeu .jeu-grille,#atelier .atelier-grille{flex:1;min-height:0;display:grid;align-items:stretch;gap:10px;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+@media (min-aspect-ratio:4/3) and (min-width:760px){
+  #jeu .jeu-grille,#atelier .atelier-grille{grid-template-columns:minmax(0,1fr) clamp(260px,26vw,330px);grid-template-rows:minmax(0,1fr)}
+  #jeu .cote,#atelier .cote{max-height:none}
+}
+#jeu .plateau,#atelier .plateau{min-height:0;position:relative}
+#jeu .plateau svg,#atelier .plateau svg{position:absolute;inset:0;width:100%;height:100%}
+#atelier .atelier-gauche{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+#jeu .cote,#atelier .cote{min-height:0;overflow-y:auto;align-self:start;max-height:100%;gap:8px;max-height:52vh}
+#atelier .cote{max-height:40vh}
+@media (min-aspect-ratio:4/3) and (min-width:760px){ #atelier .cote{max-height:none} }
+@media not ((min-aspect-ratio:4/3) and (min-width:760px)){ #atelier .cote{display:grid;grid-template-columns:1fr 1fr;align-items:start;max-height:42vh} }
+.atelier-gauche{min-height:0}
+.atelier-gauche .plateau{flex:1}
+.atelier-gauche .tiroir-a,.atelier-gauche .outils{flex:none}
+/* jeu compact */
+#jeu .phrase{font-size:clamp(1rem,2.6vh,1.3rem)}
+#jeu .saisie{font-size:clamp(1.5rem,4.8vh,2.2rem);min-height:clamp(40px,6vh,56px)}
+#jeu .pave{gap:6px}
+#jeu .pave button{min-height:clamp(40px,7vh,64px);font-size:clamp(1.3rem,3.6vh,1.8rem)}
+#jeu .outil{min-height:clamp(40px,6vh,54px);padding:4px 12px;font-size:clamp(.9rem,2.2vh,1.05rem)}
+#jeu #retour{min-height:2.2em;margin:0;font-size:clamp(.95rem,2.3vh,1.2rem)}
+#jeu #btnSuivant,#jeu .valider{min-height:clamp(46px,7vh,72px);font-size:clamp(1.1rem,2.8vh,1.35rem);padding:6px 12px}
+#jeu .cible{font-size:clamp(2rem,7vh,3.6rem)}
+#jeu .cible .lettres{font-size:clamp(1.2rem,3.6vh,2rem)}
+#jeu .compteur{font-size:1rem} #jeu .compteur b{font-size:1.4rem}
+#jeu .note{font-size:.85rem}
+#jeu .ajouts .ajout{min-height:clamp(56px,10vh,88px)}
+#jeu .tiroir-fab .ajout svg{height:clamp(32px,7vh,70px)}
+#jeu .tiroir .ajout{min-height:clamp(46px,8vh,76px);padding:4px}
+#jeu .tiroir .ajout svg{max-height:clamp(26px,5vh,46px);width:auto;max-width:100%}
+#jeu .losange-btn{width:clamp(64px,11vh,96px);height:clamp(64px,11vh,96px)}
+#jeu .losange-btn span{font-size:clamp(1.2rem,3.4vh,1.7rem)}
+/* atelier compact */
+#atelier .titre-atelier{font-size:clamp(1.1rem,3vh,1.5rem)}
+#atelier .onglet{min-height:44px;padding:4px 14px}
+#atelier .bloc{margin:0;padding:8px 10px}
+#atelier .tiroir-a{gap:6px}
+#atelier .tiroir-a .ajout{min-width:clamp(50px,7vh,78px);min-height:clamp(46px,8vh,78px);padding:3px 6px;font-size:.8rem}
+#atelier .tiroir-a .ajout svg{height:clamp(24px,4.6vh,50px)}
+#atelier .tiroir-a .ajout-cube svg{height:clamp(28px,5.4vh,56px)}
+#atelier .outils{gap:6px}
+#atelier .outil{min-height:clamp(36px,5.6vh,54px);padding:3px 10px;font-size:clamp(.85rem,2vh,1rem)}
+#atelier .etiq{margin:4px 0 0;font-size:.85rem}
+#atelier .gros-nombre{font-size:clamp(1.8rem,6.5vh,3.2rem)}
+#atelier .lettres-a{font-size:clamp(1rem,2.6vh,1.3rem)}
+#atelier #aDecomp{font-size:clamp(.85rem,2vh,1rem);margin:0}
+#atelier .numeration{font-size:clamp(1rem,3vh,1.5rem)}
+#atelier .case{margin-top:6px;font-size:.9rem}
+#atelier #aSaisie{font-size:1.05rem;min-height:40px;margin:4px 0}
+#atelier #aRetour{margin-top:4px;font-size:.95rem}
+#atelier .rond.petit{width:34px;height:34px;font-size:.95rem}
 
 @media (prefers-reduced-motion: reduce){
   .obj,.table-rangement{transition:none}
@@ -306,7 +378,12 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
   </div>
   <div class="atelier-grille">
     <div class="atelier-gauche">
-      <div class="plateau mode-monnaie"><svg id="asvg" viewBox="0 0 1000 620" role="img" aria-label="Plateau libre"></svg></div>
+      <div class="plateau mode-monnaie"><svg id="asvg" viewBox="0 0 1000 620" role="img" aria-label="Plateau libre"></svg>
+        <div class="choix-lasso" id="aChoixLasso" hidden>
+          <span id="aLassoInfo"></span>
+          <button class="outil ok-btn" id="aLassoOk">Échanger</button>
+          <button class="outil" id="aLassoEff">Effacer la sélection</button>
+        </div></div>
       <div class="tiroir-a" id="aTiroir"></div>
       <div class="outils">
         <button class="outil" id="aRanger">Ranger</button>
@@ -314,6 +391,8 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
         <button class="outil" id="aEntourer" aria-pressed="false">Entourer pour échanger</button>
         <button class="outil" id="aCasser" aria-pressed="false">Casser</button>
         <button class="outil" id="aTableauBtn" aria-pressed="true">Tableau</button>
+        <button class="outil" id="aDeuxBtn" aria-pressed="false">Addition : 2 parties</button>
+        <button class="outil ok-btn" id="aReunir" hidden>Réunir les 2 nombres</button>
         <button class="outil" id="aEffacer">Tout effacer</button>
       </div>
     </div>
@@ -330,8 +409,8 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
         <label class="case"><input type="checkbox" id="aCache"> Cacher le nombre : l'élève l'écrit</label>
       </div>
       <div class="bloc">
-        <label for="aSaisie" class="etiq">Écris un nombre : en chiffres, en lettres ou 3d 8u</label>
-        <input type="text" id="aSaisie" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="345, 3d 8u ou trois cent quarante-cinq">
+        <label for="aSaisie" class="etiq">Écris un nombre (345, trois cent…, 3d 8u) ou une addition (23 + 15)</label>
+        <input type="text" id="aSaisie" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="345, 3d 8u, 23 + 15…">
         <div class="boutons-a">
           <button class="outil" id="aVerifier">Vérifier</button>
           <button class="outil" id="aMontrerC">Montrer en cubes</button>
@@ -1218,9 +1297,11 @@ function ajouterA(spec,pos){
   if(A.busy) return;
   if(A.items.length>=150) return msgA('Le plateau est plein.','info');
   if(totalA()+valItem(spec)>MAXA) return msgA('On s\'arrête à 9 999.','info');
-  const n=A.items.filter(i=>spec.k?i.k===spec.k:false).length;
-  const p=pos||(spec.k?slotA(spec,n):placeLibreA(spec));
-  A.items.push(Object.assign({},spec,{x:p.x,y:p.y}));
+  const part = pos ? partDe(pos.y) : (A.split&&A.mode==='cubes' ? (A.partActive||'a') : null);
+  if(part) A.partActive=part;
+  const n=A.items.filter(i=>spec.k&&i.k===spec.k&&(i.part||null)===part).length;
+  const p=pos||(spec.k?slotA(spec,n,part):placeLibreA(spec));
+  A.items.push(Object.assign({},spec,{x:p.x,y:p.y,part}));
   dessinerAtelier();
 }
 function itemsPour(n,mode){
@@ -1238,6 +1319,8 @@ function montrerA(n,mode){
 function changerMode(mode,transformer){
   const n=totalA();
   A.mode=mode;
+  if(mode!=='cubes'&&A.split) basculerDeux(false,true);
+  $('#aDeuxBtn').hidden=mode!=='cubes';
   $('#aOngCubes').classList.toggle('actif',mode==='cubes'); $('#aOngMon').classList.toggle('actif',mode==='monnaie');
   $('#aOngCubes').setAttribute('aria-pressed',mode==='cubes'); $('#aOngMon').setAttribute('aria-pressed',mode==='monnaie');
   $('#aTableauBtn').hidden=mode!=='cubes';
@@ -1261,17 +1344,27 @@ function construireTiroirA(){
     t.appendChild(b);
   });
 }
-function slotA(spec,i){
+function slotA(spec,i,part){
+  if(part){
+    const y0=part==='a'?55:345;
+    if(spec.k==='m'){ const j=i%10; return {x:100+j*6,y:y0+100+j*10}; }
+    if(spec.k==='c'){ const pile=Math.floor(i/5)%2, j=i%5; return {x:330+pile*165+j*3,y:y0+82+j*20}; }
+    if(spec.k==='d'){ const j=i%10; return {x:620+j*16+Math.floor(j/5)*24+Math.floor(i/10)*8,y:y0+125+Math.floor(i/10)%3*24}; }
+    if(spec.k==='u') return {x:830+(i%5)*30,y:Math.min(y0+250,y0+30+Math.floor(i/5)*28+Math.floor(i/10)*12)};
+    return null;
+  }
   if(spec.k==='m'){ const j=i%10; return {x:100+j*6,y:190+j*36+(j>=5?30:0)}; }
   if(spec.k==='c'){ const pile=Math.floor(i/5)%4, j=i%5; return {x:330+(pile%2)*165+j*3,y:140+j*40+Math.floor(pile/2)*215}; }
   if(spec.k==='d'){ const j=i%10; return {x:620+j*16+Math.floor(j/5)*24,y:210+Math.floor(i/10)%3*160}; }
   if(spec.k==='u') return {x:830+(i%5)*30,y:Math.min(600,95+Math.floor(i/5)*30+Math.floor(i/10)*16)};
   return null;
 }
+const partDe=y=>A.split&&A.mode==='cubes' ? (y<337?'a':'b') : null;
+const partsA=()=>A.split&&A.mode==='cubes'?['a','b']:[null];
 function calculerRangement(){
   if(A.mode==='cubes'){
     const out=[];
-    ['m','c','d','u'].forEach(k=>{ A.items.filter(i=>i.k===k).sort((a,b)=>(a.y-b.y)||(a.x-b.x)).forEach((it,i)=>{ Object.assign(it,slotA(it,i)); out.push(it); }); });
+    ['m','c','d','u'].forEach(k=>partsA().forEach(pt=>{ A.items.filter(i=>i.k===k&&(i.part||null)===pt).sort((a,b)=>(a.y-b.y)||(a.x-b.x)).forEach((it,i)=>{ Object.assign(it,slotA(it,i,pt)); out.push(it); }); }));
     A.items=out;
   } else {
     const tri=A.items.slice().sort((a,b)=>b.v-a.v), b=tri.filter(i=>i.v>=5), c=tri.filter(i=>i.v<5);
@@ -1317,7 +1410,7 @@ async function animerRegroupement(sel,nouveau){
   await pause(1150);
   sel.forEach(it=>it.g.remove());
   A.items=A.items.filter(i=>!sel.includes(i));
-  A.items.push(Object.assign(nouveau,pos,{g}));
+  A.items.push(Object.assign(nouveau,pos,{g,part:sel[0].part||null}));
   if(A.mode==='cubes'&&A.tableau){ await pause(400); await animerRanger(); }
 }
 async function echangerA(){
@@ -1326,10 +1419,10 @@ async function echangerA(){
   try{
     if(A.mode==='cubes'){
       let fait=false;
-      for(const k of ['u','d','c']){
-        while(A.items.filter(i=>i.k===k).length>=10){
+      for(const pt of partsA()) for(const k of ['u','d','c']){
+        while(A.items.filter(i=>i.k===k&&(i.part||null)===pt).length>=10){
           const haut={u:'d',d:'c',c:'m'}[k];
-          const sel=A.items.filter(i=>i.k===k).sort((a,b)=>(a.y-b.y)||(a.x-b.x)).slice(0,10);
+          const sel=A.items.filter(i=>i.k===k&&(i.part||null)===pt).sort((a,b)=>(a.y-b.y)||(a.x-b.x)).slice(0,10);
           const m=`10 ${NOMS[k][1]}, c'est 1 ${NOMS[haut][0]}.`; msgA(m,'bien'); dire(m);
           await animerRegroupement(sel,{k:haut}); fait=true;
         }
@@ -1369,6 +1462,7 @@ async function casserA(it){
     $('#asvg').getBoundingClientRect();
     neufs.forEach(s=>{ transit(s.g,1000); s.g.style.opacity=1; }); transit(it.g,1000); it.g.style.opacity=0;
     await pause(1200);
+    neufs.forEach(n=>n.part=it.part||null);
     it.g.remove(); A.items.splice(A.items.indexOf(it),1); A.items.push(...neufs);
     if(A.mode==='cubes'&&A.tableau) await animerRanger();
     else {
@@ -1382,10 +1476,12 @@ async function casserA(it){
   } finally { A.busy=false; dessinerAtelier(); }
 }
 function dessinerAtelier(){
+  fermerSel();
   asvg.innerHTML='';
   if(A.mode==='cubes' && A.tableau){
     const f=el('g',{},asvg);
     [250,600,800].forEach(x=>el('line',{x1:x,y1:10,x2:x,y2:610,class:'sep'},f));
+    if(A.split){ el('line',{x1:6,y1:337,x2:994,y2:337,class:'ligne-addition'},f); el('text',{x:24,y:385,class:'signe-plus'},f).textContent='+'; }
     [['milliers',125,'r-m'],['centaines',425,'r-c'],['dizaines',700,'r-d'],['unités',900,'r-u']].forEach(([t,x,c])=>{ el('text',{x,y:40,class:'titre-col '+c+'-svg'},f).textContent=t; });
   }
   const couche=el('g',{id:'aCouche'},asvg);
@@ -1399,7 +1495,7 @@ function dessinerAtelier(){
       if(A.casser){ ev.preventDefault(); return casserA(it); }
       g.style.opacity=.25;
       glisser(ev,fantomeA(it),(dedans,moved,cx,cy)=>{
-        if(moved&&dedans){ const p=versSvgDe(asvg,cx,cy); Object.assign(it,bornerA(it,p.x,p.y)); A.items.splice(A.items.indexOf(it),1); A.items.push(it); }
+        if(moved&&dedans){ const p=versSvgDe(asvg,cx,cy); Object.assign(it,bornerA(it,p.x,p.y)); it.part=partDe(it.y); if(it.part) A.partActive=it.part; A.items.splice(A.items.indexOf(it),1); A.items.push(it); }
         else if(moved) A.items.splice(A.items.indexOf(it),1);
         dessinerAtelier();
       },asvg);
@@ -1415,6 +1511,15 @@ function chiffresColores(n){
 }
 function majPanneauA(){
   const tot=totalA();
+  if(A.split&&A.mode==='cubes'){
+    const a=sommePart('a'), b=sommePart('b'), ca=comptesPart('a'), cb=comptesPart('b');
+    $('#aNombre').innerHTML=`${chiffresColores(a)} <span class="op">+</span> ${chiffresColores(b)}`+(A.cache?' <span class="op">= ?</span>':` <span class="op">=</span> ${chiffresColores(tot)}`);
+    $('#aLettres').textContent=`${lettresN(a)} plus ${lettresN(b)}`+(A.cache?'':` égale ${lettresN(tot)}`);
+    const det=c=>['m','c','d','u'].filter(k=>c[k]).map(k=>`<span class="r-${k}">${c[k]} ${c[k]>1?NOMS[k][1]:NOMS[k][0]}</span>`).join(', ')||'rien';
+    $('#aDecomp').innerHTML=`En haut : ${det(ca)}<br>En bas : ${det(cb)}`;
+    $('#aNumeration').innerHTML=`${numeration(ca)} <span class="op">+</span> ${numeration(cb)}`;
+    return;
+  }
   $('#aNombre').innerHTML = A.cache ? '?' : chiffresColores(tot);
   $('#aLettres').textContent = A.cache ? '…' : lettresN(tot);
   let dec='';
@@ -1455,7 +1560,18 @@ function lireNombre(txt){
   return tot+cur;
 }
 function saisieA(){
-  const n=lireNombre($('#aSaisie').value);
+  const txt=$('#aSaisie').value;
+  A.addition=null;
+  if(txt.includes('+')){
+    const morceaux=txt.split('+').map(t=>t.trim());
+    if(morceaux.length===2 && morceaux.every(Boolean)){
+      const res=morceaux.map(t=>{ const n=lireNombre(t); return n===null?null:{n,c:A.comptesSaisis||comptesCanon(n)}; });
+      if(res.some(r=>r===null)){ msgA('Je ne reconnais pas un des deux nombres.','mal'); return null; }
+      const tot=res[0].n+res[1].n; if(tot>MAXA){ msgA('Le total doit rester jusqu\'à 9 999.','mal'); return null; }
+      A.addition=res; A.comptesSaisis=null; return tot;
+    }
+  }
+  const n=lireNombre(txt);
   if(n===null){ msgA('Je ne reconnais pas ce nombre. Écris-le en chiffres ou en lettres.','mal'); return null; }
   if(n>MAXA){ msgA('Choisis un nombre jusqu\'à 9 999.','mal'); return null; }
   return n;
@@ -1467,6 +1583,18 @@ $('#aVerifier').addEventListener('click',()=>{
 });
 $('#aMontrerC').addEventListener('click',()=>{
   const n=saisieA(); if(n===null) return; const cn=A.comptesSaisis;
+  if(A.busy) return;
+  if(A.addition){
+    if(A.mode!=='cubes') changerMode('cubes',false);
+    const [ra,rb]=A.addition; const ok=c=>c.u<=25&&c.d<=20&&c.c<=10&&c.m<=10;
+    if(!ok(ra.c)||!ok(rb.c)){ msgA('Ces nombres sont trop grands pour être affichés en deux parties.','mal'); return; }
+    if(!A.split) basculerDeux(true,true);
+    A.items=[];
+    [['a',ra.c],['b',rb.c]].forEach(([pt,c])=>['m','c','d','u'].forEach(k=>{ for(let i=0;i<c[k];i++) A.items.push({k,part:pt}); }));
+    rangerA();
+    msgA(`${ra.n} + ${rb.n} : touche « Réunir les 2 nombres ».`,'info');
+    return;
+  }
   if(cn && cn.u<=80 && cn.d<=27 && cn.c<=10 && cn.m<=10){
     if(A.mode!=='cubes') changerMode('cubes',false);
     A.items=[]; ['m','c','d','u'].forEach(k=>{ for(let i=0;i<cn[k];i++) A.items.push({k}); }); rangerA();
@@ -1512,6 +1640,7 @@ function dansPolygone(x,y,pts){
 asvg.addEventListener('pointerdown',ev=>{
   if(!A.entourer||A.busy) return;
   ev.preventDefault();
+  fermerSel(true);
   const p=versSvgDe(asvg,ev.clientX,ev.clientY);
   const chemin=el('path',{class:'lasso',d:`M${p.x},${p.y}`},asvg);
   lasso={pts:[[p.x,p.y]],chemin};
@@ -1533,39 +1662,92 @@ function lassoFin(){
   if(!lasso) return;
   const L=lasso; lasso=null;
   if(L.pts.length<4){ L.chemin.remove(); return; }
-  const choisis=A.items.filter(it=>dansPolygone(it.x,it.y,L.pts));
-  echangeEntoure(choisis,L);
+  const sel=A.items.filter(it=>dansPolygone(it.x,it.y,L.pts));
+  proposerSel(sel,L);
 }
-function dire2(m){ msgA(m.t,m.c); dire(m.t); }
-async function echangeEntoure(sel,L){
-  const garder=()=>setTimeout(()=>{ L.chemin.remove(); },900);
-  if(!sel.length){ garder(); return dire2({t: A.mode==='cubes'?'Entoure 10 cubes pareils.':'Entoure des pièces ou des billets.',c:'info'}); }
-  let nouveau=null, phrase='';
+function evaluerSel(sel){
+  if(!sel.length) return {ok:false,info:A.mode==='cubes'?'Rien n\'est entouré.':'Aucune pièce entourée.'};
   if(A.mode==='cubes'){
+    if(new Set(sel.map(i=>i.part||null)).size>1) return {ok:false,info:'Entoure dans une seule partie (en haut ou en bas).'};
     const kinds=[...new Set(sel.map(i=>i.k))];
-    if(kinds.length>1){ garder(); return dire2({t:'Entoure seulement des objets pareils : que des unités, ou que des dizaines, ou que des centaines.',c:'mal'}); }
-    const k=kinds[0], n=sel.length;
-    if(k==='m'){ garder(); return dire2({t:'Les milliers ne s\'échangent pas ici.',c:'info'}); }
-    if(n!==10){ garder(); return dire2({t:`Tu as entouré ${n} ${n>1?NOMS[k][1]:NOMS[k][0]}. Il en faut exactement 10.`,c:'mal'}); }
+    if(kinds.length>1) return {ok:false,info:'Tu as entouré des objets différents. Entoure seulement des objets pareils.'};
+    const k=kinds[0], n=sel.length, nom=`${n} ${n>1?NOMS[k][1]:NOMS[k][0]}`;
+    if(k==='m') return {ok:false,info:`${nom} : les milliers ne s'échangent pas ici.`};
+    if(n!==10) return {ok:false,info:`Tu as entouré ${nom}. Il en faut exactement 10.`};
     const haut={u:'d',d:'c',c:'m'}[k];
-    nouveau={k:haut}; phrase=`10 ${NOMS[k][1]}, c'est 1 ${NOMS[haut][0]} !`;
-  } else {
-    const somme=sel.reduce((s,i)=>s+i.v,0), max=Math.max(...sel.map(i=>i.v));
-    if(sel.length<2){ garder(); return dire2({t:'Entoure plusieurs pièces ou billets pour les échanger.',c:'info'}); }
-    if(!MONNAIE.includes(somme) || somme<=max){ garder(); return dire2({t:`Tu as entouré ${somme} €. Il n'existe pas de pièce ou de billet de ${somme} €.`,c:'mal'}); }
-    nouveau={v:somme}; phrase=`${sel.map(i=>i.v).sort((a,b)=>b-a).join(' € + ')} €, c'est ${somme>=5?'1 billet':'1 pièce'} de ${somme} € !`;
+    return {ok:true,info:`Tu as entouré 10 ${NOMS[k][1]}.`,nouveau:{k:haut},phrase:`10 ${NOMS[k][1]}, c'est 1 ${NOMS[haut][0]} !`};
   }
-  L.chemin.classList.add('ok-lasso');
-  dire2({t:phrase,c:'bien'});
-  A.busy=true;
-  setTimeout(()=>L.chemin.remove(),1600);
-  try{ await animerRegroupement(sel,nouveau); } finally { A.busy=false; dessinerAtelier(); }
+  const somme=sel.reduce((s,i)=>s+i.v,0), max=Math.max(...sel.map(i=>i.v));
+  if(sel.length<2) return {ok:false,info:'Entoure plusieurs pièces ou billets.'};
+  if(!MONNAIE.includes(somme)||somme<=max) return {ok:false,info:`Tu as entouré ${somme} €. Il n'existe pas de pièce ou de billet de ${somme} €.`};
+  return {ok:true,info:`Tu as entouré ${somme} €.`,nouveau:{v:somme},phrase:`${sel.map(i=>i.v).sort((a,b)=>b-a).join(' € + ')} €, c'est ${somme>=5?'1 billet':'1 pièce'} de ${somme} € !`};
 }
+function proposerSel(sel,L){
+  fermerSel(true);
+  const r=evaluerSel(sel);
+  sel.forEach(it=>it.g&&it.g.classList.add('selec'));
+  L.chemin.classList.toggle('mauvais',!r.ok);
+  A.sel={sel,L,r};
+  $('#aLassoInfo').textContent=r.info;
+  $('#aLassoOk').disabled=!r.ok;
+  $('#aChoixLasso').hidden=false;
+  msgA(r.ok?'Touche « Échanger » ou efface la sélection pour recommencer.':'Efface la sélection et entoure à nouveau.',r.ok?'info':'mal');
+  dire(r.info);
+}
+function fermerSel(effacerDessin){
+  const S0=A.sel; A.sel=null;
+  const box=$('#aChoixLasso'); if(box) box.hidden=true;
+  if(S0&&effacerDessin!==false){ S0.sel.forEach(it=>it.g&&it.g.classList.remove('selec')); if(S0.L.chemin.parentNode) S0.L.chemin.remove(); }
+}
+$('#aLassoEff').addEventListener('click',()=>{ if(A.busy) return; fermerSel(true); msgA('Sélection effacée. Entoure à nouveau.','info'); });
+$('#aLassoOk').addEventListener('click',async()=>{
+  if(A.busy||!A.sel||!A.sel.r.ok) return;
+  const {sel,L,r}=A.sel; A.sel=null; $('#aChoixLasso').hidden=true;
+  L.chemin.classList.add('ok-lasso'); msgA(r.phrase,'bien'); dire(r.phrase);
+  A.busy=true; setTimeout(()=>{ if(L.chemin.parentNode) L.chemin.remove(); },1600);
+  try{ await animerRegroupement(sel,r.nouveau); } finally { A.busy=false; dessinerAtelier(); }
+});
+function dire2(m){ msgA(m.t,m.c); dire(m.t); }
+async function echangeEntoure(){}
 $('#aEntourer').addEventListener('click',()=>{
   A.entourer=!A.entourer; if(A.entourer&&A.casser){ A.casser=false; $('#aCasser').setAttribute('aria-pressed',false); $('#aCasser').classList.remove('enfonce'); }
+  if(!A.entourer) fermerSel(true);
   $('#aEntourer').setAttribute('aria-pressed',A.entourer); $('#aEntourer').classList.toggle('enfonce',A.entourer);
   msgA(A.entourer?(A.mode==='cubes'?'Entoure 10 cubes pareils avec le doigt pour les échanger.':'Entoure des pièces ou des billets pour les échanger contre un seul.'):'',A.entourer?'info':'');
 });
+
+function basculerDeux(etat,silencieux){
+  A.split=etat; fermerSel(true);
+  $('#aDeuxBtn').classList.toggle('enfonce',etat); $('#aDeuxBtn').setAttribute('aria-pressed',etat);
+  $('#aReunir').hidden=!etat;
+  if(etat){ A.tableau=true; A.items.forEach(it=>it.part=partDe(it.y)); A.partActive='a'; }
+  else A.items.forEach(it=>it.part=null);
+  if(!silencieux){ calculerRangement(); dessinerAtelier();
+    msgA(etat?'Place le 1er nombre en haut, le 2e nombre en bas.':'',etat?'info':''); }
+}
+$('#aDeuxBtn').addEventListener('click',()=>{ if(A.busy||A.mode!=='cubes') return; basculerDeux(!A.split); });
+$('#aReunir').addEventListener('click',async()=>{
+  if(A.busy||!A.split) return;
+  const a=sommePart('a'), b=sommePart('b');
+  if(!a||!b){ return msgA('Il faut un nombre en haut et un nombre en bas.','info'); }
+  A.busy=true;
+  try{
+    const m=`On réunit ${a} et ${b}.`; msgA(m,'bien'); dire(m);
+    const lignes=[...asvg.querySelectorAll('.ligne-addition,.signe-plus')];
+    lignes.forEach(l=>{ l.style.transition='opacity 1.2s'; l.style.opacity=0; });
+    A.split=false; A.items.forEach(it=>it.part=null);
+    $('#aDeuxBtn').classList.remove('enfonce'); $('#aDeuxBtn').setAttribute('aria-pressed',false); $('#aReunir').hidden=true;
+    await pause(600);
+    await animerRanger(2200);
+    const t=a+b, c=comptesCanon(t);
+    const cnt={}; ['m','c','d','u'].forEach(k=>cnt[k]=A.items.filter(i=>i.k===k).length);
+    const plein=['u','d','c'].find(k=>cnt[k]>=10);
+    const fin = plein ? `Il y a ${cnt[plein]} ${NOMS[plein][1]} : entoure 10 ${NOMS[plein][1]} pour faire 1 ${NOMS[{u:'d',d:'c',c:'m'}[plein]][0]}.` : 'Compte maintenant combien il y a en tout.';
+    msgA(fin,'info'); dire(fin);
+  } finally { A.busy=false; dessinerAtelier(); }
+});
+function sommePart(pt){ return A.items.filter(i=>(i.part||null)===pt).reduce((s,i)=>s+valItem(i),0); }
+function comptesPart(pt){ const c={}; ['m','c','d','u'].forEach(k=>c[k]=A.items.filter(i=>i.k===k&&(i.part||null)===pt).length); return c; }
 
 $('#btnAtelier').addEventListener('click',()=>{ montrer('atelier'); changerMode(A.mode,false); dessinerAtelier(); });
 
