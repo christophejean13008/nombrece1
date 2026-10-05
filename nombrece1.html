@@ -29,6 +29,7 @@ html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0;min-height:100%;background:var(--papier);color:var(--encre);
   font-family:Andika,"Trebuchet MS","Segoe UI",system-ui,sans-serif;font-size:20px;line-height:1.4}
+[hidden]{display:none!important}
 button,select,input{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:3px solid var(--bleu);outline-offset:3px}
@@ -75,7 +76,7 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 .consigne p{margin:0;font-size:1.35rem;font-weight:700}
 .jeu-grille{display:grid;gap:14px}
 @media (min-width:1000px){ .jeu-grille{grid-template-columns:1fr 330px;align-items:start} }
-.plateau{background:var(--tableau);border:2px solid var(--trait);border-radius:16px;overflow:hidden}
+.plateau{background:var(--tableau);border:2px solid var(--trait);border-radius:16px}
 .plateau svg{display:block;width:100%;height:auto}
 .cote{display:flex;flex-direction:column;gap:12px}
 .phrase{font-size:1.3rem;margin:0;text-align:center}
@@ -113,6 +114,7 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 .losange.trouve{fill:var(--vertclair);stroke:var(--vert);stroke-width:3.5}
 .rep{font-size:30px;font-weight:700;fill:var(--encre);text-anchor:middle;dominant-baseline:central}
 .fleche{stroke:var(--doux);stroke-width:2.5}
+.pointe{fill:var(--doux)}
 .bond{fill:none;stroke:var(--vert);stroke-width:3}
 .val{font-size:22px;font-weight:700;fill:var(--vert);text-anchor:middle}
 .cible-grad{stroke:var(--vert);stroke-width:6}
@@ -225,11 +227,15 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 #jeu .consigne p{font-size:clamp(1rem,2.6vh,1.35rem)}
 #jeu .jeu-grille,#atelier .atelier-grille{flex:1;min-height:0;display:grid;align-items:stretch;gap:10px;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
 @media (min-aspect-ratio:4/3) and (min-width:760px){
-  #jeu .jeu-grille,#atelier .atelier-grille{grid-template-columns:minmax(0,1fr) clamp(260px,26vw,330px);grid-template-rows:minmax(0,1fr)}
+  #jeu .jeu-grille{grid-template-columns:minmax(0,1fr) clamp(260px,26vw,330px);grid-template-rows:minmax(0,1fr)}
+  #atelier .atelier-grille{grid-template-columns:minmax(0,1fr) clamp(210px,19vw,270px);grid-template-rows:minmax(0,1fr)}
   #jeu .cote,#atelier .cote{max-height:none}
 }
-#jeu .plateau,#atelier .plateau{min-height:0;position:relative}
-#jeu .plateau svg,#atelier .plateau svg{position:absolute;inset:0;width:100%;height:100%}
+#jeu .plateau,#atelier .plateau{min-height:0;display:flex;align-items:center;justify-content:center}
+#jeu .plateau svg,#atelier .plateau svg{flex:none;display:block}
+/* Quand la réponse est donnée : on retire le clavier / le tiroir pour que « Suivant » soit tout de suite visible */
+#jeu.fini .pave,#jeu.fini .ajouts,#jeu.fini .tiroir,#jeu.fini .note,#jeu.fini #btnEchange,#jeu.fini #btnRanger{display:none}
+#jeu.fini #btnSuivant{order:-1}
 #atelier .atelier-gauche{display:flex;flex-direction:column;min-height:0;overflow:hidden}
 #jeu .cote,#atelier .cote{min-height:0;overflow-y:auto;align-self:start;max-height:100%;gap:8px;max-height:52vh}
 #atelier .cote{max-height:40vh}
@@ -266,15 +272,29 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 #atelier .tiroir-a .ajout-cube svg{height:clamp(28px,5.4vh,56px)}
 #atelier .outils{gap:6px}
 #atelier .outil{min-height:clamp(36px,5.6vh,54px);padding:3px 10px;font-size:clamp(.85rem,2vh,1rem)}
-#atelier .etiq{margin:4px 0 0;font-size:.85rem}
-#atelier .gros-nombre{font-size:clamp(1.8rem,6.5vh,3.2rem)}
-#atelier .lettres-a{font-size:clamp(1rem,2.6vh,1.3rem)}
-#atelier #aDecomp{font-size:clamp(.85rem,2vh,1rem);margin:0}
-#atelier .numeration{font-size:clamp(1rem,3vh,1.5rem)}
+#atelier .etiq{margin:3px 0 0;font-size:.75rem}
+#atelier .gros-nombre{font-size:clamp(1.3rem,4.4vh,2.2rem);letter-spacing:0}
+#atelier .lettres-a{font-size:clamp(.85rem,2vh,1rem)}
+#atelier #aDecomp{font-size:clamp(.75rem,1.7vh,.9rem);margin:0}
+#atelier .numeration{font-size:clamp(.95rem,2.4vh,1.25rem)}
+#atelier .panneau-a,#atelier .cote .bloc{font-size:.9rem}
+#atelier .cote .outil{font-size:.85rem;padding:3px 8px}
+#atelier .case{font-size:.8rem}
+#atelier #aSaisie{font-size:.95rem}
+.compte-col{font-size:40px;font-weight:700;text-anchor:middle}
+.fond-compte{fill:var(--tableau);stroke:currentColor;stroke-width:2.5}
+.nombre-part{font-size:38px;font-weight:700;fill:var(--encre)}
 #atelier .case{margin-top:6px;font-size:.9rem}
 #atelier #aSaisie{font-size:1.05rem;min-height:40px;margin:4px 0}
 #atelier #aRetour{margin-top:4px;font-size:.95rem}
 #atelier .rond.petit{width:34px;height:34px;font-size:.95rem}
+
+/* Affichage de secours : le canvas montre l'image, le SVG reste dessous pour les gestes */
+#plateau,#atelier .plateau{position:relative}
+canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
+.miroir-actif canvas.miroir{display:block}
+.miroir-actif #svg,.miroir-actif #asvg{opacity:0}
+.miroir-actif .table-rangement{transition:none}
 
 @media (prefers-reduced-motion: reduce){
   .obj,.table-rangement{transition:none}
@@ -329,6 +349,7 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
           <option value="jamais">Jamais (comme l'évaluation)</option>
         </select></div>
       <div class="reglage"><span>Lecture à voix haute</span><input type="checkbox" id="chkVoix"></div>
+      <div class="reglage"><span>Affichage de secours TBI</span><input type="checkbox" id="chkMiroir"><span class="note">à garder coché si des points de couleur apparaissent sur le tableau</span></div>
       <div class="reglage"><span>Ajuster le niveau seul</span><input type="checkbox" id="chkAuto">
         <span class="note">monte si 80 % de réussite du premier coup, descend sous 35 %</span></div>
     </details>
@@ -457,7 +478,7 @@ const MAXN=k=>Object.keys(ACTS[k].desc).length;
 
 /* ---------- Données ---------- */
 const CLE='adaptnombre-v1';
-const REG0=()=>({nq:8,voix:true,couleurs:'auto',auto:true,acts:ORDRE.slice()});
+const REG0=()=>({nq:8,voix:true,couleurs:'auto',auto:true,acts:ORDRE.slice(),miroir:true});
 let data={eleves:{},courant:'',reglages:REG0()};
 try{ const s=localStorage.getItem(CLE); if(s){ const d=JSON.parse(s); if(d&&d.eleves) data=Object.assign(data,d); data.reglages=Object.assign(REG0(),d.reglages||{}); } }catch(e){}
 function sauver(){ try{ localStorage.setItem(CLE,JSON.stringify(data)); }catch(e){} }
@@ -491,7 +512,7 @@ function majAccueil(){
   $('#niveaux').innerHTML=ORDRE.map(k=>`<div class="reglage"><span>Niveau : ${ACTS[k].court.toLowerCase()}</span><select data-niv="${k}">${Object.keys(ACTS[k].desc).map(n=>`<option value="${n}" ${+n===e[ACTS[k].champ]?'selected':''}>${n} : ${ACTS[k].desc[n]}</option>`).join('')}</select></div>`).join('');
   $('#acts').innerHTML=ORDRE.map(k=>`<label><input type="checkbox" data-act="${k}" ${R.acts.includes(k)?'checked':''}>${ACTS[k].court}</label>`).join('');
   $('#selNq').value=String(R.nq); $('#selCoul').value=R.couleurs;
-  $('#chkVoix').checked=R.voix; $('#chkAuto').checked=R.auto;
+  $('#chkVoix').checked=R.voix; $('#chkMiroir').checked=R.miroir; $('#chkAuto').checked=R.auto;
   const h=e.hist.slice().reverse();
   const cel=(sc,nv)=>sc?`${sc} (niv. ${nv})`:'–';
   $('#suivi').innerHTML = h.length
@@ -515,10 +536,28 @@ $('#btnSuppr').addEventListener('click',()=>{
 $('#selNq').addEventListener('change',e=>{ data.reglages.nq=+e.target.value; sauver(); });
 $('#selCoul').addEventListener('change',e=>{ data.reglages.couleurs=e.target.value; sauver(); });
 $('#chkVoix').addEventListener('change',e=>{ data.reglages.voix=e.target.checked; sauver(); });
+$('#chkMiroir').addEventListener('change',e=>{ data.reglages.miroir=e.target.checked; sauver(); appliquerMiroir(); });
 $('#chkAuto').addEventListener('change',e=>{ data.reglages.auto=e.target.checked; sauver(); });
 document.querySelector('[data-mode="rituel"]').addEventListener('click',()=>demarrer('rituel'));
 
-function montrer(id){ document.querySelectorAll('.ecran').forEach(s=>s.classList.toggle('actif',s.id===id)); window.scrollTo(0,0); }
+function montrer(id){ document.querySelectorAll('.ecran').forEach(s=>s.classList.toggle('actif',s.id===id)); window.scrollTo(0,0); ajusterPlateaux(); }
+/* Taille du plateau calculée en pixels (au lieu d'un SVG étiré en %), plus sûr pour les navigateurs de TBI */
+function ajusterPlateaux(){
+  [['#plateau','#svg'],['#atelier .plateau','#asvg']].forEach(([pc,sc])=>{
+    const p=document.querySelector(pc), s=document.querySelector(sc);
+    if(!p||!s||!p.offsetParent) return;
+    const vb=(s.getAttribute('viewBox')||'0 0 720 400').split(/\s+/).map(Number);
+    const W=p.clientWidth-6, H=p.clientHeight-6;
+    if(W<=0||H<=0) return;
+    const k=Math.min(W/vb[2],H/vb[3]);
+    const w=Math.floor(vb[2]*k), h=Math.floor(vb[3]*k);
+    if(s.style.width!==w+'px') s.style.width=w+'px';
+    if(s.style.height!==h+'px') s.style.height=h+'px';
+  });
+}
+window.addEventListener('resize',()=>requestAnimationFrame(ajusterPlateaux));
+window.addEventListener('orientationchange',()=>setTimeout(ajusterPlateaux,300));
+if('ResizeObserver' in window){ const ro=new ResizeObserver(()=>ajusterPlateaux()); document.addEventListener('DOMContentLoaded',()=>{}); setTimeout(()=>{ ['#plateau','#atelier .plateau'].forEach(q=>{ const e=document.querySelector(q); if(e) ro.observe(e); }); },0); }
 
 /* ---------- Séance ---------- */
 let S=null;
@@ -550,7 +589,9 @@ function suivante(){
   S.sig=q.sig; q.essais=0; q.fini=false; S.q=q;
   retour.textContent=''; retour.className='';
   $('#btnSuivant').hidden=true; $('#btnAide').disabled=false;
+  document.getElementById('jeu').classList.remove('fini');
   AFF[type]();
+  ajusterPlateaux();
   majProgres();
   direConsigne();
 }
@@ -571,7 +612,7 @@ async function echec(){
   await AIDE[q.type]();
   finQuestion();
 }
-function finQuestion(){ majProgres(); $('#btnAide').disabled = S.q.type==='droite' && S.q.fini; const v=$('#btnValider'); if(v) v.hidden=true; $('#btnSuivant').hidden=false; $('#btnSuivant').focus({preventScroll:true}); }
+function finQuestion(){ majProgres(); $('#btnAide').disabled = S.q.type==='droite' && S.q.fini; const v=$('#btnValider'); if(v) v.hidden=true; $('#btnSuivant').hidden=false; document.getElementById('jeu').classList.add('fini'); const b=$('#btnSuivant'); try{ b.scrollIntoView({block:'nearest'}); }catch(e){} b.focus({preventScroll:true}); }
 $('#btnSuivant').addEventListener('click',suivante);
 $('#btnMaison').addEventListener('click',()=>{ S.tok++; if('speechSynthesis' in window) speechSynthesis.cancel(); majAccueil(); montrer('accueil'); });
 function direConsigne(){ dire($('#txtConsigne').textContent+(S&&S.q&&S.q.dire?' '+S.q.dire:'')); }
@@ -845,7 +886,8 @@ function afficherDroite(){
   const xt=X(q.k);
   q.los=el('polygon',{points:`${xt},26 ${xt+36},62 ${xt},98 ${xt-36},62`,class:'losange'},svg);
   q.rep=el('text',{x:xt,y:62,class:'rep'},svg); q.rep.textContent='?';
-  el('line',{x1:xt,y1:100,x2:xt,y2:Y-18,class:'fleche','marker-end':'url(#pointe)'},svg);
+  el('line',{x1:xt,y1:100,x2:xt,y2:Y-26,class:'fleche'},svg);
+  el('polygon',{points:`${xt-8},${Y-28} ${xt+8},${Y-28} ${xt},${Y-14}`,class:'pointe'},svg);
   couchAide=el('g',{},svg);
   $('#txtConsigne').textContent='Quel nombre est caché sous la flèche ?';
   $('#btnRanger').hidden=true;
@@ -1325,6 +1367,7 @@ function itemsPour(n,mode){
 }
 function montrerA(n,mode){
   if(A.busy) return;
+  if(A.split) basculerDeux(false,true);
   if(mode!==A.mode) changerMode(mode,false);
   A.items=itemsPour(n,mode); rangerA();
 }
@@ -1375,6 +1418,7 @@ const partDe=y=>A.split&&A.mode==='cubes' ? (y<337?'a':'b') : null;
 const partsA=()=>A.split&&A.mode==='cubes'?['a','b']:[null];
 function calculerRangement(){
   if(A.mode==='cubes'){
+    if(A.split) A.items.forEach(i=>{ if(!i.part) i.part=partDe(i.y||0); });
     const out=[];
     ['m','c','d','u'].forEach(k=>partsA().forEach(pt=>{ A.items.filter(i=>i.k===k&&(i.part||null)===pt).sort((a,b)=>(a.y-b.y)||(a.x-b.x)).forEach((it,i)=>{ Object.assign(it,slotA(it,i,pt)); out.push(it); }); }));
     A.items=out;
@@ -1496,6 +1540,24 @@ function dessinerAtelier(){
     const f=el('g',{},asvg);
     [250,600,800].forEach(x=>el('line',{x1:x,y1:10,x2:x,y2:610,class:'sep'},f));
     if(A.split){ el('line',{x1:6,y1:337,x2:994,y2:337,class:'ligne-addition'},f); el('text',{x:24,y:385,class:'signe-plus'},f).textContent='+'; }
+    if(!A.cache && A.items.length){
+      /* nombre d'objets écrit en bas de chaque colonne (en haut et en bas en mode addition) */
+      const COLX={m:125,c:425,d:700,u:900};
+      partsA().forEach(pt=>{
+        const objets=A.items.filter(i=>(i.part||null)===pt);
+        if(!objets.length) return;
+        const yb = pt==='a' ? 322 : 604;
+        ['m','c','d','u'].forEach(k=>{
+          const n=objets.filter(i=>i.k===k).length;
+          if(!n && (k==='m'||(k==='c'&&!objets.some(i=>i.k==='m')))) return; // pas de zéro inutile à gauche
+          const g=el('g',{class:`r-${k}-svg`,style:'color:'+({m:'#8C63D9',c:'#2E8B47',d:'#C8362B',u:'#2F63D6'}[k])},f);
+          const w=String(n).length*24+26;
+          el('rect',{x:COLX[k]-w/2,y:yb-38,width:w,height:46,rx:10,class:'fond-compte'},g);
+          el('text',{x:COLX[k],y:yb,class:'compte-col'},g).textContent=n;
+        });
+        if(A.split){ const t=objets.reduce((s,i)=>s+valItem(i),0); el('text',{x:16,y:pt==='a'?110:440,class:'nombre-part'},f).textContent=t; }
+      });
+    }
     [['milliers',125,'r-m'],['centaines',425,'r-c'],['dizaines',700,'r-d'],['unités',900,'r-u']].forEach(([t,x,c])=>{ el('text',{x,y:40,class:'titre-col '+c+'-svg'},f).textContent=t; });
   }
   const couche=el('g',{id:'aCouche'},asvg);
@@ -1612,6 +1674,7 @@ $('#aMontrerC').addEventListener('click',()=>{
   if(cn && ['u','d','c','m'].some(k=>cn[k]>CAPA[k])){ msgA(`Trop d'objets pour le plateau : au plus ${CAPA.c} centaines, ${CAPA.d} dizaines et ${CAPA.u} unités.`,'mal'); return; }
   if(cn){
     if(A.mode!=='cubes') changerMode('cubes',false);
+    if(A.split) basculerDeux(false,true);
     A.items=[]; ['m','c','d','u'].forEach(k=>{ for(let i=0;i<cn[k];i++) A.items.push({k}); }); rangerA();
     msgA(`${numeration(cn).replace(/<[^>]+>/g,'')} = ${n.toLocaleString('fr-FR')}`,'info');
   } else { montrerA(n,'cubes'); msgA(`${n.toLocaleString('fr-FR')} en cubes.`,'info'); }
@@ -1625,7 +1688,7 @@ $('#aEchanger').addEventListener('click',echangerA);
 $('#aCasser').addEventListener('click',()=>{ A.casser=!A.casser; if(A.casser&&A.entourer){ A.entourer=false; $('#aEntourer').setAttribute('aria-pressed',false); $('#aEntourer').classList.remove('enfonce'); } $('#aCasser').setAttribute('aria-pressed',A.casser); $('#aCasser').classList.toggle('enfonce',A.casser); msgA(A.casser?'Touche un cube ou un billet pour le casser en plus petits.':'',A.casser?'info':''); });
 $('#aTableauBtn').addEventListener('click',()=>{ A.tableau=!A.tableau; $('#aTableauBtn').setAttribute('aria-pressed',A.tableau); dessinerAtelier(); });
 $('#aEffacer').addEventListener('click',()=>{ if(A.busy) return; A.items=[]; msgA(''); dessinerAtelier(); });
-$('#aCache').addEventListener('change',e=>{ A.cache=e.target.checked; majPanneauA(); });
+$('#aCache').addEventListener('change',e=>{ A.cache=e.target.checked; dessinerAtelier(); });
 $('#aLire').addEventListener('click',()=>{ if(A.cache) return; const t=totalA(); dire(lettresN(t)+(A.mode==='monnaie'?' euros':'')); });
 $('#aMaison').addEventListener('click',()=>{ majAccueil(); montrer('accueil'); });
 /* ---- Écriture en unités de numération (3d 8u) ---- */
@@ -1766,6 +1829,66 @@ function comptesPart(pt){ const c={}; ['m','c','d','u'].forEach(k=>c[k]=A.items.
 
 $('#btnAtelier').addEventListener('click',()=>{ montrer('atelier'); changerMode(A.mode,false); dessinerAtelier(); });
 
+
+/* ================= AFFICHAGE DE SECOURS POUR TBI =================
+   Certains TBI affichent mal les dessins SVG (points de couleur au hasard).
+   Le plateau SVG reste en place (invisible) pour les gestes de l'élève,
+   et une copie en image est peinte dans un canvas calculé par le processeur. */
+const PROPS=['fill','fill-opacity','stroke','stroke-width','stroke-opacity','stroke-dasharray','stroke-linejoin','stroke-linecap','opacity','display','visibility','font-size','font-weight','font-family','text-anchor','dominant-baseline'];
+const cacheStyle=new WeakMap();
+const miroirs=[];
+function styleEnLigne(src){
+  const cle=(src.getAttribute('class')||'')+'|'+(src.getAttribute('style')||'')+'|'+(src.parentNode&&src.parentNode.getAttribute?src.parentNode.getAttribute('class'):'')+'|'+document.documentElement.dataset.cleTheme+'|'+(src.ownerSVGElement&&src.ownerSVGElement.parentNode?src.ownerSVGElement.parentNode.className:'');
+  const c=cacheStyle.get(src); if(c&&c.cle===cle) return c.st;
+  const cs=getComputedStyle(src);
+  const st=PROPS.map(p=>{ const v=cs.getPropertyValue(p); return v?`${p}:${v}`:''; }).filter(Boolean).join(';');
+  cacheStyle.set(src,{cle,st}); return st;
+}
+function creerMiroir(svgEl){
+  const cv=document.createElement('canvas'); cv.className='miroir'; cv.setAttribute('aria-hidden','true');
+  svgEl.parentNode.insertBefore(cv,svgEl);
+  let ctx=null; try{ ctx=cv.getContext('2d',{willReadFrequently:true}); }catch(e){ ctx=cv.getContext('2d'); }
+  const m={svg:svgEl,cv,ctx,sale:true,enCours:false,raf:0};
+  new MutationObserver(()=>{ m.sale=true; planifierMiroir(m); }).observe(svgEl,{subtree:true,childList:true,attributes:true,characterData:true});
+  miroirs.push(m); return m;
+}
+function planifierMiroir(m){ if(!data.reglages.miroir||m.raf) return; m.raf=requestAnimationFrame(()=>{ m.raf=0; peindreMiroir(m); }); }
+function peindreMiroir(m){
+  if(!data.reglages.miroir||m.enCours) return;
+  const svgEl=m.svg, par=svgEl.parentNode; if(!par||!par.offsetParent){ return; }
+  m.sale=false; m.enCours=true;
+  const rs=svgEl.getBoundingClientRect(), rp=par.getBoundingClientRect();
+  const w=rs.width, h=rs.height, gx=rs.left-rp.left-par.clientLeft, gy=rs.top-rp.top-par.clientTop;
+  if(!w||!h){ m.enCours=false; return; }
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const W=Math.round(w*dpr), H=Math.round(h*dpr);
+  const clone=svgEl.cloneNode(true);
+  clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  clone.setAttribute('width',W); clone.setAttribute('height',H); clone.removeAttribute('style'); clone.removeAttribute('class');
+  const src=svgEl.querySelectorAll('*'), dst=clone.querySelectorAll('*');
+  for(let i=0;i<src.length;i++){ const st=styleEnLigne(src[i]); const s0=src[i].getAttribute('style'); dst[i].setAttribute('style',st+(s0&&/opacity/.test(s0)?';'+s0.split(';').filter(x=>/opacity/.test(x)).join(';'):'')); dst[i].removeAttribute('class'); }
+  const txt=new XMLSerializer().serializeToString(clone);
+  const img=new Image();
+  img.onload=()=>{
+    if(m.cv.width!==W) m.cv.width=W; if(m.cv.height!==H) m.cv.height=H;
+    m.cv.style.width=w+'px'; m.cv.style.height=h+'px';
+    m.cv.style.left=gx+'px'; m.cv.style.top=gy+'px';
+    m.ctx.clearRect(0,0,W,H); m.ctx.drawImage(img,0,0,W,H);
+    m.enCours=false; if(m.sale) planifierMiroir(m);
+  };
+  img.onerror=()=>{ m.enCours=false; data.reglages.miroir=false; appliquerMiroir(); };
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(txt);
+}
+function appliquerMiroir(){
+  document.body.classList.toggle('miroir-actif',!!data.reglages.miroir);
+  miroirs.forEach(m=>{ m.sale=true; planifierMiroir(m); });
+}
+creerMiroir(svg); creerMiroir(asvg);
+document.documentElement.dataset.cleTheme=matchMedia('(prefers-color-scheme: dark)').matches?'s':'c';
+try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change',e=>{ document.documentElement.dataset.cleTheme=e.matches?'s':'c'; appliquerMiroir(); }); }catch(e){}
+new MutationObserver(()=>miroirs.forEach(m=>{ m.sale=true; planifierMiroir(m); })).observe(document.getElementById('plateau'),{attributes:true,attributeFilter:['class']});
+['jeu','atelier'].forEach(id=>new MutationObserver(()=>miroirs.forEach(m=>planifierMiroir(m))).observe(document.getElementById(id),{attributes:true,attributeFilter:['class']}));
+appliquerMiroir();
 
 majAccueil();
 })();
