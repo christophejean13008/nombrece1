@@ -91,7 +91,7 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 #btnSuivant{text-align:center;max-width:320px;margin:0 auto}
 
 /* Cubes */
-.obj{transition:transform .9s cubic-bezier(.5,0,.2,1)}
+
 .obj .avant{fill:var(--tableau);stroke:var(--encre);stroke-width:1.4}
 .obj .face{fill:var(--ombre);stroke:var(--encre);stroke-width:1.2}
 .couleurs .bar .avant{fill:var(--diz)} .couleurs .bar .face{fill:var(--diz2)}
@@ -673,7 +673,25 @@ function dessiner(it,parent){
   }
   return g;
 }
-function poser(it,x,y,a){ it.g.style.transform=`translate(${x}px,${y}px) rotate(${a}deg)`; }
+/* Déplacement par l'attribut SVG "transform" (compatible avec tous les navigateurs de TBI),
+   animé image par image, au lieu des transformations CSS sur le SVG. */
+function ecrireTf(g,x,y,a,sc){ g.setAttribute('transform',`translate(${x.toFixed(1)} ${y.toFixed(1)})`+(a?` rotate(${a.toFixed(1)})`:'')+(sc!=null&&sc!==1?` scale(${sc.toFixed(3)})`:'')); }
+const adoucir=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+function bougerVers(g,x,y,a,sc,ms){
+  a=a||0; sc=sc==null?1:sc;
+  const x0=g._x, y0=g._y, a0=g._a||0, s0=g._s==null?1:g._s;
+  g._x=x; g._y=y; g._a=a; g._s=sc;
+  const id=(g._anim=(g._anim||0)+1);
+  if(!ms || x0==null || window.matchMedia('(prefers-reduced-motion: reduce)').matches){ ecrireTf(g,x,y,a,sc); return; }
+  const t0=performance.now();
+  (function etape(now){
+    if(g._anim!==id) return;
+    const t=Math.min(1,(now-t0)/ms), e=adoucir(t);
+    ecrireTf(g,x0+(x-x0)*e,y0+(y-y0)*e,a0+(a-a0)*e,s0+(sc-s0)*e);
+    if(t<1) requestAnimationFrame(etape);
+  })(t0);
+}
+function poser(it,x,y,a){ bougerVers(it.g,x,y,a,1,it.g._x==null?0:900); }
 
 let couchEtiq=null, couchPaquet=null;
 function afficherCubes(){
@@ -1377,8 +1395,8 @@ function calculerRangement(){
 function rangerA(){ calculerRangement(); dessinerAtelier(); }
 /* ---- animations ---- */
 const LENT=1;  // multiplicateur de durée
-function transit(g,ms){ g.style.transition=`transform ${ms*LENT}ms ease-in-out, opacity ${ms*LENT}ms ease`; }
-function posStyle(g,x,y,s){ g.style.transform=`translate(${x}px,${y}px)`+(s!=null?` scale(${s})`:''); }
+function transit(g,ms){ g._ms=ms*LENT; g.style.transition=`opacity ${ms*LENT}ms ease`; }
+function posStyle(g,x,y,s){ const ms=g._ms||0; g._ms=0; bougerVers(g,x,y,0,s,ms); }
 const pause=ms=>attendre(ms*LENT);
 function formeCible(k,i,cx,cy){
   if(k==='u') return {x:cx,y:cy-63+14*i};      // 10 unités en colonne = 1 barre
