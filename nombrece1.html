@@ -154,7 +154,7 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 .tiroir .ajout,.tiroir-fab .ajout{cursor:grab}
 .tiroir-fab .ajout{touch-action:none;-webkit-user-select:none;user-select:none}
 .tiroir-fab .ajout svg{height:70px}
-.fantome{position:fixed;left:0;top:0;z-index:50;pointer-events:none;filter:drop-shadow(0 6px 8px rgba(0,0,0,.3))}
+.fantome{position:fixed;left:0;top:0;z-index:50;pointer-events:none;opacity:.85}
 .fantome svg{display:block}
 .vide-txt{font-size:24px;fill:var(--doux);text-anchor:middle}
 .val-billet{font-size:24px;font-weight:700;fill:#1D2B4F;text-anchor:middle;dominant-baseline:central}
@@ -170,6 +170,7 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 .atelier-grille{display:grid;gap:14px}
 @media (min-width:1000px){ .atelier-grille{grid-template-columns:1fr 340px;align-items:start} }
 .atelier-gauche{display:flex;flex-direction:column;gap:10px}
+.tiroir-a[hidden]{display:none}
 .tiroir-a{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .tiroir-a .ajout{min-width:78px;min-height:78px;touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;font-size:.9rem}
 .tiroir-a .ajout svg{height:50px;width:auto;max-width:110px}
@@ -196,9 +197,9 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 .numeration{font-size:1.6rem;font-weight:700;margin:0}
 .op{color:var(--doux);font-weight:700}
 .numeration small{font-size:.9rem;font-weight:400;color:var(--doux)}
-.lasso{fill:#2F63D6;fill-opacity:.1;stroke:#2F63D6;stroke-width:4;stroke-dasharray:10 7;stroke-linejoin:round}
-.choix-lasso{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:5;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;
-  background:var(--tableau);border:2px solid var(--bleu);border-radius:14px;padding:8px 12px;box-shadow:0 6px 18px rgba(0,0,0,.18);max-width:94%}
+.lasso{fill:none;stroke:#2F63D6;stroke-width:4;stroke-dasharray:10 7;stroke-linejoin:round}
+.choix-lasso{flex:none;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;
+  background:var(--tableau);border:2px solid var(--bleu);border-radius:14px;padding:6px 12px}
 .choix-lasso span{font-weight:700}
 .choix-lasso[hidden]{display:none}
 .outil.ok-btn{background:var(--vert);border-color:var(--vert);color:#fff}
@@ -206,8 +207,8 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 #aDeuxBtn.enfonce{background:var(--bleu);color:#fff}
 .ligne-addition{stroke:#E8590C;stroke-width:4;stroke-dasharray:14 10}
 .signe-plus{font-size:44px;font-weight:700;fill:#E8590C;text-anchor:middle}
-.lasso.mauvais{fill:#C23A4E;stroke:#C23A4E}
-.lasso.ok-lasso{fill:#1F8A52;stroke:#1F8A52;fill-opacity:.15}
+.lasso.mauvais{stroke:#C23A4E}
+.lasso.ok-lasso{stroke:#1F8A52}
 #aEntourer.enfonce{background:var(--bleu);color:#fff}
 .r-m{color:#8C63D9} .r-c{color:#2E8B47} .r-d{color:#C8362B} .r-u{color:#2F63D6}
 .r-m-svg{fill:#8C63D9} .r-c-svg{fill:#2E8B47} .r-d-svg{fill:#C8362B} .r-u-svg{fill:#2F63D6}
@@ -378,12 +379,12 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
   </div>
   <div class="atelier-grille">
     <div class="atelier-gauche">
-      <div class="plateau mode-monnaie"><svg id="asvg" viewBox="0 0 1000 620" role="img" aria-label="Plateau libre"></svg>
+      <div class="plateau mode-monnaie"><svg id="asvg" viewBox="0 0 1000 620" role="img" aria-label="Plateau libre"></svg></div>
         <div class="choix-lasso" id="aChoixLasso" hidden>
           <span id="aLassoInfo"></span>
           <button class="outil ok-btn" id="aLassoOk">Échanger</button>
           <button class="outil" id="aLassoEff">Effacer la sélection</button>
-        </div></div>
+        </div>
       <div class="tiroir-a" id="aTiroir"></div>
       <div class="outils">
         <button class="outil" id="aRanger">Ranger</button>
@@ -1260,35 +1261,27 @@ const totalA=()=>A.items.reduce((s,it)=>s+valItem(it),0);
 const VB={u:'-9 -14 23 23',d:'-9 -77 23 149',c:'-72 -80 152 152',m:'-72 -102 174 174'};
 function extA(it){ if(it.k) return {u:[9,13],d:[9,76],c:[80,80],m:[88,88]}[it.k]; return it.v>=5?[58,30]:[30,30]; }
 function ligne(g,x1,y1,x2,y2){ el('line',{x1,y1,x2,y2,class:'grille'},g); }
+/* Dessin allégé : 2 à 4 éléments par bloc (au lieu de 20 à 50) pour ne pas saturer les navigateurs de TBI */
 function dessinerBloc(k,p){
   const g=el('g',{class:'blk k-'+k},p);
-  if(k==='u'){
-    el('polygon',{points:'-7,-7 -2,-12 12,-12 7,-7',class:'face'},g);
-    el('polygon',{points:'7,-7 12,-12 12,2 7,7',class:'face'},g);
-    el('rect',{x:-7,y:-7,width:14,height:14,class:'avant'},g);
-  } else if(k==='d'){
-    el('polygon',{points:'-7,-70 -2,-75 12,-75 7,-70',class:'face'},g);
-    el('polygon',{points:'7,-70 12,-75 12,65 7,70',class:'face'},g);
-    el('rect',{x:-7,y:-70,width:14,height:140,class:'avant'},g);
-    for(let i=1;i<10;i++) ligne(g,-7,-70+14*i,7,-70+14*i);
-  } else if(k==='c'){
-    el('polygon',{points:'-70,-70 -62,-78 78,-78 70,-70',class:'face'},g);
-    el('polygon',{points:'70,-70 78,-78 78,62 70,70',class:'face'},g);
-    for(let i=1;i<10;i++){ ligne(g,-70+14*i,-70,-62+14*i,-78); ligne(g,70,-70+14*i,78,-78+14*i); }
-    el('rect',{x:-70,y:-70,width:140,height:140,class:'avant'},g);
-    for(let i=1;i<10;i++){ ligne(g,-70+14*i,-70,-70+14*i,70); ligne(g,-70,-70+14*i,70,-70+14*i); }
-  } else {
-    el('polygon',{points:'-70,-70 -40,-100 100,-100 70,-70',class:'face'},g);
-    el('polygon',{points:'70,-70 100,-100 100,40 70,70',class:'face'},g);
-    for(let i=1;i<10;i++){
-      ligne(g,-70+14*i,-70,-40+14*i,-100); ligne(g,-70+3*i,-70-3*i,70+3*i,-70-3*i);
-      ligne(g,70,-70+14*i,100,-100+14*i); ligne(g,70+3*i,-70-3*i,70+3*i,70-3*i);
-    }
-    el('rect',{x:-70,y:-70,width:140,height:140,class:'avant'},g);
-    for(let i=1;i<10;i++){ ligne(g,-70+14*i,-70,-70+14*i,70); ligne(g,-70,-70+14*i,70,-70+14*i); }
-  }
+  let faces, lignesFaces='', avant, grille='';
+  if(k==='u'){ faces='M-7,-7L-2,-12L12,-12L7,-7ZM7,-7L12,-12L12,2L7,7Z'; avant=[-7,-7,14,14]; }
+  else if(k==='d'){ faces='M-7,-70L-2,-75L12,-75L7,-70ZM7,-70L12,-75L12,65L7,70Z'; avant=[-7,-70,14,140];
+    for(let i=1;i<10;i++) grille+=`M-7,${-70+14*i}H7`; }
+  else if(k==='c'){ faces='M-70,-70L-62,-78L78,-78L70,-70ZM70,-70L78,-78L78,62L70,70Z'; avant=[-70,-70,140,140];
+    for(let i=1;i<10;i++){ lignesFaces+=`M${-70+14*i},-70L${-62+14*i},-78M70,${-70+14*i}L78,${-78+14*i}`; grille+=`M${-70+14*i},-70V70M-70,${-70+14*i}H70`; } }
+  else { faces='M-70,-70L-40,-100L100,-100L70,-70ZM70,-70L100,-100L100,40L70,70Z'; avant=[-70,-70,140,140];
+    for(let i=1;i<10;i++){ lignesFaces+=`M${-70+14*i},-70L${-40+14*i},-100M${-70+3*i},${-70-3*i}H${70+3*i}M70,${-70+14*i}L100,${-100+14*i}M${70+3*i},${-70-3*i}V${70-3*i}`; grille+=`M${-70+14*i},-70V70M-70,${-70+14*i}H70`; } }
+  el('path',{d:faces,class:'face'},g);
+  if(lignesFaces) el('path',{d:lignesFaces,class:'grille'},g);
+  el('rect',{x:avant[0],y:avant[1],width:avant[2],height:avant[3],class:'avant'},g);
+  if(grille) el('path',{d:grille,class:'grille'},g);
   return g;
 }
+/* Limites d'affichage : au-delà, le plateau devient illisible et trop lourd */
+const CAPA={u:50,d:30,c:20,m:10}, CAPA_PART={u:25,d:20,c:10,m:10};
+function capa(k,part){ return (part?CAPA_PART:CAPA)[k]; }
+function nbK(k,part){ return A.items.filter(i=>i.k===k&&(i.part||null)===(part||null)).length; }
 function iconeA(spec,largeur){
   const s=document.createElementNS(NS,'svg'); s.setAttribute('aria-hidden','true');
   if(spec.k){ s.setAttribute('viewBox',VB[spec.k]); dessinerBloc(spec.k,s); }
@@ -1313,11 +1306,12 @@ function placeLibreA(spec){
 function msgA(t,c){ const r=$('#aRetour'); r.textContent=t; r.className=c||''; }
 function ajouterA(spec,pos){
   if(A.busy) return;
-  if(A.items.length>=150) return msgA('Le plateau est plein.','info');
+  if(A.items.length>=100) return msgA('Le plateau est plein.','info');
   if(totalA()+valItem(spec)>MAXA) return msgA('On s\'arrête à 9 999.','info');
   const part = pos ? partDe(pos.y) : (A.split&&A.mode==='cubes' ? (A.partActive||'a') : null);
   if(part) A.partActive=part;
   const n=A.items.filter(i=>spec.k&&i.k===spec.k&&(i.part||null)===part).length;
+  if(spec.k && n>=capa(spec.k,part)) return msgA(`Plus de place pour les ${NOMS[spec.k][1]} (${capa(spec.k,part)} au plus). Fais des échanges.`,'info');
   const p=pos||(spec.k?slotA(spec,n,part):placeLibreA(spec));
   A.items.push(Object.assign({},spec,{x:p.x,y:p.y,part}));
   dessinerAtelier();
@@ -1469,7 +1463,9 @@ async function casserA(it){
   if(A.busy) return;
   const i=A.items.indexOf(it); if(i<0) return;
   let neufs, bas=null;
-  if(it.k){ if(it.k==='u') return msgA('Une unité ne se casse pas.','info'); bas={m:'c',c:'d',d:'u'}[it.k]; neufs=Array.from({length:10},()=>({k:bas})); }
+  if(it.k){ if(it.k==='u') return msgA('Une unité ne se casse pas.','info'); bas={m:'c',c:'d',d:'u'}[it.k];
+    if(nbK(bas,it.part)+10>capa(bas,it.part)) return msgA(`Pas assez de place pour 10 ${NOMS[bas][1]} de plus. Échange d'abord des ${NOMS[bas][1]}.`,'info');
+    neufs=Array.from({length:10},()=>({k:bas})); }
   else { if(it.v===1) return msgA('Une pièce de 1 € ne se casse pas ici.','info'); neufs=decomposer(it.v,MONNAIE.filter(v=>v<it.v)).map(v=>({v})); }
   A.busy=true;
   try{
@@ -1604,7 +1600,7 @@ $('#aMontrerC').addEventListener('click',()=>{
   if(A.busy) return;
   if(A.addition){
     if(A.mode!=='cubes') changerMode('cubes',false);
-    const [ra,rb]=A.addition; const ok=c=>c.u<=25&&c.d<=20&&c.c<=10&&c.m<=10;
+    const [ra,rb]=A.addition; const ok=c=>['u','d','c','m'].every(k=>c[k]<=CAPA_PART[k]);
     if(!ok(ra.c)||!ok(rb.c)){ msgA('Ces nombres sont trop grands pour être affichés en deux parties.','mal'); return; }
     if(!A.split) basculerDeux(true,true);
     A.items=[];
@@ -1613,7 +1609,8 @@ $('#aMontrerC').addEventListener('click',()=>{
     msgA(`${ra.n} + ${rb.n} : touche « Réunir les 2 nombres ».`,'info');
     return;
   }
-  if(cn && cn.u<=80 && cn.d<=27 && cn.c<=10 && cn.m<=10){
+  if(cn && ['u','d','c','m'].some(k=>cn[k]>CAPA[k])){ msgA(`Trop d'objets pour le plateau : au plus ${CAPA.c} centaines, ${CAPA.d} dizaines et ${CAPA.u} unités.`,'mal'); return; }
+  if(cn){
     if(A.mode!=='cubes') changerMode('cubes',false);
     A.items=[]; ['m','c','d','u'].forEach(k=>{ for(let i=0;i<cn[k];i++) A.items.push({k}); }); rangerA();
     msgA(`${numeration(cn).replace(/<[^>]+>/g,'')} = ${n.toLocaleString('fr-FR')}`,'info');
@@ -1708,19 +1705,19 @@ function proposerSel(sel,L){
   A.sel={sel,L,r};
   $('#aLassoInfo').textContent=r.info;
   $('#aLassoOk').disabled=!r.ok;
-  $('#aChoixLasso').hidden=false;
+  $('#aChoixLasso').hidden=false; $('#aTiroir').hidden=true;
   msgA(r.ok?'Touche « Échanger » ou efface la sélection pour recommencer.':'Efface la sélection et entoure à nouveau.',r.ok?'info':'mal');
   dire(r.info);
 }
 function fermerSel(effacerDessin){
   const S0=A.sel; A.sel=null;
-  const box=$('#aChoixLasso'); if(box) box.hidden=true;
+  const box=$('#aChoixLasso'); if(box) box.hidden=true; const tr=$('#aTiroir'); if(tr) tr.hidden=false;
   if(S0&&effacerDessin!==false){ S0.sel.forEach(it=>it.g&&it.g.classList.remove('selec')); if(S0.L.chemin.parentNode) S0.L.chemin.remove(); }
 }
 $('#aLassoEff').addEventListener('click',()=>{ if(A.busy) return; fermerSel(true); msgA('Sélection effacée. Entoure à nouveau.','info'); });
 $('#aLassoOk').addEventListener('click',async()=>{
   if(A.busy||!A.sel||!A.sel.r.ok) return;
-  const {sel,L,r}=A.sel; A.sel=null; $('#aChoixLasso').hidden=true;
+  const {sel,L,r}=A.sel; A.sel=null; $('#aChoixLasso').hidden=true; $('#aTiroir').hidden=false;
   L.chemin.classList.add('ok-lasso'); msgA(r.phrase,'bien'); dire(r.phrase);
   A.busy=true; setTimeout(()=>{ if(L.chemin.parentNode) L.chemin.remove(); },1600);
   try{ await animerRegroupement(sel,r.nouveau); } finally { A.busy=false; dessinerAtelier(); }
