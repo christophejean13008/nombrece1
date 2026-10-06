@@ -699,13 +699,22 @@ function essayer(items,niv){
   }
   return true;
 }
+/* Rangement des unités « comme le dé » : paquets de 5 en dé (6 = dé 5 + dé 1 … 10 = 2 dés de 5) */
+const MOTIF_DE={1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],4:[[-1,-1],[1,-1],[-1,1],[1,1]],5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]]};
+function posDe(i,total,o){
+  const grp=Math.floor(i/5), j=i%5, c=Math.max(1,Math.min(5,total-grp*5));
+  const P=MOTIF_DE[c][Math.min(j,c-1)], t=Math.floor(grp/2);
+  return {x:(grp%2?o.x2:o.x1)+P[0]*o.d, y:o.y0+t*o.dy+P[1]*o.d};
+}
+const triUnites=(a,b)=>((a.si==null)-(b.si==null))||((a.si||0)-(b.si||0))||(a.y-b.y)||(a.x-b.x);
+const DE_RITUEL={x1:525,x2:640,y0:175,dy:130,d:32};
 function disposer(q,niv){
   const items=[];
   for(let i=0;i<q.t;i++) items.push({kind:'bar',a:0});
   for(let j=0;j<q.u;j++) items.push({kind:'cube',a:0});
   if(niv>1){ for(let e=0;e<60;e++){ if(essayer(items,niv)) return items; } }
   let bi=0,ui=0;
-  items.forEach(it=>{ if(it.kind==='bar'){ it.x=60+bi*40; it.y=240; bi++; } else { it.x=480+(ui%5)*44; it.y=150+Math.floor(ui/5)*56; ui++; } it.a=0; });
+  items.forEach(it=>{ if(it.kind==='bar'){ it.x=60+bi*40; it.y=240; bi++; } else { Object.assign(it,posDe(ui,q.u,DE_RITUEL)); it.si=ui; ui++; } it.a=0; });
   return items;
 }
 function dessiner(it,parent){
@@ -785,9 +794,9 @@ function ranger(){
   const q=S.q; if(!q||q.type!=='cubes'||q.range) return;
   q.range=true; plateau.classList.add('range'); $('#btnRanger').disabled=true;
   const bars=q.items.filter(i=>i.kind==='bar').sort((a,b)=>a.x-b.x);
-  const cubes=q.items.filter(i=>i.kind==='cube').sort((a,b)=>(a.y-b.y)||(a.x-b.x));
+  const cubes=q.items.filter(i=>i.kind==='cube').sort(triUnites);
   bars.forEach((b,i)=>{ b.rx=60+i*40; b.ry=240; });
-  cubes.forEach((c,j)=>{ c.rx=480+(j%5)*44; c.ry=150+Math.floor(j/5)*56; });
+  cubes.forEach((c,j)=>{ const p=posDe(j,cubes.length,DE_RITUEL); c.rx=p.x; c.ry=p.y; c.si=j; });
   q.bars=bars; q.cubes=cubes;
   q.items.forEach(it=>poser(it,it.rx,it.ry,0));
 }
@@ -810,9 +819,9 @@ async function aideCubes(){
   let n=0;
   message('On compte les barres de 10, puis les cubes seuls.','info');
   for(const b of q.bars){ n+=10; b.g.classList.add('compte'); bulle(b.rx,b.ry-124,n); dire(n); await attendre(1050); if(tok!==S.tok) return; }
-  for(const c of q.cubes){ n+=1; c.g.classList.add('compte'); bulle(c.rx,c.ry-30,n); dire(n); await attendre(800); if(tok!==S.tok) return; }
+  for(const c of q.cubes){ n+=1; c.g.classList.add('compte'); bulle(c.rx,c.ry,n); dire(n); await attendre(800); if(tok!==S.tok) return; }
   if(q.u>=10){
-    el('rect',{x:460,y:124,width:218,height:104,rx:10,class:'paquet'},couchPaquet);
+    el('rect',{x:470,y:124,width:228,height:104,rx:10,class:'paquet'},couchPaquet);
     el('text',{x:569,y:352,class:'paquet-txt'},couchPaquet).textContent='10 unités = 1 dizaine';
   }
   const p=phraseCubes(q);
@@ -993,7 +1002,7 @@ function fantomeFab(kind){
 const nbFab=q=>q.items.filter(i=>i.kind==='bar').length;
 const ncFab=q=>q.items.filter(i=>i.kind==='cube').length;
 function bornerFab(kind,x,y){ const [hw,hh]=kind==='bar'?[16,106]:[16,16]; return {x:Math.max(hw,Math.min(720-hw,x)),y:Math.max(hh,Math.min(400-hh,y))}; }
-function caseFab(kind,i){ return kind==='bar' ? {x:60+i*40,y:240} : {x:480+(i%5)*44,y:150+Math.floor(i/5)*56}; }
+function caseFab(kind,i,total){ return kind==='bar' ? {x:60+i*40,y:240} : posDe(i,total==null?i+1:total,DE_RITUEL); }
 
 function afficherFab(){
   const q=S.q, niv=S.niv.fabriquer; q.items=[];
@@ -1057,14 +1066,19 @@ function ajouterFab(k,pos){
   if(k==='bar'&&n>=10) return message('Il n\'y a plus de place pour les barres.','info');
   if(k==='cube'&&n>=20) return message('Il n\'y a plus de place pour les cubes.','info');
   const p=pos||caseFab(k,n);
-  q.items.push({kind:k,x:p.x,y:p.y}); message(''); dessinerFab();
+  q.items.push({kind:k,x:p.x,y:p.y});
+  if(!pos && k==='cube'){ // les cubes déjà rangés dans la colonne se replacent en dé
+    const col=q.items.filter(i=>i.kind==='cube'&&i.x>440).sort(triUnites);
+    col.forEach((c,j)=>{ Object.assign(c,caseFab('cube',j,col.length)); c.si=j; });
+  }
+  message(''); dessinerFab();
 }
 function rangerFab(){
   const q=S.q;
   const bars=q.items.filter(i=>i.kind==='bar').sort((a,b)=>a.x-b.x);
-  const cubes=q.items.filter(i=>i.kind==='cube').sort((a,b)=>(a.y-b.y)||(a.x-b.x));
+  const cubes=q.items.filter(i=>i.kind==='cube').sort(triUnites);
   bars.forEach((b,i)=>Object.assign(b,caseFab('bar',i)));
-  cubes.forEach((c,j)=>Object.assign(c,caseFab('cube',j)));
+  cubes.forEach((c,j)=>{ Object.assign(c,caseFab('cube',j,cubes.length)); c.si=j; });
   q.items=bars.concat(cubes); dessinerFab();
 }
 function echangerFab(){
@@ -1076,7 +1090,7 @@ function echangerFab(){
 }
 function bullesFab(q){
   couchEtiq.innerHTML=''; let n=0;
-  q.items.forEach(p=>{ n+=p.kind==='bar'?10:1; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y-30,n); });
+  q.items.forEach(p=>{ n+=p.kind==='bar'?10:1; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y,n); });
 }
 function validerFab(){
   const q=S.q; if(q.fini||S.busy) return;
@@ -1103,12 +1117,12 @@ async function aideFab(){
     q.items=[]; dessinerFab(); await attendre(500); if(tok!==S.tok) return;
     let n=0;
     for(let i=0;i<q.t;i++){ q.items.push(Object.assign({kind:'bar'},caseFab('bar',i))); n+=10; dessinerFab(); bullesFab(q); dire(n); await attendre(950); if(tok!==S.tok) return; }
-    for(let j=0;j<q.u;j++){ q.items.push(Object.assign({kind:'cube'},caseFab('cube',j))); n++; dessinerFab(); bullesFab(q); dire(n); await attendre(750); if(tok!==S.tok) return; }
+    for(let j=0;j<q.u;j++){ q.items.push(Object.assign({kind:'cube',si:j},caseFab('cube',j,q.u))); n++; dessinerFab(); bullesFab(q); dire(n); await attendre(750); if(tok!==S.tok) return; }
     message(phr,'info'); dire(phr); await attendre(2500);
   } else {
     rangerFab(); await attendre(300); if(tok!==S.tok) return;
     let n=0; couchEtiq.innerHTML='';
-    for(const p of q.items){ n+=p.kind==='bar'?10:1; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y-30,n); dire(n); await attendre(p.kind==='bar'?950:750); if(tok!==S.tok) return; }
+    for(const p of q.items){ n+=p.kind==='bar'?10:1; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y,n); dire(n); await attendre(p.kind==='bar'?950:750); if(tok!==S.tok) return; }
     let m=`Tu as mis ${n}. ${phr}`;
     if(S.niv.fabriquer<3 && q.t>0) m=`Tu as mis ${n}. Dans ${q.cible}, le ${q.t} dit ${q.t} ${pl(q.t,'barre')}, le ${q.u} dit ${q.u} ${pl(q.u,'cube')}.`;
     message(m,'info'); dire(m); await attendre(Math.min(7000,1500+m.length*55));
@@ -1362,6 +1376,10 @@ function ajouterA(spec,pos){
   if(spec.k && n>=capa(spec.k,part)) return msgA(`Plus de place pour les ${NOMS[spec.k][1]} (${capa(spec.k,part)} au plus). Fais des échanges.`,'info');
   const p=pos||(spec.k?slotA(spec,n,part):placeLibreA(spec));
   A.items.push(Object.assign({},spec,{x:p.x,y:p.y,part}));
+  if(!pos && spec.k==='u' && A.tableau){ // les unités rangées dans leur colonne se replacent en dé
+    const col=A.items.filter(i=>i.k==='u'&&(i.part||null)===part&&i.x>800).sort(triUnites);
+    col.forEach((it,j)=>{ Object.assign(it,slotA(it,j,part,col.length)); it.si=j; });
+  }
   dessinerAtelier();
 }
 function itemsPour(n,mode){
@@ -1405,19 +1423,19 @@ function construireTiroirA(){
     t.appendChild(b);
   });
 }
-function slotA(spec,i,part){
+function slotA(spec,i,part,total){
   if(part){
     const y0=part==='a'?55:345;
     if(spec.k==='m'){ const j=i%10; return {x:100+j*6,y:y0+100+j*10}; }
     if(spec.k==='c'){ const pile=Math.floor(i/5)%2, j=i%5; return {x:330+pile*165+j*3,y:y0+82+j*20}; }
     if(spec.k==='d'){ const j=i%10; return {x:620+j*16+Math.floor(j/5)*24+Math.floor(i/10)*8,y:y0+125+Math.floor(i/10)%3*24}; }
-    if(spec.k==='u') return {x:830+(i%5)*30,y:Math.min(y0+250,y0+30+Math.floor(i/5)*28+Math.floor(i/10)*12)};
+    if(spec.k==='u') return posDe(i,total==null?i+1:total,{x1:852,x2:950,y0:y0+46,dy:68,d:22});
     return null;
   }
   if(spec.k==='m'){ const j=i%10; return {x:100+j*6,y:190+j*36+(j>=5?30:0)}; }
   if(spec.k==='c'){ const pile=Math.floor(i/5)%4, j=i%5; return {x:330+(pile%2)*165+j*3,y:140+j*40+Math.floor(pile/2)*215}; }
   if(spec.k==='d'){ const j=i%10; return {x:620+j*16+Math.floor(j/5)*24,y:210+Math.floor(i/10)%3*160}; }
-  if(spec.k==='u') return {x:830+(i%5)*30,y:Math.min(600,95+Math.floor(i/5)*30+Math.floor(i/10)*16)};
+  if(spec.k==='u') return posDe(i,total==null?i+1:total,{x1:852,x2:950,y0:118,dy:92,d:22});
   return null;
 }
 const partDe=y=>A.split&&A.mode==='cubes' ? (y<337?'a':'b') : null;
@@ -1426,7 +1444,7 @@ function calculerRangement(){
   if(A.mode==='cubes'){
     if(A.split) A.items.forEach(i=>{ if(!i.part) i.part=partDe(i.y||0); });
     const out=[];
-    ['m','c','d','u'].forEach(k=>partsA().forEach(pt=>{ A.items.filter(i=>i.k===k&&(i.part||null)===pt).sort((a,b)=>(a.y-b.y)||(a.x-b.x)).forEach((it,i)=>{ Object.assign(it,slotA(it,i,pt)); out.push(it); }); }));
+    ['m','c','d','u'].forEach(k=>partsA().forEach(pt=>{ { const lot=A.items.filter(i=>i.k===k&&(i.part||null)===pt).sort(k==='u'?triUnites:(a,b)=>(a.y-b.y)||(a.x-b.x)); lot.forEach((it,i)=>{ Object.assign(it,slotA(it,i,pt,lot.length)); if(k==='u') it.si=i; out.push(it); }); } }));
     A.items=out;
   } else {
     const tri=A.items.slice().sort((a,b)=>b.v-a.v), b=tri.filter(i=>i.v>=5), c=tri.filter(i=>i.v<5);
@@ -1577,7 +1595,7 @@ function dessinerAtelier(){
       if(A.casser){ ev.preventDefault(); return casserA(it); }
       g.style.opacity=.25;
       glisser(ev,fantomeA(it),(dedans,moved,cx,cy)=>{
-        if(moved&&dedans){ const p=versSvgDe(asvg,cx,cy); Object.assign(it,bornerA(it,p.x,p.y)); it.part=partDe(it.y); if(it.part) A.partActive=it.part; A.items.splice(A.items.indexOf(it),1); A.items.push(it); }
+        if(moved&&dedans){ const p=versSvgDe(asvg,cx,cy); Object.assign(it,bornerA(it,p.x,p.y)); it.si=undefined; it.part=partDe(it.y); if(it.part) A.partActive=it.part; A.items.splice(A.items.indexOf(it),1); A.items.push(it); }
         else if(moved) A.items.splice(A.items.indexOf(it),1);
         dessinerAtelier();
       },asvg);
