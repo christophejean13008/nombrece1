@@ -981,18 +981,20 @@ function glisser(ev,fantome,fin,cible){
   if(gl) return; if(ev.button!==undefined && ev.button!==0) return;
   ev.preventDefault();
   const gh=document.createElement('div'); gh.className='fantome'; gh.appendChild(fantome); document.body.appendChild(gh);
-  gl={gh,fin,cible:cible||svg,x0:ev.clientX,y0:ev.clientY,moved:false};
+  gl={gh,fin,cible:cible||svg,src:ev.currentTarget&&ev.currentTarget.closest&&ev.currentTarget.closest('.ajout')?ev.currentTarget:null,x0:ev.clientX,y0:ev.clientY,moved:false};
   glBouge(ev);
   window.addEventListener('pointermove',glBouge); window.addEventListener('pointerup',glFin); window.addEventListener('pointercancel',glFin);
 }
-function glBouge(ev){ if(!gl) return; if(Math.hypot(ev.clientX-gl.x0,ev.clientY-gl.y0)>6) gl.moved=true; gl.gh.style.transform=`translate(${ev.clientX}px,${ev.clientY}px) translate(-50%,-50%)`; }
+function glBouge(ev){ if(!gl) return; if(Math.hypot(ev.clientX-gl.x0,ev.clientY-gl.y0)>14) gl.moved=true; gl.gh.style.transform=`translate(${ev.clientX}px,${ev.clientY}px) translate(-50%,-50%)`; }
 function glFin(ev){
   if(!gl) return;
   window.removeEventListener('pointermove',glBouge); window.removeEventListener('pointerup',glFin); window.removeEventListener('pointercancel',glFin);
   const g=gl; gl=null; g.gh.remove();
   const r=g.cible.getBoundingClientRect();
   const dedans=ev.type!=='pointercancel' && ev.clientX>=r.left && ev.clientX<=r.right && ev.clientY>=r.top && ev.clientY<=r.bottom;
-  g.fin(dedans,g.moved,ev.clientX,ev.clientY);
+  // relâché sur le bouton de départ : c'est un simple toucher
+  const surDepart=g.src && ev.type!=='pointercancel' && (()=>{ const b=g.src.getBoundingClientRect(); return ev.clientX>=b.left&&ev.clientX<=b.right&&ev.clientY>=b.top&&ev.clientY<=b.bottom; })();
+  g.fin(dedans,g.moved&&!surDepart,ev.clientX,ev.clientY);
 }
 function fantomeFab(kind){
   const k=svg.getBoundingClientRect().width/720;
@@ -1051,14 +1053,19 @@ function dessinerFab(){
       if(q.fini||S.busy) return;
       it.g.style.opacity=.25;
       glisser(ev,fantomeFab(it.kind),(dedans,moved,cx,cy)=>{
-        if(moved && dedans){ const p=versSvg(cx,cy), b=bornerFab(it.kind,p.x,p.y); it.x=b.x; it.y=b.y; q.items.splice(q.items.indexOf(it),1); q.items.push(it); }
+        if(moved && dedans){ const p=versSvg(cx,cy), b=bornerFab(it.kind,p.x,p.y); it.x=b.x; it.y=b.y; it.si=undefined; q.items.splice(q.items.indexOf(it),1); q.items.push(it); }
         else if(moved){ q.items.splice(q.items.indexOf(it),1); message(''); }
+        if(moved) rangerColFab(q,it.kind);
         dessinerFab();
       });
     });
   });
   const c=$('#compteur'); if(c) c.textContent=nbFab(q)*10+ncFab(q);
   const ech=$('#btnEchange'); if(ech) ech.hidden=ncFab(q)<10;
+}
+function rangerColFab(q,k){
+  const col=q.items.filter(i=>i.kind===k&&(k==='bar'?i.x<440:i.x>=440)).sort(triRang);
+  col.forEach((c,j)=>{ Object.assign(c,caseFab(k,j,col.length)); c.si=j; });
 }
 function ajouterFab(k,pos){
   const q=S.q; if(q.fini||S.busy) return;
@@ -1067,10 +1074,7 @@ function ajouterFab(k,pos){
   if(k==='cube'&&n>=20) return message('Il n\'y a plus de place pour les cubes.','info');
   const p=pos||caseFab(k,n);
   q.items.push({kind:k,x:p.x,y:p.y});
-  if(!pos && k==='cube'){ // les cubes déjà rangés dans la colonne se replacent en dé
-    const col=q.items.filter(i=>i.kind==='cube'&&i.x>440).sort(triUnites);
-    col.forEach((c,j)=>{ Object.assign(c,caseFab('cube',j,col.length)); c.si=j; });
-  }
+  if(!pos || (k==='bar'?p.x<440:p.x>=440)) rangerColFab(q,k);
   message(''); dessinerFab();
 }
 function rangerFab(){
@@ -1341,7 +1345,15 @@ function dessinerBloc(k,p){
   return g;
 }
 /* Limites d'affichage : au-delà, le plateau devient illisible et trop lourd */
-const CAPA={u:50,d:30,c:20,m:10}, CAPA_PART={u:25,d:20,c:10,m:10};
+const CAPA={u:50,d:30,c:20,m:10}, CAPA_PART={u:25,d:10,c:10,m:10};
+const colonneDe=x=>x<250?'m':x<600?'c':x<800?'d':'u';
+const triRang=(a,b)=>((a.si==null)-(b.si==null))||((a.si||0)-(b.si||0))||(a.y-b.y)||(a.x-b.x);
+/* Range tout de suite les objets d'un même rang (dans leur colonne) : plus aucun ne se superpose */
+function rangerColonne(k,part){
+  if(!k||A.mode!=='cubes') return;
+  const col=A.items.filter(i=>i.k===k&&(i.part||null)===(part||null)&&(!A.tableau||colonneDe(i.x)===k)).sort(triRang);
+  col.forEach((it,j)=>{ Object.assign(it,slotA(it,j,part||null,col.length)); it.si=j; });
+}
 function capa(k,part){ return (part?CAPA_PART:CAPA)[k]; }
 function nbK(k,part){ return A.items.filter(i=>i.k===k&&(i.part||null)===(part||null)).length; }
 function iconeA(spec,largeur){
@@ -1375,11 +1387,10 @@ function ajouterA(spec,pos){
   const n=A.items.filter(i=>spec.k&&i.k===spec.k&&(i.part||null)===part).length;
   if(spec.k && n>=capa(spec.k,part)) return msgA(`Plus de place pour les ${NOMS[spec.k][1]} (${capa(spec.k,part)} au plus). Fais des échanges.`,'info');
   const p=pos||(spec.k?slotA(spec,n,part):placeLibreA(spec));
-  A.items.push(Object.assign({},spec,{x:p.x,y:p.y,part}));
-  if(!pos && spec.k==='u' && A.tableau){ // les unités rangées dans leur colonne se replacent en dé
-    const col=A.items.filter(i=>i.k==='u'&&(i.part||null)===part&&i.x>800).sort(triUnites);
-    col.forEach((it,j)=>{ Object.assign(it,slotA(it,j,part,col.length)); it.si=j; });
-  }
+  const it=Object.assign({},spec,{x:p.x,y:p.y,part});
+  A.items.push(it);
+  // toucher, ou dépôt dans la bonne colonne : la colonne se range aussitôt
+  if(spec.k && (!pos || !A.tableau || colonneDe(it.x)===spec.k))rangerColonne(spec.k,part);
   dessinerAtelier();
 }
 function itemsPour(n,mode){
@@ -1595,8 +1606,10 @@ function dessinerAtelier(){
       if(A.casser){ ev.preventDefault(); return casserA(it); }
       g.style.opacity=.25;
       glisser(ev,fantomeA(it),(dedans,moved,cx,cy)=>{
+        const ancienne=it.part||null;
         if(moved&&dedans){ const p=versSvgDe(asvg,cx,cy); Object.assign(it,bornerA(it,p.x,p.y)); it.si=undefined; it.part=partDe(it.y); if(it.part) A.partActive=it.part; A.items.splice(A.items.indexOf(it),1); A.items.push(it); }
         else if(moved) A.items.splice(A.items.indexOf(it),1);
+        if(moved && it.k && A.tableau){ rangerColonne(it.k,ancienne); if((it.part||null)!==ancienne) rangerColonne(it.k,it.part); }
         dessinerAtelier();
       },asvg);
     });
