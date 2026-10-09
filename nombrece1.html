@@ -213,6 +213,13 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 .outil.ok-btn{background:var(--vert);border-color:var(--vert);color:#fff}
 .outil.ok-btn:disabled{background:var(--tableau);color:var(--doux);border-color:var(--trait)}
 #aDeuxBtn.enfonce{background:var(--bleu);color:#fff}
+.barre-deux{flex:none;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:6px 10px;border:2px solid #E8590C;border-radius:12px;background:var(--tableau)}
+.etq-deux{font-weight:700;color:#E8590C}
+.onglets.petits{border-color:#E8590C}
+.onglets.petits .onglet{min-height:44px;min-width:60px;padding:4px 14px;color:#E8590C;font-size:1.1rem}
+.onglets.petits .onglet.actif{background:#E8590C;color:#fff}
+#aOpPlus,#aOpMoins{font-size:1.6rem;line-height:1;min-width:54px}
+.zone-active{fill:#E8590C;fill-opacity:.07;stroke:#E8590C;stroke-width:3;stroke-opacity:.5}
 .ligne-addition{stroke:#E8590C;stroke-width:4;stroke-dasharray:14 10}
 .signe-plus{font-size:44px;font-weight:700;fill:#E8590C;text-anchor:middle}
 .lasso.mauvais{stroke:#C23A4E}
@@ -412,6 +419,18 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
           <button class="outil ok-btn" id="aLassoOk">Échanger</button>
           <button class="outil" id="aLassoEff">Effacer la sélection</button>
         </div>
+      <div class="barre-deux" id="aBarreDeux" hidden>
+        <span class="etq-deux">Mettre en</span>
+        <div class="onglets petits" role="group" aria-label="Où poser les cubes">
+          <button class="onglet actif" id="aPartA" aria-pressed="true">Haut</button>
+          <button class="onglet" id="aPartB" aria-pressed="false">Bas</button>
+        </div>
+        <div class="onglets petits" role="group" aria-label="Opération">
+          <button class="onglet actif" id="aOpPlus" aria-pressed="true" aria-label="Addition">+</button>
+          <button class="onglet" id="aOpMoins" aria-pressed="false" aria-label="Soustraction">−</button>
+        </div>
+        <button class="outil ok-btn" id="aReunir">Réunir les 2 nombres</button>
+      </div>
       <div class="tiroir-a" id="aTiroir"></div>
       <div class="outils">
         <button class="outil" id="aRanger">Ranger</button>
@@ -419,8 +438,7 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
         <button class="outil" id="aEntourer" aria-pressed="false">Entourer pour échanger</button>
         <button class="outil" id="aCasser" aria-pressed="false">Casser</button>
         <button class="outil" id="aTableauBtn" aria-pressed="true">Tableau</button>
-        <button class="outil" id="aDeuxBtn" aria-pressed="false">Addition : 2 parties</button>
-        <button class="outil ok-btn" id="aReunir" hidden>Réunir les 2 nombres</button>
+        <button class="outil" id="aDeuxBtn" aria-pressed="false">2 nombres : + ou −</button>
         <button class="outil" id="aEffacer">Tout effacer</button>
       </div>
     </div>
@@ -437,8 +455,8 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
         <label class="case"><input type="checkbox" id="aCache"> Cacher le nombre : l'élève l'écrit</label>
       </div>
       <div class="bloc">
-        <label for="aSaisie" class="etiq">Écris un nombre (345, trois cent…, 3d 8u) ou une addition (23 + 15)</label>
-        <input type="text" id="aSaisie" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="345, 3d 8u, 23 + 15…">
+        <label for="aSaisie" class="etiq">Écris un nombre (345, trois cent…, 3d 8u) ou un calcul (23 + 15, 45 − 18)</label>
+        <input type="text" id="aSaisie" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="345, 3d 8u, 23 + 15, 45 − 18…">
         <div class="boutons-a">
           <button class="outil" id="aVerifier">Vérifier</button>
           <button class="outil" id="aMontrerC">Montrer en cubes</button>
@@ -1317,7 +1335,7 @@ const AIDE={cubes:aideCubes,fabriquer:aideFab,droite:aideDroite,monnaie:aideMon}
 
 /* ================= ATELIER LIBRE ================= */
 const asvg=$('#asvg');
-let A={mode:'cubes',items:[],cache:false,casser:false,tableau:true};
+let A={mode:'cubes',items:[],cache:false,casser:false,tableau:true,op:'+'};
 const VALEUR={u:1,d:10,c:100,m:1000};
 const NOMS={u:['unité','unités'],d:['dizaine','dizaines'],c:['centaine','centaines'],m:['millier','milliers']};
 const MONNAIE=[500,200,100,50,20,10,5,2,1];
@@ -1345,7 +1363,7 @@ function dessinerBloc(k,p){
   return g;
 }
 /* Limites d'affichage : au-delà, le plateau devient illisible et trop lourd */
-const CAPA={u:50,d:30,c:20,m:10}, CAPA_PART={u:25,d:10,c:10,m:10};
+const CAPA={u:50,d:30,c:20,m:10}, CAPA_PART={u:25,d:20,c:10,m:10};
 const colonneDe=x=>x<250?'m':x<600?'c':x<800?'d':'u';
 const triRang=(a,b)=>((a.si==null)-(b.si==null))||((a.si||0)-(b.si||0))||(a.y-b.y)||(a.x-b.x);
 /* Range tout de suite les objets d'un même rang (dans leur colonne) : plus aucun ne se superpose */
@@ -1436,11 +1454,11 @@ function construireTiroirA(){
 }
 function slotA(spec,i,part,total){
   if(part){
-    const y0=part==='a'?55:345;
-    if(spec.k==='m'){ const j=i%10; return {x:100+j*6,y:y0+100+j*10}; }
-    if(spec.k==='c'){ const pile=Math.floor(i/5)%2, j=i%5; return {x:330+pile*165+j*3,y:y0+82+j*20}; }
-    if(spec.k==='d'){ const j=i%10; return {x:620+j*16+Math.floor(j/5)*24+Math.floor(i/10)*8,y:y0+125+Math.floor(i/10)%3*24}; }
-    if(spec.k==='u') return posDe(i,total==null?i+1:total,{x1:852,x2:950,y0:y0+46,dy:68,d:22});
+    const y0=part==='a'?55:340;   // blocs à 75 % : chaque paquet de 10 a sa propre rangée
+    if(spec.k==='m'){ const j=i%10; return {x:110+j*5,y:y0+80+j*7}; }
+    if(spec.k==='c'){ const pile=Math.floor(i/5)%2, j=i%5; return {x:340+pile*150+j*2.5,y:y0+62+j*15}; }
+    if(spec.k==='d'){ const j=i%10, rang=Math.floor(i/10)%2; return {x:622+j*13+Math.floor(j/5)*18,y:y0+63+rang*114}; }
+    if(spec.k==='u') return posDe(i,total==null?i+1:total,{x1:852,x2:938,y0:y0+30,dy:52,d:16.5});
     return null;
   }
   if(spec.k==='m'){ const j=i%10; return {x:100+j*6,y:190+j*36+(j>=5?30:0)}; }
@@ -1469,12 +1487,16 @@ function rangerA(){ calculerRangement(); dessinerAtelier(); }
 /* ---- animations ---- */
 const LENT=1;  // multiplicateur de durée
 function transit(g,ms){ g._ms=ms*LENT; g.style.transition=`opacity ${ms*LENT}ms ease`; }
-function posStyle(g,x,y,s){ const ms=g._ms||0; g._ms=0; bougerVers(g,x,y,0,s,ms); }
+/* En mode « 2 nombres », chaque partie est deux fois moins haute : les blocs sont dessinés à 75 % */
+const ECH_DEUX=.75;
+function echA(g){ return (typeof A!=='undefined' && A.split && A.mode==='cubes' && g && g.ownerSVGElement===asvg) ? ECH_DEUX : 1; }
+function posStyle(g,x,y,s){ const ms=g._ms||0; g._ms=0; bougerVers(g,x,y,0,s!=null?s:echA(g),ms); }
 const pause=ms=>attendre(ms*LENT);
 function formeCible(k,i,cx,cy){
-  if(k==='u') return {x:cx,y:cy-63+14*i};      // 10 unités en colonne = 1 barre
-  if(k==='d') return {x:cx-63+14*i,y:cy};      // 10 barres côte à côte = 1 plaque
-  if(k==='c') return {x:cx+3*i,y:cy-3*i};      // 10 plaques empilées = 1 gros cube
+  const e=(A.split&&A.mode==='cubes')?ECH_DEUX:1;
+  if(k==='u') return {x:cx,y:cy+(-63+14*i)*e};      // 10 unités en colonne = 1 barre
+  if(k==='d') return {x:cx+(-63+14*i)*e,y:cy};      // 10 barres côte à côte = 1 plaque
+  if(k==='c') return {x:cx+3*i*e,y:cy-3*i*e};      // 10 plaques empilées = 1 gros cube
   return {x:cx,y:cy};
 }
 function nouveauG(spec){
@@ -1557,7 +1579,7 @@ async function casserA(it){
     await pause(1200);
     neufs.forEach(n=>n.part=it.part||null);
     it.g.remove(); A.items.splice(A.items.indexOf(it),1); A.items.push(...neufs);
-    if(A.mode==='cubes'&&A.tableau) await animerRanger();
+    if(A.mode==='cubes'&&A.tableau){ await animerRanger(); if(A.split&&A.op==='-'){ activerCasser(false); const m='Touche à nouveau « Enlever le nombre du bas ».'; msgA(m,'info'); dire(m); } }
     else {
       neufs.forEach((s,j)=>{
         if(bas){ const n=neufs.length; Object.assign(s,bornerA(s,it.x+((j%5)-2)*(bas==='u'?30:bas==='d'?24:60),it.y+(Math.floor(j/5)-.5)*(bas==='u'?30:bas==='d'?160:150))); }
@@ -1569,19 +1591,23 @@ async function casserA(it){
   } finally { A.busy=false; dessinerAtelier(); }
 }
 function dessinerAtelier(){
-  fermerSel();
+  fermerSel(); majBarreDeux();
   asvg.innerHTML='';
   if(A.mode==='cubes' && A.tableau){
     const f=el('g',{},asvg);
     [250,600,800].forEach(x=>el('line',{x1:x,y1:10,x2:x,y2:610,class:'sep'},f));
-    if(A.split){ el('line',{x1:6,y1:337,x2:994,y2:337,class:'ligne-addition'},f); el('text',{x:24,y:385,class:'signe-plus'},f).textContent='+'; }
+    if(A.split){
+      const za=A.partActive==='b'?{y:340,h:276}:{y:6,h:328};
+      el('rect',{x:4,y:za.y,width:992,height:za.h,rx:12,class:'zone-active'},f);
+      el('line',{x1:6,y1:337,x2:994,y2:337,class:'ligne-addition'},f); el('text',{x:24,y:385,class:'signe-plus'},f).textContent=A.op==='-'?'−':'+';
+    }
     if(!A.cache && A.items.length){
       /* nombre d'objets écrit en bas de chaque colonne (en haut et en bas en mode addition) */
       const COLX={m:125,c:425,d:700,u:900};
       partsA().forEach(pt=>{
         const objets=A.items.filter(i=>(i.part||null)===pt);
         if(!objets.length) return;
-        const yb = pt==='a' ? 322 : 604;
+        const yb = pt==='a' ? 322 : 612;
         ['m','c','d','u'].forEach(k=>{
           const n=objets.filter(i=>i.k===k).length;
           if(!n && (k==='m'||(k==='c'&&!objets.some(i=>i.k==='m')))) return; // pas de zéro inutile à gauche
@@ -1626,11 +1652,12 @@ function majPanneauA(){
   const tot=totalA();
   if(A.split&&A.mode==='cubes'){
     const a=sommePart('a'), b=sommePart('b'), ca=comptesPart('a'), cb=comptesPart('b');
-    $('#aNombre').innerHTML=`${chiffresColores(a)} <span class="op">+</span> ${chiffresColores(b)}`+(A.cache?' <span class="op">= ?</span>':` <span class="op">=</span> ${chiffresColores(tot)}`);
-    $('#aLettres').textContent=`${lettresN(a)} plus ${lettresN(b)}`+(A.cache?'':` égale ${lettresN(tot)}`);
+    const moins=A.op==='-', sym=moins?'−':'+', res=moins?(a>=b?a-b:null):a+b;
+    $('#aNombre').innerHTML=`${chiffresColores(a)} <span class="op">${sym}</span> ${chiffresColores(b)}`+(A.cache||res===null?' <span class="op">= ?</span>':` <span class="op">=</span> ${chiffresColores(res)}`);
+    $('#aLettres').textContent=`${lettresN(a)} ${moins?'moins':'plus'} ${lettresN(b)}`+(A.cache||res===null?'':` égale ${lettresN(res)}`);
     const det=c=>['m','c','d','u'].filter(k=>c[k]).map(k=>`<span class="r-${k}">${c[k]} ${c[k]>1?NOMS[k][1]:NOMS[k][0]}</span>`).join(', ')||'rien';
     $('#aDecomp').innerHTML=`En haut : ${det(ca)}<br>En bas : ${det(cb)}`;
-    $('#aNumeration').innerHTML=`${numeration(ca)} <span class="op">+</span> ${numeration(cb)}`;
+    $('#aNumeration').innerHTML=`${numeration(ca)} <span class="op">${sym}</span> ${numeration(cb)}`;
     return;
   }
   $('#aNombre').innerHTML = A.cache ? '?' : chiffresColores(tot);
@@ -1675,13 +1702,20 @@ function lireNombre(txt){
 function saisieA(){
   const txt=$('#aSaisie').value;
   A.addition=null;
-  if(txt.includes('+')){
-    const morceaux=txt.split('+').map(t=>t.trim());
+  let morceaux=null, op=null;
+  if(txt.includes('+')){ morceaux=txt.split('+'); op='+'; }
+  else if(/[−–]/.test(txt)){ morceaux=txt.split(/[−–]/); op='-'; }
+  else if(/\s-\s/.test(txt)){ morceaux=txt.split(/\s-\s/); op='-'; }
+  else if(/^\s*[\d\s]+-[\d\s]+$/.test(txt)){ morceaux=txt.split('-'); op='-'; }
+  if(morceaux){
+    morceaux=morceaux.map(t=>t.trim());
     if(morceaux.length===2 && morceaux.every(Boolean)){
       const res=morceaux.map(t=>{ const n=lireNombre(t); return n===null?null:{n,c:A.comptesSaisis||comptesCanon(n)}; });
       if(res.some(r=>r===null)){ msgA('Je ne reconnais pas un des deux nombres.','mal'); return null; }
-      const tot=res[0].n+res[1].n; if(tot>MAXA){ msgA('Le total doit rester jusqu\'à 9 999.','mal'); return null; }
-      A.addition=res; A.comptesSaisis=null; return tot;
+      if(res[0].n+res[1].n>MAXA){ msgA('Les nombres doivent rester jusqu\'à 9 999.','mal'); return null; }
+      if(op==='-' && res[0].n<res[1].n){ msgA('Le premier nombre doit être le plus grand pour une soustraction.','mal'); return null; }
+      A.addition=res; A.addition.op=op; A.comptesSaisis=null;
+      return op==='-'?res[0].n-res[1].n:res[0].n+res[1].n;
     }
   }
   const n=lireNombre(txt);
@@ -1690,7 +1724,9 @@ function saisieA(){
   return n;
 }
 $('#aVerifier').addEventListener('click',()=>{
-  const n=saisieA(); if(n===null) return; const tot=totalA();
+  const n=saisieA(); if(n===null) return;
+  let tot=totalA();
+  if(A.split&&A.mode==='cubes'&&!A.addition){ const a=sommePart('a'), b=sommePart('b'); tot=A.op==='-'?a-b:a+b; }
   if(n===tot){ const m=`Oui ! Il y a bien ${lettresN(tot)}.`; msgA(m,'bien'); dire(m); }
   else { const m='Ce n\'est pas ça. Recompte en commençant par les plus grands.'; msgA(m,'mal'); dire(m); }
 });
@@ -1702,10 +1738,11 @@ $('#aMontrerC').addEventListener('click',()=>{
     const [ra,rb]=A.addition; const ok=c=>['u','d','c','m'].every(k=>c[k]<=CAPA_PART[k]);
     if(!ok(ra.c)||!ok(rb.c)){ msgA('Ces nombres sont trop grands pour être affichés en deux parties.','mal'); return; }
     if(!A.split) basculerDeux(true,true);
+    choisirOp(A.addition.op||'+',true);
     A.items=[];
     [['a',ra.c],['b',rb.c]].forEach(([pt,c])=>['m','c','d','u'].forEach(k=>{ for(let i=0;i<c[k];i++) A.items.push({k,part:pt}); }));
     rangerA();
-    msgA(`${ra.n} + ${rb.n} : touche « Réunir les 2 nombres ».`,'info');
+    msgA(A.op==='-'?`${ra.n} − ${rb.n} : touche « Enlever le nombre du bas ».`:`${ra.n} + ${rb.n} : touche « Réunir les 2 nombres ».`,'info');
     return;
   }
   if(cn && ['u','d','c','m'].some(k=>cn[k]>CAPA[k])){ msgA(`Trop d'objets pour le plateau : au plus ${CAPA.c} centaines, ${CAPA.d} dizaines et ${CAPA.u} unités.`,'mal'); return; }
@@ -1832,35 +1869,116 @@ $('#aEntourer').addEventListener('click',()=>{
 });
 
 function basculerDeux(etat,silencieux){
-  A.split=etat; fermerSel(true);
+  A.split=etat; fermerSel(true); A.sousInit=null;
   $('#aDeuxBtn').classList.toggle('enfonce',etat); $('#aDeuxBtn').setAttribute('aria-pressed',etat);
-  $('#aReunir').hidden=!etat;
-  if(etat){ A.tableau=true; A.items.forEach(it=>it.part=partDe(it.y)); A.partActive='a'; }
-  else A.items.forEach(it=>it.part=null);
+  if(etat){ A.tableau=true; A.items.forEach(it=>it.part=partDe(it.y)); A.partActive='a'; if(!A.op) A.op='+'; }
+  else { A.items.forEach(it=>it.part=null); activerCasser(false); }
+  majBarreDeux();
   if(!silencieux){ calculerRangement(); dessinerAtelier();
-    msgA(etat?'Place le 1er nombre en haut, le 2e nombre en bas.':'',etat?'info':''); }
+    msgA(etat?'Choisis « Haut » ou « Bas », puis touche les cubes pour poser chaque nombre.':'',etat?'info':''); }
 }
+function majBarreDeux(){
+  const b=$('#aBarreDeux'); if(!b) return;
+  const on=!!(A.split&&A.mode==='cubes'); b.hidden=!on; if(!on) return;
+  const h=A.partActive!=='b';
+  $('#aPartA').classList.toggle('actif',h); $('#aPartA').setAttribute('aria-pressed',h);
+  $('#aPartB').classList.toggle('actif',!h); $('#aPartB').setAttribute('aria-pressed',!h);
+  const m=A.op==='-';
+  $('#aOpPlus').classList.toggle('actif',!m); $('#aOpPlus').setAttribute('aria-pressed',!m);
+  $('#aOpMoins').classList.toggle('actif',m); $('#aOpMoins').setAttribute('aria-pressed',m);
+  $('#aReunir').textContent=m?'Enlever le nombre du bas':'Réunir les 2 nombres';
+}
+function choisirPart(pt){ if(A.busy) return; A.partActive=pt; dessinerAtelier(); }
+function choisirOp(op,silencieux){ A.op=op; if(!silencieux) dessinerAtelier(); else majBarreDeux(); }
+function activerCasser(on){
+  A.casser=!!on; if(on&&A.entourer){ A.entourer=false; $('#aEntourer').setAttribute('aria-pressed',false); $('#aEntourer').classList.remove('enfonce'); }
+  $('#aCasser').setAttribute('aria-pressed',A.casser); $('#aCasser').classList.toggle('enfonce',A.casser);
+}
+$('#aPartA').addEventListener('click',()=>choisirPart('a'));
+$('#aPartB').addEventListener('click',()=>choisirPart('b'));
+$('#aOpPlus').addEventListener('click',()=>{ if(!A.busy) choisirOp('+'); });
+$('#aOpMoins').addEventListener('click',()=>{ if(!A.busy) choisirOp('-'); });
+/* toucher le haut ou le bas du plateau choisit aussi la partie */
+asvg.addEventListener('pointerdown',ev=>{
+  if(!A.split||A.mode!=='cubes'||A.entourer||A.busy) return;
+  if(ev.target.closest && ev.target.closest('.retirable')) return;
+  const p=versSvgDe(asvg,ev.clientX,ev.clientY); const pt=partDe(p.y);
+  if(pt && pt!==A.partActive) choisirPart(pt);
+});
 $('#aDeuxBtn').addEventListener('click',()=>{ if(A.busy||A.mode!=='cubes') return; basculerDeux(!A.split); });
-$('#aReunir').addEventListener('click',async()=>{
+$('#aReunir').addEventListener('click',()=>{ if(A.op==='-') enleverBas(); else reunirDeux(); });
+async function reunirDeux(){
   if(A.busy||!A.split) return;
   const a=sommePart('a'), b=sommePart('b');
-  if(!a||!b){ return msgA('Il faut un nombre en haut et un nombre en bas.','info'); }
+  if(!a||!b){ const m=!a?'Il manque le nombre du haut : choisis « Haut » puis touche les cubes.':'Il manque le nombre du bas : choisis « Bas » puis touche les cubes.'; msgA(m,'info'); dire(m); return; }
+  const ca=comptesPart('a'), cb=comptesPart('b'), trop=['d','c','m'].find(k=>ca[k]+cb[k]>CAPA[k]);
+  if(trop){ const m=`Il y aurait trop de ${NOMS[trop][1]} sur le plateau : entoure d'abord 10 ${NOMS[trop][1]} pour les échanger.`; msgA(m,'info'); dire(m); return; }
   A.busy=true;
   try{
     const m=`On réunit ${a} et ${b}.`; msgA(m,'bien'); dire(m);
-    const lignes=[...asvg.querySelectorAll('.ligne-addition,.signe-plus')];
-    lignes.forEach(l=>{ l.style.transition='opacity 1.2s'; l.style.opacity=0; });
-    A.split=false; A.items.forEach(it=>it.part=null);
-    $('#aDeuxBtn').classList.remove('enfonce'); $('#aDeuxBtn').setAttribute('aria-pressed',false); $('#aReunir').hidden=true;
+    asvg.querySelectorAll('.ligne-addition,.signe-plus,.zone-active').forEach(l=>{ l.style.transition='opacity 1.2s'; l.style.opacity=0; });
+    A.split=false; A.items.forEach(it=>it.part=null); basculerDeuxUI(false);
     await pause(600);
     await animerRanger(2200);
-    const t=a+b, c=comptesCanon(t);
     const cnt={}; ['m','c','d','u'].forEach(k=>cnt[k]=A.items.filter(i=>i.k===k).length);
     const plein=['u','d','c'].find(k=>cnt[k]>=10);
     const fin = plein ? `Il y a ${cnt[plein]} ${NOMS[plein][1]} : entoure 10 ${NOMS[plein][1]} pour faire 1 ${NOMS[{u:'d',d:'c',c:'m'}[plein]][0]}.` : 'Compte maintenant combien il y a en tout.';
     msgA(fin,'info'); dire(fin);
   } finally { A.busy=false; dessinerAtelier(); }
-});
+}
+function basculerDeuxUI(on){ $('#aDeuxBtn').classList.toggle('enfonce',on); $('#aDeuxBtn').setAttribute('aria-pressed',on); majBarreDeux(); }
+/* Soustraction : chaque objet du bas vient « effacer » un objet pareil du haut, rang par rang (unités d'abord) */
+async function enleverBas(){
+  if(A.busy||!A.split) return;
+  const a=sommePart('a'), b=sommePart('b');
+  if(!a){ const m='Il manque le nombre du haut : choisis « Haut » puis touche les cubes.'; msgA(m,'info'); dire(m); return; }
+  if(!b){ const m='Il manque le nombre à enlever : choisis « Bas » puis touche les cubes.'; msgA(m,'info'); dire(m); return; }
+  if(a<b){ const m=`On ne peut pas enlever ${b} à ${a} : le nombre du haut est plus petit.`; msgA(m,'mal'); dire(m); return; }
+  // a − b ne change pas pendant les cassages et les retraits : on garde les nombres de départ
+  if(!A.sousInit || A.sousInit.a-A.sousInit.b!==a-b) A.sousInit={a,b};
+  A.busy=true; activerCasser(false);
+  let bloque=null;
+  try{
+    for(const k of ['u','d','c','m']){
+      const bas=A.items.filter(i=>i.k===k&&i.part==='b').sort(triRang);
+      if(!bas.length) continue;
+      const haut=A.items.filter(i=>i.k===k&&i.part==='a').sort(triRang);
+      if(haut.length<bas.length){ bloque={k,h:haut.length,b:bas.length}; break; }
+      const nom=bas.length>1?NOMS[k][1]:NOMS[k][0];
+      const m=`On enlève ${bas.length} ${nom}.`; msgA(m,'bien'); dire(m);
+      const cibles=haut.slice(haut.length-bas.length);
+      bas.forEach(it=>it.g&&it.g.classList.add('selec')); cibles.forEach(it=>it.g&&it.g.classList.add('selec'));
+      await pause(800);
+      bas.forEach((it,i)=>{ transit(it.g,1500); posStyle(it.g,cibles[i].x,cibles[i].y); });
+      await pause(1600);
+      [...bas,...cibles].forEach(it=>{ transit(it.g,900); it.g.style.opacity=0; });
+      await pause(1000);
+      A.items=A.items.filter(i=>!bas.includes(i)&&!cibles.includes(i));
+      [...bas,...cibles].forEach(it=>it.g&&it.g.remove());
+      rangerColonne(k,'a');
+      A.items.filter(i=>i.k===k&&i.part==='a').forEach(it=>{ transit(it.g,900); posStyle(it.g,it.x,it.y); });
+      await pause(1000);
+    }
+  } finally { A.busy=false; }
+  if(bloque){
+    dessinerAtelier();
+    const {k,h,b:nb}=bloque, ordre=['u','d','c','m'];
+    const sup=ordre.slice(ordre.indexOf(k)+1).find(r=>A.items.some(i=>i.k===r&&i.part==='a'));
+    const m=`En haut, il y a ${h} ${h>1?NOMS[k][1]:NOMS[k][0]} : on ne peut pas en enlever ${nb}. Touche 1 ${NOMS[sup][0]} du haut pour la casser.`;
+    msgA(m,'info'); dire(m); activerCasser(true);
+    return;
+  }
+  // tout est enlevé : il reste le nombre du haut
+  A.busy=true;
+  try{
+    const reste=sommePart('a');
+    asvg.querySelectorAll('.ligne-addition,.signe-plus,.zone-active').forEach(l=>{ l.style.transition='opacity 1.2s'; l.style.opacity=0; });
+    A.split=false; A.items.forEach(it=>it.part=null); basculerDeuxUI(false);
+    await pause(600); await animerRanger(1800);
+    const d0=A.sousInit||{a,b}; A.sousInit=null;
+    const m=`${d0.a} moins ${d0.b}, il reste ${reste}.`; msgA(`${d0.a} − ${d0.b} = ${reste}`,'bien'); dire(m);
+  } finally { A.busy=false; dessinerAtelier(); }
+}
 function sommePart(pt){ return A.items.filter(i=>(i.part||null)===pt).reduce((s,i)=>s+valItem(i),0); }
 function comptesPart(pt){ const c={}; ['m','c','d','u'].forEach(k=>c[k]=A.items.filter(i=>i.k===k&&(i.part||null)===pt).length); return c; }
 
