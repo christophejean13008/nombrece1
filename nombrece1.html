@@ -103,6 +103,9 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 .obj .face{fill:var(--ombre);stroke:var(--encre);stroke-width:1.2}
 .couleurs .bar .avant{fill:var(--diz)} .couleurs .bar .face{fill:var(--diz2)}
 .couleurs .cube .avant{fill:var(--uni)} .couleurs .cube .face{fill:var(--uni2)}
+.couleurs .plaque .avant{fill:#9FD8A8} .couleurs .plaque .face{fill:#5DAF6E}
+.obj .grille-r{fill:none;stroke:var(--encre);stroke-width:1;opacity:.55}
+.ajouts.trois{grid-template-columns:repeat(3,1fr)}
 .obj.compte .avant{stroke:var(--vert);stroke-width:3}
 .table-rangement{opacity:0;transition:opacity .6s}
 .range .table-rangement{opacity:1}
@@ -205,7 +208,12 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 .numeration{font-size:1.6rem;font-weight:700;margin:0}
 .op{color:var(--doux);font-weight:700}
 .numeration small{font-size:.9rem;font-weight:400;color:var(--doux)}
-.lasso{fill:none;stroke:#2F63D6;stroke-width:4;stroke-dasharray:10 7;stroke-linejoin:round}
+.lasso{fill:none;stroke:#2F63D6;stroke-width:5;stroke-dasharray:12 8;stroke-linejoin:round;stroke-linecap:round}
+#aEntourer.enfonce{background:#E8590C;border-color:#E8590C;color:#fff}
+.poubelle{position:fixed;z-index:40;display:flex;align-items:center;justify-content:center;font-size:clamp(1.1rem,3vh,1.6rem);font-weight:700;color:#7A1426;background:#FBE3E7;border:4px dashed #C23A4E;border-radius:16px;pointer-events:none;opacity:.92}
+.poubelle.chaude{background:#C23A4E;color:#fff;border-style:solid}
+.poubelle[hidden]{display:none}
+.atelier-gauche .bulle text{font-size:19px}
 .choix-lasso{flex:none;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;
   background:var(--tableau);border:2px solid var(--bleu);border-radius:14px;padding:6px 12px}
 .choix-lasso span{font-weight:700}
@@ -420,7 +428,8 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
   </div>
   <div class="atelier-grille">
     <div class="atelier-gauche">
-      <div class="plateau mode-monnaie"><svg id="asvg" viewBox="0 0 1000 620" role="img" aria-label="Plateau libre"></svg></div>
+      <div class="plateau mode-monnaie"><svg id="asvg" viewBox="0 0 1100 620" role="img" aria-label="Plateau libre"></svg></div>
+      <div class="poubelle" id="aPoubelle" hidden aria-hidden="true">🗑️ Lâche ici pour enlever</div>
         <div class="choix-lasso" id="aChoixLasso" hidden>
           <span id="aLassoInfo"></span>
           <button class="outil ok-btn" id="aLassoOk">Échanger</button>
@@ -446,6 +455,7 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
       <div class="outils">
         <button class="outil" id="aRanger">Ranger</button>
         <button class="outil" id="aEchanger">Échanger par 10</button>
+        <button class="outil" id="aCompter">Compter avec moi</button>
         <button class="outil" id="aEntourer" aria-pressed="false">Entourer pour échanger</button>
         <button class="outil" id="aCasser" aria-pressed="false">Casser</button>
         <button class="outil" id="aTableauBtn" aria-pressed="true">Tableau</button>
@@ -503,10 +513,10 @@ const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 const pl=(n,m)=> n>1 ? m+'s' : m;
 
 const ACTS={
-  cubes:{nom:'Compter les cubes',court:'Compter',champ:'nc',desc:{1:"jusqu'à 29, cubes rangés",2:"jusqu'à 59, barres debout",3:"jusqu'à 99, barres penchées ou couchées",4:"défi : plus de 10 cubes seuls"}},
-  fabriquer:{nom:'Fabriquer le nombre avec les cubes',court:'Fabriquer',champ:'nf',desc:{1:"jusqu'à 50, compteur visible",2:"jusqu'à 99, sans compteur",3:"nombre dicté et écrit en lettres"}},
-  droite:{nom:'Placer sur la droite',court:'Droite',champ:'nd',desc:{1:"2 bonds de 1",2:"4 bonds de 1",3:"10 bonds de 1",4:"bonds de 5 ou de 10",5:"tout mélangé, jusqu'à 30 bonds"}},
-  monnaie:{nom:'Payer avec les euros',court:'Monnaie',champ:'nm',desc:{1:"billets de 10 € et pièces de 1 €, compteur visible",2:"pièces de 1 et 2 €, billets de 5 et 10 €",3:"toutes les pièces et billets jusqu'à 50 €",4:"payer avec le moins de pièces et billets possible"}}
+  cubes:{nom:'Compter les cubes',court:'Compter',champ:'nc',desc:{1:"jusqu'à 29, cubes rangés",2:"jusqu'à 59, barres debout",3:"jusqu'à 99, barres penchées ou couchées",4:"défi : plus de 10 cubes seuls",5:"jusqu'à 999, avec les plaques de 100"}},
+  fabriquer:{nom:'Fabriquer le nombre avec les cubes',court:'Fabriquer',champ:'nf',desc:{1:"jusqu'à 50, compteur visible",2:"jusqu'à 99, sans compteur",3:"nombre dicté et écrit en lettres",4:"jusqu'à 999, avec les plaques de 100"}},
+  droite:{nom:'Placer sur la droite',court:'Droite',champ:'nd',desc:{1:"2 bonds de 1",2:"4 bonds de 1",3:"10 bonds de 1",4:"bonds de 5 ou de 10",5:"tout mélangé, jusqu'à 30 bonds",6:"jusqu'à 999 : bonds de 1, 5, 10 ou 100"}},
+  monnaie:{nom:'Payer avec les euros',court:'Monnaie',champ:'nm',desc:{1:"billets de 10 € et pièces de 1 €, compteur visible",2:"pièces de 1 et 2 €, billets de 5 et 10 €",3:"toutes les pièces et billets jusqu'à 50 €",4:"payer avec le moins de pièces et billets possible",5:"jusqu'à 999 €, avec les billets de 100, 200 et 500 €"}}
 };
 const ORDRE=['cubes','fabriquer','droite','monnaie'];
 const MAXN=k=>Object.keys(ACTS[k].desc).length;
@@ -683,23 +693,26 @@ $('#btnAccueil').addEventListener('click',()=>{ majAccueil(); montrer('accueil')
 
 /* ================= CUBES ================= */
 function genCubes(niv){
-  let t,u;
+  let c=0,t,u;
   if(niv===1){ t=rnd(1,2); u=rnd(0,9); }
   else if(niv===2){ t=rnd(1,5); u=rnd(0,9); }
   else if(niv===3){ t=rnd(2,9); u=Math.random()<.15?0:rnd(1,9); }
-  else { t=rnd(2,8); u=Math.random()<.5?rnd(10,14):(Math.random()<.2?0:rnd(1,9)); while(t*10+u>99) t--; }
-  if(t*10+u===0) u=1;
-  return {type:'cubes',t,u,total:t*10+u,sig:'c'+t+'-'+u};
+  else if(niv===4){ t=rnd(2,8); u=Math.random()<.5?rnd(10,14):(Math.random()<.2?0:rnd(1,9)); while(t*10+u>99) t--; }
+  else { c=rnd(1,9); t=Math.random()<.12?0:rnd(1,9); u=Math.random()<.12?0:rnd(1,9); }
+  if(c*100+t*10+u===0) u=1;
+  return {type:'cubes',c,t,u,total:c*100+t*10+u,cent:niv>=5,sig:'c'+c+'-'+t+'-'+u};
 }
 function ext(kind,a){
   if(kind==='cube') return [16,16];
+  if(kind==='plaque') return [112,112];
   const r=a*Math.PI/180, c=Math.abs(Math.cos(r)), s=Math.abs(Math.sin(r));
   return [12*c+104*s, 12*s+104*c];
 }
 const ZONE={x0:18,y0:18,x1:702,y1:382};
-function placerBoite(it,hw,hh,placed){
+function placerBoite(it,hw,hh,placed,Z){
+  Z=Z||ZONE;
   for(let k=0;k<300;k++){
-    const x=rnd(ZONE.x0+hw,ZONE.x1-hw), y=rnd(ZONE.y0+hh,ZONE.y1-hh);
+    const x=rnd(Z.x0+hw,Z.x1-hw), y=rnd(Z.y0+hh,Z.y1-hh);
     if(placed.every(p=>Math.abs(p.x-x)>p.hw+hw+10 || Math.abs(p.y-y)>p.hh+hh+10)){ it.x=x; it.y=y; placed.push({x,y,hw,hh}); return true; }
   }
   return false;
@@ -708,23 +721,24 @@ function motif(n){
   const d=22;
   return {1:[[0,0]],2:[[-d,-d],[d,d]],3:[[-d,-d],[0,0],[d,d]],4:[[-d,-d],[d,-d],[-d,d],[d,d]],5:[[-d,-d],[d,-d],[0,0],[-d,d],[d,d]]}[n];
 }
-function essayer(items,niv){
+function essayer(items,niv,Z){
   const placed=[];
-  const bars=items.filter(i=>i.kind==='bar'), cubes=items.filter(i=>i.kind==='cube');
+  const pl_=items.filter(i=>i.kind==='plaque'), bars=items.filter(i=>i.kind==='bar'), cubes=items.filter(i=>i.kind==='cube');
+  for(const p of pl_){ p.a=0; if(!placerBoite(p,112,112,placed,Z)) return false; }
   for(const b of bars){
     b.a = niv===2 ? 0 : pick([0,0,90,90,30,-30,-60]);
-    const [hw,hh]=ext('bar',b.a); if(!placerBoite(b,hw,hh,placed)) return false;
+    const [hw,hh]=ext('bar',b.a); if(!placerBoite(b,hw,hh,placed,Z)) return false;
   }
-  const des = niv===2 || (niv===3 && Math.random()<.5);
+  const des = niv===2 || (niv>=3 && Math.random()<.5);
   if(des){
     let idx=0;
     while(idx<cubes.length){
       const n=Math.min(5,cubes.length-idx), g={};
-      if(!placerBoite(g,36,36,placed)) return false;
+      if(!placerBoite(g,36,36,placed,Z)) return false;
       motif(n).forEach(([dx,dy])=>{ const c=cubes[idx++]; c.x=g.x+dx; c.y=g.y+dy; c.a=0; });
     }
   } else {
-    for(const c of cubes){ c.a=0; if(!placerBoite(c,16,16,placed)) return false; }
+    for(const c of cubes){ c.a=0; if(!placerBoite(c,16,16,placed,Z)) return false; }
   }
   return true;
 }
@@ -737,13 +751,35 @@ function posDe(i,total,o){
 }
 const triUnites=(a,b)=>((a.si==null)-(b.si==null))||((a.si||0)-(b.si||0))||(a.y-b.y)||(a.x-b.x);
 const DE_RITUEL={x1:525,x2:640,y0:175,dy:130,d:32};
+/* Deux plateaux : normal (dizaines, unités) et « jusqu'à 999 » (centaines, dizaines, unités), plus grand */
+const GEO_N={w:720,h:400,sep:[440],titres:[[230,'dizaines'],[568,'unités']],zone:{x0:18,y0:18,x1:702,y1:382},de:DE_RITUEL,
+  barre:i=>({x:60+i*40,y:240}), plaque:null, maxBar:10};
+const GEO_C={w:1400,h:780,sep:[660,1070],titres:[[330,'centaines'],[865,'dizaines'],[1235,'unités']],zone:{x0:18,y0:18,x1:1382,y1:762},
+  de:{x1:1160,x2:1310,y0:230,dy:150,d:32},
+  barre:i=>({x:692+(i%10)*36+Math.floor((i%10)/5)*14,y:300+Math.floor(i/10)*240}),
+  plaque:i=>({x:115+(i%3)*215,y:200+Math.floor(i/3)*215}), maxBar:19};
+const geo=q=>(q&&q.cent)?GEO_C:GEO_N;
+const VAL_OBJ={plaque:100,bar:10,cube:1};
+function colonneObj(q,x){ const G=geo(q); if(q.cent) return x<G.sep[0]?'plaque':x<G.sep[1]?'bar':'cube'; return x<G.sep[0]?'bar':'cube'; }
+function fondTableau(q){
+  const G=geo(q), fond=el('g',{class:'table-rangement'},svg);
+  G.sep.forEach(x=>el('line',{x1:x,y1:24,x2:x,y2:G.h-24,class:'sep'},fond));
+  G.titres.forEach(([x,t])=>{ const e=el('text',{x,y:q.cent?70:60,class:'titre-col'},fond); e.textContent=t; if(q.cent) e.setAttribute('style','font-size:44px'); });
+  return fond;
+}
 function disposer(q,niv){
-  const items=[];
+  const G=geo(q), items=[];
+  for(let i=0;i<(q.c||0);i++) items.push({kind:'plaque',a:0});
   for(let i=0;i<q.t;i++) items.push({kind:'bar',a:0});
   for(let j=0;j<q.u;j++) items.push({kind:'cube',a:0});
-  if(niv>1){ for(let e=0;e<60;e++){ if(essayer(items,niv)) return items; } }
-  let bi=0,ui=0;
-  items.forEach(it=>{ if(it.kind==='bar'){ it.x=60+bi*40; it.y=240; bi++; } else { Object.assign(it,posDe(ui,q.u,DE_RITUEL)); it.si=ui; ui++; } it.a=0; });
+  if(niv>1){ for(let e=0;e<80;e++){ if(essayer(items,niv,G.zone)) return items; } }
+  let pi=0,bi=0,ui=0;
+  items.forEach(it=>{
+    if(it.kind==='plaque') Object.assign(it,G.plaque(pi++));
+    else if(it.kind==='bar') Object.assign(it,G.barre(bi++));
+    else { Object.assign(it,posDe(ui,q.u,G.de)); it.si=ui; ui++; }
+    it.a=0;
+  });
   return items;
 }
 function dessiner(it,parent){
@@ -752,6 +788,11 @@ function dessiner(it,parent){
     el('polygon',{points:'-10,-10 -5,-15 15,-15 10,-10',class:'face'},g);
     el('polygon',{points:'10,-10 15,-15 15,5 10,10',class:'face'},g);
     el('rect',{x:-10,y:-10,width:20,height:20,class:'avant'},g);
+  } else if(it.kind==='plaque'){
+    el('path',{d:'M-100,-100L-90,-110L110,-110L100,-100ZM100,-100L110,-110L110,90L100,100Z',class:'face'},g);
+    el('rect',{x:-100,y:-100,width:200,height:200,class:'avant'},g);
+    let d=''; for(let i=1;i<10;i++) d+=`M${-100+20*i},-100V100M-100,${-100+20*i}H100`;
+    el('path',{d,class:'grille-r'},g);
   } else {
     el('polygon',{points:'-10,-100 -5,-105 15,-105 10,-100',class:'face'},g);
     el('polygon',{points:'10,-100 15,-105 15,95 10,100',class:'face'},g);
@@ -785,11 +826,9 @@ function afficherCubes(){
   const coul = c==='toujours' || (c==='auto' && niv<=2);
   plateau.classList.toggle('couleurs',coul);
   plateau.classList.remove('range');
-  svg.setAttribute('viewBox','0 0 720 400'); svg.innerHTML='';
-  const fond=el('g',{class:'table-rangement'},svg);
-  el('line',{x1:440,y1:24,x2:440,y2:376,class:'sep'},fond);
-  el('text',{x:230,y:60,class:'titre-col'},fond).textContent='dizaines';
-  el('text',{x:568,y:60,class:'titre-col'},fond).textContent='unités';
+  const G=geo(q);
+  svg.setAttribute('viewBox',`0 0 ${G.w} ${G.h}`); svg.innerHTML='';
+  fondTableau(q);
   const couche=el('g',{},svg);
   couchPaquet=el('g',{},svg);
   couchEtiq=el('g',{},svg);
@@ -821,21 +860,27 @@ document.addEventListener('keydown',e=>{
 });
 function ranger(){
   const q=S.q; if(!q||q.type!=='cubes'||q.range) return;
+  const G=geo(q);
   q.range=true; plateau.classList.add('range'); $('#btnRanger').disabled=true;
+  const plaques=q.items.filter(i=>i.kind==='plaque').sort((a,b)=>(a.y-b.y)||(a.x-b.x));
   const bars=q.items.filter(i=>i.kind==='bar').sort((a,b)=>a.x-b.x);
   const cubes=q.items.filter(i=>i.kind==='cube').sort(triUnites);
-  bars.forEach((b,i)=>{ b.rx=60+i*40; b.ry=240; });
-  cubes.forEach((c,j)=>{ const p=posDe(j,cubes.length,DE_RITUEL); c.rx=p.x; c.ry=p.y; c.si=j; });
-  q.bars=bars; q.cubes=cubes;
+  plaques.forEach((p,i)=>{ const o=G.plaque(i); p.rx=o.x; p.ry=o.y; });
+  bars.forEach((b,i)=>{ const o=G.barre(i); b.rx=o.x; b.ry=o.y; });
+  cubes.forEach((c,j)=>{ const p=posDe(j,cubes.length,G.de); c.rx=p.x; c.ry=p.y; c.si=j; });
+  q.plaques=plaques; q.bars=bars; q.cubes=cubes;
   q.items.forEach(it=>poser(it,it.rx,it.ry,0));
 }
-function bulle(x,y,n){ const g=el('g',{class:'bulle'},couchEtiq); el('circle',{cx:x,cy:y,r:n>9?16:14},g); el('text',{x,y},g).textContent=n; }
+function bulle(x,y,n,kind){ const grand=S&&S.q&&S.q.cent;
+  // plateau « jusqu'à 999 » : barres et cubes sont serrés, on ne garde que la dernière bulle de chaque sorte
+  if(grand&&kind&&kind!=='plaque') couchEtiq.querySelectorAll(`[data-k="${kind}"]`).forEach(b=>b.remove());
+  const g=el('g',{class:'bulle','data-k':kind||''},couchEtiq); el('circle',{cx:x,cy:y,r:grand?(n>99?32:26):(n>9?16:14)},g); const t=el('text',{x,y},g); t.textContent=n; if(grand) t.setAttribute('style','font-size:28px'); }
+function listeEt(a){ return a.length<2?a.join(''):a.slice(0,-1).join(', ')+' et '+a[a.length-1]; }
 function phraseCubes(q){
-  const {t,u,total}=q;
-  if(u===0) return `${t} ${pl(t,'dizaine')}, ça fait ${total}.`;
-  if(t===0) return `${u} ${pl(u,'unité')}, ça fait ${total}.`;
+  const {c=0,t,u,total}=q;
   if(u>=10) return `${t} ${pl(t,'dizaine')} et ${u} unités. ${u} unités, c'est 1 dizaine et ${u-10} ${pl(u-10,'unité')}. En tout : ${total}.`;
-  return `${t} ${pl(t,'dizaine')} et ${u} ${pl(u,'unité')}, ça fait ${total}.`;
+  const parts=[c&&`${c} ${pl(c,'centaine')}`, t&&`${t} ${pl(t,'dizaine')}`, u&&`${u} ${pl(u,'unité')}`].filter(Boolean);
+  return `${listeEt(parts)}, ça fait ${total}.`;
 }
 async function aideCubes(){
   if(S.busy) return; S.busy=true; const tok=S.tok, q=S.q; if(!q.fini) q.aide=true;
@@ -846,12 +891,15 @@ async function aideCubes(){
   couchEtiq.innerHTML=''; couchPaquet.innerHTML='';
   q.items.forEach(it=>it.g.classList.remove('compte'));
   let n=0;
-  message('On compte les barres de 10, puis les cubes seuls.','info');
-  for(const b of q.bars){ n+=10; b.g.classList.add('compte'); bulle(b.rx,b.ry-124,n); dire(n); await attendre(1050); if(tok!==S.tok) return; }
-  for(const c of q.cubes){ n+=1; c.g.classList.add('compte'); bulle(c.rx,c.ry,n); dire(n); await attendre(800); if(tok!==S.tok) return; }
+  message(q.cent?'On compte les plaques de 100, puis les barres de 10, puis les cubes seuls.':'On compte les barres de 10, puis les cubes seuls.','info');
+  for(const p of (q.plaques||[])){ n+=100; p.g.classList.add('compte'); bulle(p.rx,p.ry,n); dire(n); await attendre(1150); if(tok!==S.tok) return; }
+  for(const b of q.bars){ n+=10; b.g.classList.add('compte'); bulle(b.rx,b.ry-124,n,'bar'); dire(n); await attendre(1050); if(tok!==S.tok) return; }
+  for(const c of q.cubes){ n+=1; c.g.classList.add('compte'); bulle(c.rx,c.ry,n,'cube'); dire(n); await attendre(800); if(tok!==S.tok) return; }
   if(q.u>=10){
-    el('rect',{x:470,y:124,width:228,height:104,rx:10,class:'paquet'},couchPaquet);
-    el('text',{x:569,y:352,class:'paquet-txt'},couchPaquet).textContent='10 unités = 1 dizaine';
+    const dix=q.cubes.slice(0,10), xs=dix.map(c=>c.rx), ys=dix.map(c=>c.ry), x0=Math.min(...xs)-28, y0=Math.min(...ys)-30;
+    const w=Math.max(...xs)+28-x0, h=Math.max(...ys)+26-y0;
+    el('rect',{x:x0,y:y0,width:w,height:h,rx:10,class:'paquet'},couchPaquet);
+    el('text',{x:x0+w/2,y:Math.min(geo(q).h-20,y0+h+150),class:'paquet-txt'},couchPaquet).textContent='10 unités = 1 dizaine';
   }
   const p=phraseCubes(q);
   if(!q.fini) { message(p+' Écris le nombre.','info'); }
@@ -868,8 +916,11 @@ function validerCubes(){
   q.essais++;
   s.classList.remove('secoue'); void s.offsetWidth; s.classList.add('secoue');
   let m;
-  if(q.t>0 && v===q.t+q.u) m='Attention : une barre, c\'est 10 cubes.';
-  else if(q.u>0 && q.u<10 && v===q.u*10+q.t) m='Tu as inversé les dizaines et les unités.';
+  if(q.cent && v===q.c+q.t+q.u) m='Attention : une plaque, c\'est 100 cubes, et une barre, 10 cubes.';
+  else if(q.cent && Math.abs(v-q.total)%100===0) m='Recompte les plaques de 100.';
+  else if(q.cent && Math.abs(v-q.total)%10===0 && Math.abs(v-q.total)<100) m='Recompte les barres de 10.';
+  else if(q.t>0 && v===q.t+q.u) m='Attention : une barre, c\'est 10 cubes.';
+  else if(!q.cent && q.u>0 && q.u<10 && v===q.u*10+q.t) m='Tu as inversé les dizaines et les unités.';
   else if(Math.abs(v-q.total)<=2) m='Presque ! Recompte les cubes seuls.';
   else m='Ce n\'est pas le bon nombre.';
   if(q.essais>=2){ message(m,'mal'); dire(m); setTimeout(()=>{ s.textContent=''; echec(); },1400); }
@@ -889,6 +940,14 @@ function cfgDroite(niv){
     ()=>{ const a=rnd(0,12)*5; return {a,b:a+20,n:4}; },
     ()=>{ const a=rnd(0,5)*10; return {a,b:a+50,n:10}; }
   ])(); }
+  if(niv>=6){ return pick([
+    ()=>{ const a=rnd(10,98)*10; return {a,b:a+10,n:10}; },       // 340 … 350 : bonds de 1
+    ()=>{ const a=rnd(10,98)*10; return {a,b:a+10,n:10}; },
+    ()=>{ const a=rnd(1,8)*100; return {a,b:a+100,n:10}; },       // 300 … 400 : bonds de 10
+    ()=>{ const a=rnd(1,8)*100; return {a,b:a+100,n:10}; },
+    ()=>{ const a=rnd(1,9)*100+pick([0,50]); return a+50<=999?{a,b:a+50,n:10}:{a:a-50,b:a,n:10}; }, // bonds de 5
+    ()=>({a:100,b:900,n:8})                                          // bonds de 100
+  ])(); }
   return pick([
     ()=>{ const a=rnd(0,7)*10; return {a,b:a+30,n:30}; },
     ()=>{ const a=rnd(0,7)*10; return {a,b:a+30,n:30}; },
@@ -902,12 +961,13 @@ function genDroite(niv){
   c.choix=leurres(c); return c;
 }
 function leurres(q){
-  const {a,b,pas,cible}=q, set=new Set([cible]), out=[];
-  const ajoute=v=>{ if(Number.isInteger(v)&&v>=0&&v<=110&&!set.has(v)&&out.length<5){ set.add(v); out.push(v); } };
+  const {a,b,pas,cible}=q, set=new Set([cible]), out=[], max=Math.max(110,b+pas*2);
+  const ajoute=v=>{ if(Number.isInteger(v)&&v>=0&&v<=max&&!set.has(v)&&out.length<5){ set.add(v); out.push(v); } };
   melanger([cible-pas,cible+pas,cible-1,cible+1]).slice(0,2).forEach(ajoute);
-  const d=String(cible); const inv = d.length===2&&d[0]!==d[1]&&d[1]!=='0' ? +(d[1]+d[0]) : -1;
-  melanger([inv,a,b,a-1,b+1,cible+10,cible-10,cible+pas*2,cible-pas*2]).forEach(ajoute);
-  while(out.length<5) ajoute(rnd(0,99));
+  const d=String(cible);
+  const inv = d.length===2&&d[0]!==d[1]&&d[1]!=='0' ? +(d[1]+d[0]) : d.length===3&&d[1]!==d[2]&&d[2]!=='0' ? +(d[0]+d[2]+d[1]) : -1;
+  melanger([inv,a,b,a-1,b+1,cible+10,cible-10,cible+pas*2,cible-pas*2,cible>=100?cible+100:-1,cible>=200?cible-100:-1]).forEach(ajoute);
+  while(out.length<5) ajoute(Math.max(0,cible+rnd(-60,60)));
   return melanger([cible,...out]);
 }
 let couchAide=null;
@@ -993,14 +1053,15 @@ function lettres(n){
   if(d===8) return 'quatre-vingt'+(u===0?'s':'-'+MOTS[u]);
   return 'quatre-vingt-'+lettres(10+u);
 }
-function phraseFab(t,u){
-  if(u===0) return `${t} ${pl(t,'barre')} de 10`;
-  if(t===0) return `${u} ${pl(u,'cube')}`;
-  return `${t} ${pl(t,'barre')} de 10 et ${u} ${pl(u,'cube')}`;
+function phraseFab(t,u,c){
+  const parts=[c&&`${c} ${pl(c,'plaque')} de 100`, t&&`${t} ${pl(t,'barre')} de 10`, u&&`${u} ${pl(u,'cube')}`].filter(Boolean);
+  return listeEt(parts);
 }
-function genFab(niv){ const n=niv===1?rnd(11,50):rnd(11,99); return {type:'fabriquer',cible:n,t:Math.floor(n/10),u:n%10,sig:'f'+n,dire:niv===3?String(n):''}; }
+function genFab(niv){ const n=niv===1?rnd(11,50):niv>=4?rnd(101,999):rnd(11,99); return {type:'fabriquer',cible:n,c:Math.floor(n/100),t:Math.floor(n/10)%10,u:n%10,cent:niv>=4,sig:'f'+n,dire:niv===3?String(n):''}; }
 let couchFab=null, gl=null;
 function iconeSvg(kind){
+  if(kind==='plaque'){ let d=''; for(let i=1;i<10;i++) d+=`M${-100+20*i},-100V100M-100,${-100+20*i}H100`;
+    return `<svg viewBox="-106 -116 222 222" aria-hidden="true"><path d="M-100,-100L-90,-110L110,-110L100,-100ZM100,-100L110,-110L110,90L100,100Z" fill="#5DAF6E" stroke="#1D2B4F" stroke-width="3"/><rect x="-100" y="-100" width="200" height="200" fill="#9FD8A8" stroke="#1D2B4F" stroke-width="4"/><path d="${d}" stroke="#1D2B4F" stroke-width="2" fill="none" opacity=".6"/></svg>`; }
   return kind==='bar'
     ? `<svg viewBox="-14 -108 32 216" aria-hidden="true">${Array.from({length:10},(_,i)=>`<rect x="-10" y="${-100+i*20}" width="20" height="20" fill="#8FB0F5" stroke="#1D2B4F" stroke-width="2"/>`).join('')}</svg>`
     : `<svg viewBox="-14 -14 32 32" aria-hidden="true"><rect x="-10" y="-10" width="20" height="20" fill="#F9D66B" stroke="#1D2B4F" stroke-width="2"/></svg>`;
@@ -1010,15 +1071,20 @@ function glisser(ev,fantome,fin,cible){
   if(gl) return; if(ev.button!==undefined && ev.button!==0) return;
   ev.preventDefault();
   const gh=document.createElement('div'); gh.className='fantome'; gh.appendChild(fantome); document.body.appendChild(gh);
-  gl={gh,fin,cible:cible||svg,src:ev.currentTarget&&ev.currentTarget.closest&&ev.currentTarget.closest('.ajout')?ev.currentTarget:null,x0:ev.clientX,y0:ev.clientY,moved:false};
+  gl={gh,fin,surBouge:null,cible:cible||svg,src:ev.currentTarget&&ev.currentTarget.closest&&ev.currentTarget.closest('.ajout')?ev.currentTarget:null,x0:ev.clientX,y0:ev.clientY,moved:false};
   glBouge(ev);
   window.addEventListener('pointermove',glBouge); window.addEventListener('pointerup',glFin); window.addEventListener('pointercancel',glFin);
 }
-function glBouge(ev){ if(!gl) return; if(Math.hypot(ev.clientX-gl.x0,ev.clientY-gl.y0)>14) gl.moved=true; gl.gh.style.transform=`translate(${ev.clientX}px,${ev.clientY}px) translate(-50%,-50%)`; }
+function glBouge(ev){ if(!gl) return; if(Math.hypot(ev.clientX-gl.x0,ev.clientY-gl.y0)>14) gl.moved=true; gl.gh.style.transform=`translate(${ev.clientX}px,${ev.clientY}px) translate(-50%,-50%)`; if(gl.surBouge) gl.surBouge(ev); }
 function glFin(ev){
   if(!gl) return;
   window.removeEventListener('pointermove',glBouge); window.removeEventListener('pointerup',glFin); window.removeEventListener('pointercancel',glFin);
   const g=gl; gl=null; g.gh.remove();
+  if(ev.type==='pointercancel'){ // geste interrompu par le navigateur : on remet tout comme avant
+    if(g.cible===asvg){ cacherPoubelle(); dessinerAtelier(); }
+    else if(typeof S!=='undefined'&&S&&S.q&&S.q.type==='fabriquer') dessinerFab();
+    return;
+  }
   const r=g.cible.getBoundingClientRect();
   const dedans=ev.type!=='pointercancel' && ev.clientX>=r.left && ev.clientX<=r.right && ev.clientY>=r.top && ev.clientY<=r.bottom;
   // relâché sur le bouton de départ : c'est un simple toucher
@@ -1026,32 +1092,33 @@ function glFin(ev){
   g.fin(dedans,g.moved&&!surDepart,ev.clientX,ev.clientY);
 }
 function fantomeFab(kind){
-  const k=svg.getBoundingClientRect().width/720;
+  const k=svg.getBoundingClientRect().width/geo(S.q).w;
   const w=document.createElement('div'); w.innerHTML=iconeSvg(kind);
-  const s=w.firstChild; s.style.width=(32*k)+'px'; s.style.height='auto'; return s;
+  const s=w.firstChild; s.style.width=((kind==='plaque'?222:32)*k)+'px'; s.style.height='auto'; return s;
 }
 const nbFab=q=>q.items.filter(i=>i.kind==='bar').length;
 const ncFab=q=>q.items.filter(i=>i.kind==='cube').length;
-function bornerFab(kind,x,y){ const [hw,hh]=kind==='bar'?[16,106]:[16,16]; return {x:Math.max(hw,Math.min(720-hw,x)),y:Math.max(hh,Math.min(400-hh,y))}; }
-function caseFab(kind,i,total){ return kind==='bar' ? {x:60+i*40,y:240} : posDe(i,total==null?i+1:total,DE_RITUEL); }
+const npFab=q=>q.items.filter(i=>i.kind==='plaque').length;
+const totFab=q=>npFab(q)*100+nbFab(q)*10+ncFab(q);
+function bornerFab(kind,x,y){ const G=geo(S.q), [hw,hh]=kind==='bar'?[16,106]:kind==='plaque'?[112,112]:[16,16]; return {x:Math.max(hw,Math.min(G.w-hw,x)),y:Math.max(hh,Math.min(G.h-hh,y))}; }
+function caseFab(kind,i,total){ const G=geo(S.q); return kind==='bar' ? G.barre(i) : kind==='plaque' ? G.plaque(i) : posDe(i,total==null?i+1:total,G.de); }
 
 function afficherFab(){
   const q=S.q, niv=S.niv.fabriquer; q.items=[];
   plateau.classList.toggle('couleurs',data.reglages.couleurs!=='jamais');
   plateau.classList.add('range','mode-monnaie');
-  svg.setAttribute('viewBox','0 0 720 400'); svg.innerHTML='';
-  const fond=el('g',{class:'table-rangement'},svg);
-  el('line',{x1:440,y1:24,x2:440,y2:376,class:'sep'},fond);
-  el('text',{x:230,y:60,class:'titre-col'},fond).textContent='dizaines';
-  el('text',{x:568,y:60,class:'titre-col'},fond).textContent='unités';
+  const G=geo(q);
+  svg.setAttribute('viewBox',`0 0 ${G.w} ${G.h}`); svg.innerHTML='';
+  fondTableau(q);
   couchFab=el('g',{},svg); couchPaquet=el('g',{},svg); couchEtiq=el('g',{},svg);
-  $('#txtConsigne').textContent = niv===3 ? 'Écoute le nombre et fabrique-le avec les barres et les cubes.' : 'Fabrique ce nombre avec les barres et les cubes.';
+  $('#txtConsigne').textContent = niv===3 ? 'Écoute le nombre et fabrique-le avec les barres et les cubes.' : q.cent ? 'Fabrique ce nombre avec les plaques, les barres et les cubes.' : 'Fabrique ce nombre avec les barres et les cubes.';
   $('#btnRanger').hidden=false; $('#btnRanger').disabled=false; $('#btnRanger').textContent='Ranger les cubes';
   $('#btnAide').textContent='Compter avec moi';
   zone.innerHTML=`
     <p class="cible num-cible" id="cible">${niv===3?`<span class="lettres">${lettres(q.cible)}</span>`:q.cible}</p>
     ${niv===1?'<p class="compteur">J\'ai mis : <b id="compteur">0</b></p>':''}
-    <div class="ajouts tiroir-fab">
+    <div class="ajouts tiroir-fab${q.cent?' trois':''}">
+      ${q.cent?`<button class="ajout" data-a="plaque" aria-label="Ajouter une plaque de 100">${iconeSvg('plaque')}plaque de 100</button>`:''}
       <button class="ajout" data-a="bar" aria-label="Ajouter une barre de 10">${iconeSvg('bar')}barre de 10</button>
       <button class="ajout" data-a="cube" aria-label="Ajouter un cube">${iconeSvg('cube')}cube</button>
     </div>
@@ -1089,54 +1156,67 @@ function dessinerFab(){
       });
     });
   });
-  const c=$('#compteur'); if(c) c.textContent=nbFab(q)*10+ncFab(q);
-  const ech=$('#btnEchange'); if(ech) ech.hidden=ncFab(q)<10;
+  const c=$('#compteur'); if(c) c.textContent=totFab(q);
+  const ech=$('#btnEchange');
+  if(ech){ const cu=ncFab(q)>=10, ba=q.cent&&nbFab(q)>=10; ech.hidden=!(cu||ba); ech.textContent=cu?'Échanger 10 cubes contre 1 barre':'Échanger 10 barres contre 1 plaque'; }
 }
 function rangerColFab(q,k){
-  const col=q.items.filter(i=>i.kind===k&&(k==='bar'?i.x<440:i.x>=440)).sort(triRang);
+  const col=q.items.filter(i=>i.kind===k&&colonneObj(q,i.x)===k).sort(triRang);
   col.forEach((c,j)=>{ Object.assign(c,caseFab(k,j,col.length)); c.si=j; });
 }
 function ajouterFab(k,pos){
   const q=S.q; if(q.fini||S.busy) return;
-  const n=k==='bar'?nbFab(q):ncFab(q);
-  if(k==='bar'&&n>=10) return message('Il n\'y a plus de place pour les barres.','info');
+  const n=k==='bar'?nbFab(q):k==='plaque'?npFab(q):ncFab(q), G=geo(q);
+  if(k==='plaque'&&n>=9) return message('Il n\'y a plus de place pour les plaques.','info');
+  if(k==='bar'&&n>=G.maxBar) return message('Il n\'y a plus de place pour les barres.','info');
   if(k==='cube'&&n>=20) return message('Il n\'y a plus de place pour les cubes.','info');
   const p=pos||caseFab(k,n);
   q.items.push({kind:k,x:p.x,y:p.y});
-  if(!pos || (k==='bar'?p.x<440:p.x>=440)) rangerColFab(q,k);
+  if(!pos || colonneObj(q,p.x)===k) rangerColFab(q,k);
   message(''); dessinerFab();
 }
 function rangerFab(){
   const q=S.q;
-  const bars=q.items.filter(i=>i.kind==='bar').sort((a,b)=>a.x-b.x);
+  const plaques=q.items.filter(i=>i.kind==='plaque').sort((a,b)=>(a.y-b.y)||(a.x-b.x));
+  const bars=q.items.filter(i=>i.kind==='bar').sort((a,b)=>(a.y-b.y)||(a.x-b.x));
   const cubes=q.items.filter(i=>i.kind==='cube').sort(triUnites);
+  plaques.forEach((p,i)=>Object.assign(p,caseFab('plaque',i)));
   bars.forEach((b,i)=>Object.assign(b,caseFab('bar',i)));
   cubes.forEach((c,j)=>{ Object.assign(c,caseFab('cube',j,cubes.length)); c.si=j; });
-  q.items=bars.concat(cubes); dessinerFab();
+  q.items=plaques.concat(bars,cubes); dessinerFab();
 }
 function echangerFab(){
-  const q=S.q; if(q.fini||S.busy||ncFab(q)<10) return;
-  if(nbFab(q)>=10) return message('Il n\'y a plus de place pour une barre.','info');
-  let n=0; q.items=q.items.filter(i=>!(i.kind==='cube' && n++<10));
-  rangerFab(); ajouterFab('bar'); rangerFab();
-  message('10 cubes, c\'est 1 barre de 10.','info'); dire('10 cubes, c\'est une barre de 10.');
+  const q=S.q; if(q.fini||S.busy) return;
+  if(ncFab(q)>=10){
+    if(nbFab(q)>=geo(q).maxBar) return message('Il n\'y a plus de place pour une barre.','info');
+    let n=0; q.items=q.items.filter(i=>!(i.kind==='cube' && n++<10));
+    rangerFab(); ajouterFab('bar'); rangerFab();
+    message('10 cubes, c\'est 1 barre de 10.','info'); dire('10 cubes, c\'est une barre de 10.');
+  } else if(q.cent && nbFab(q)>=10){
+    if(npFab(q)>=9) return message('Il n\'y a plus de place pour une plaque.','info');
+    let n=0; q.items=q.items.filter(i=>!(i.kind==='bar' && n++<10));
+    rangerFab(); ajouterFab('plaque'); rangerFab();
+    message('10 barres, c\'est 1 plaque de 100.','info'); dire('10 barres, c\'est une plaque de 100.');
+  }
 }
 function bullesFab(q){
   couchEtiq.innerHTML=''; let n=0;
-  q.items.forEach(p=>{ n+=p.kind==='bar'?10:1; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y,n); });
+  q.items.forEach(p=>{ n+=VAL_OBJ[p.kind]; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y,n,p.kind); });
 }
 function validerFab(){
   const q=S.q; if(q.fini||S.busy) return;
-  const nb=nbFab(q), nc=ncFab(q), tot=nb*10+nc;
-  if(tot===0) return message('Ajoute des barres et des cubes.','info');
+  const nb=nbFab(q), nc=ncFab(q), np=npFab(q), tot=totFab(q);
+  if(tot===0) return message(q.cent?'Ajoute des plaques, des barres et des cubes.':'Ajoute des barres et des cubes.','info');
   if(tot===q.cible){
     if(nc>=10){ const m=`Tu as bien ${tot}, mais 10 cubes seuls font 1 barre : échange-les.`; message(m,'info'); dire(m); return; }
+    if(q.cent&&nb>=10){ const m=`Tu as bien ${tot}, mais 10 barres font 1 plaque : échange-les.`; message(m,'info'); dire(m); return; }
     rangerFab(); bullesFab(q);
-    return reussite(`${q.cible}, c'est ${phraseFab(q.t,q.u)}.`);
+    return reussite(`${q.cible}, c'est ${phraseFab(q.t,q.u,q.c)}.`);
   }
   q.essais++;
   let m;
-  if(q.t!==q.u && nb===q.u && nc===q.t) m='Tu as inversé : le chiffre des dizaines dit combien de barres.';
+  if(!q.cent && q.t!==q.u && nb===q.u && nc===q.t) m='Tu as inversé : le chiffre des dizaines dit combien de barres.';
+  else if(q.cent && np!==q.c && tot!==q.cible && np===q.u && nc===q.c) m='Tu as inversé : le chiffre des centaines dit combien de plaques.';
   else if(tot<q.cible) m='Il manque des cubes.';
   else m='Il y a trop de cubes.';
   if(q.essais>=2){ message(m,'mal'); dire(m); setTimeout(echec,1400); }
@@ -1145,19 +1225,21 @@ function validerFab(){
 async function aideFab(){
   if(S.busy) return; S.busy=true; const tok=S.tok, q=S.q; if(!q.fini) q.aide=true;
   $('#btnAide').disabled=true;
-  const phr=`${q.cible}, c'est ${phraseFab(q.t,q.u)}.`;
+  const phr=`${q.cible}, c'est ${phraseFab(q.t,q.u,q.c)}.`;
   if(q.fini){
     q.items=[]; dessinerFab(); await attendre(500); if(tok!==S.tok) return;
     let n=0;
+    for(let i=0;i<(q.c||0);i++){ q.items.push(Object.assign({kind:'plaque'},caseFab('plaque',i))); n+=100; dessinerFab(); bullesFab(q); dire(n); await attendre(1100); if(tok!==S.tok) return; }
     for(let i=0;i<q.t;i++){ q.items.push(Object.assign({kind:'bar'},caseFab('bar',i))); n+=10; dessinerFab(); bullesFab(q); dire(n); await attendre(950); if(tok!==S.tok) return; }
     for(let j=0;j<q.u;j++){ q.items.push(Object.assign({kind:'cube',si:j},caseFab('cube',j,q.u))); n++; dessinerFab(); bullesFab(q); dire(n); await attendre(750); if(tok!==S.tok) return; }
     message(phr,'info'); dire(phr); await attendre(2500);
   } else {
     rangerFab(); await attendre(300); if(tok!==S.tok) return;
     let n=0; couchEtiq.innerHTML='';
-    for(const p of q.items){ n+=p.kind==='bar'?10:1; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y,n); dire(n); await attendre(p.kind==='bar'?950:750); if(tok!==S.tok) return; }
+    for(const p of q.items){ n+=VAL_OBJ[p.kind]; p.g.classList.add('compte'); bulle(p.x,p.kind==='bar'?p.y-124:p.y,n,p.kind); dire(n); await attendre(p.kind==='cube'?750:p.kind==='bar'?950:1100); if(tok!==S.tok) return; }
     let m=`Tu as mis ${n}. ${phr}`;
-    if(S.niv.fabriquer<3 && q.t>0) m=`Tu as mis ${n}. Dans ${q.cible}, le ${q.t} dit ${q.t} ${pl(q.t,'barre')}, le ${q.u} dit ${q.u} ${pl(q.u,'cube')}.`;
+    if(q.cent) m=`Tu as mis ${n}. Dans ${q.cible}, le ${q.c} dit ${q.c} ${pl(q.c,'plaque')}, le ${q.t} dit ${q.t} ${pl(q.t,'barre')}, le ${q.u} dit ${q.u} ${pl(q.u,'cube')}.`;
+    else if(S.niv.fabriquer<3 && q.t>0) m=`Tu as mis ${n}. Dans ${q.cible}, le ${q.t} dit ${q.t} ${pl(q.t,'barre')}, le ${q.u} dit ${q.u} ${pl(q.u,'cube')}.`;
     message(m,'info'); dire(m); await attendre(Math.min(7000,1500+m.length*55));
   }
   if(tok!==S.tok) return;
@@ -1165,10 +1247,10 @@ async function aideFab(){
 }
 
 /* ================= MONNAIE ================= */
-const VALS={1:[10,1],2:[10,5,2,1],3:[50,20,10,5,2,1],4:[50,20,10,5,2,1]};
+const VALS={1:[10,1],2:[10,5,2,1],3:[50,20,10,5,2,1],4:[50,20,10,5,2,1],5:[500,200,100,50,20,10,5,2,1]};
 function decomposer(n,vals){ const out=[]; for(const v of vals){ while(n>=v){ out.push(v); n-=v; } } return out; }
 function genMon(niv){
-  const n= niv===1?rnd(11,59) : niv===2?rnd(6,99) : rnd(12,99);
+  const n= niv===1?rnd(11,59) : niv===2?rnd(6,99) : niv>=5?rnd(101,999) : rnd(12,99);
   return {type:'monnaie',cible:n,sig:'m'+n,vals:VALS[niv],min:decomposer(n,VALS[niv]).length};
 }
 function dessinerArgent(v,parent){
@@ -1354,7 +1436,7 @@ const MAXA=9999;
 const valItem=it=>it.k?VALEUR[it.k]:it.v;
 const totalA=()=>A.items.reduce((s,it)=>s+valItem(it),0);
 const VB={u:'-9 -14 23 23',d:'-9 -77 23 149',c:'-72 -80 152 152',m:'-72 -102 174 174'};
-function extA(it){ if(it.k) return {u:[9,13],d:[9,76],c:[80,80],m:[88,88]}[it.k]; return it.v>=5?[58,30]:[30,30]; }
+function extA(it){ const e=(typeof A!=='undefined')?echelleAtelier():1; const b=it.k?{u:[9,13],d:[9,76],c:[80,80],m:[88,88]}[it.k]:(it.v>=5?[58,30]:[30,30]); return [b[0]*e,b[1]*e]; }
 function ligne(g,x1,y1,x2,y2){ el('line',{x1,y1,x2,y2,class:'grille'},g); }
 /* Dessin allégé : 2 à 4 éléments par bloc (au lieu de 20 à 50) pour ne pas saturer les navigateurs de TBI */
 function dessinerBloc(k,p){
@@ -1375,7 +1457,10 @@ function dessinerBloc(k,p){
 }
 /* Limites d'affichage : au-delà, le plateau devient illisible et trop lourd */
 const CAPA={u:50,d:30,c:20,m:10}, CAPA_PART={u:25,d:20,c:10,m:10};
-const colonneDe=x=>x<250?'m':x<600?'c':x<800?'d':'u';
+const colonneDe=x=>x<250?'m':x<700?'c':x<900?'d':'u';
+const VBW=1100;   // largeur du plateau de l'atelier (colonnes : 0-250 / 250-700 / 700-900 / 900-1100)
+/* taille des objets : un peu plus grands, sauf en mode « 2 nombres » où chaque partie est deux fois moins haute */
+function echelleAtelier(){ return A.mode==='cubes' ? (A.split?.75:1.15) : 1.1; }
 const triRang=(a,b)=>((a.si==null)-(b.si==null))||((a.si||0)-(b.si||0))||(a.y-b.y)||(a.x-b.x);
 /* Range tout de suite les objets d'un même rang (dans leur colonne) : plus aucun ne se superpose */
 function rangerColonne(k,part){
@@ -1393,18 +1478,18 @@ function iconeA(spec,largeur){
   return s;
 }
 function fantomeA(spec){
-  const k=asvg.getBoundingClientRect().width/1000;
+  const k=asvg.getBoundingClientRect().width/VBW*echelleAtelier();
   const w=spec.k?+VB[spec.k].split(' ')[2]:(spec.v>=5?120:64);
   return iconeA(spec,w*k);
 }
 function versSvgDe(s,cx,cy){ const pt=s.createSVGPoint(); pt.x=cx; pt.y=cy; const m=s.getScreenCTM(); return m?pt.matrixTransform(m.inverse()):{x:500,y:300}; }
-function bornerA(it,x,y){ const [hw,hh]=extA(it); return {x:Math.max(hw,Math.min(1000-hw,x)),y:Math.max(hh+10,Math.min(620-hh,y))}; }
+function bornerA(it,x,y){ const [hw,hh]=extA(it); return {x:Math.max(hw,Math.min(VBW-hw,x)),y:Math.max(hh+10,Math.min(620-hh,y))}; }
 function placeLibreA(spec){
   const [hw,hh]=extA(spec);
   const libre=(x,y)=>A.items.every(p=>{ const [pw,ph]=extA(p); return Math.abs(p.x-x)>pw+hw+4||Math.abs(p.y-y)>ph+hh+4; });
-  const px=spec.v>=5?128:66, py=spec.v>=5?68:66;
-  for(let y=hh+12;y<=620-hh;y+=py) for(let x=hw+12;x<=1000-hw;x+=px) if(libre(x,y)) return {x,y};
-  return bornerA(spec,rnd(100,900),rnd(80,540));
+  const px=spec.v>=5?140:74, py=spec.v>=5?76:74;
+  for(let y=hh+12;y<=620-hh;y+=py) for(let x=hw+12;x<=VBW-hw;x+=px) if(libre(x,y)) return {x,y};
+  return bornerA(spec,rnd(100,1000),rnd(80,540));
 }
 function msgA(t,c){ const r=$('#aRetour'); r.textContent=t; r.className=c||''; }
 function ajouterA(spec,pos){
@@ -1467,15 +1552,16 @@ function slotA(spec,i,part,total){
   if(part){
     const y0=part==='a'?55:340;   // blocs à 75 % : chaque paquet de 10 a sa propre rangée
     if(spec.k==='m'){ const j=i%10; return {x:110+j*5,y:y0+80+j*7}; }
-    if(spec.k==='c'){ const pile=Math.floor(i/5)%2, j=i%5; return {x:340+pile*150+j*2.5,y:y0+62+j*15}; }
-    if(spec.k==='d'){ const j=i%10, rang=Math.floor(i/10)%2; return {x:622+j*13+Math.floor(j/5)*18,y:y0+63+rang*114}; }
-    if(spec.k==='u') return posDe(i,total==null?i+1:total,{x1:852,x2:938,y0:y0+30,dy:52,d:16.5});
+    if(spec.k==='c'){ const pile=Math.floor(i/5)%2, j=i%5; return {x:390+pile*150+j*2.5,y:y0+62+j*15}; }
+    if(spec.k==='d'){ const j=i%10, rang=Math.floor(i/10)%2; return {x:722+j*13+Math.floor(j/5)*18,y:y0+63+rang*114}; }
+    if(spec.k==='u') return posDe(i,total==null?i+1:total,{x1:952,x2:1038,y0:y0+30,dy:52,d:16.5});
     return null;
   }
-  if(spec.k==='m'){ const j=i%10; return {x:100+j*6,y:190+j*36+(j>=5?30:0)}; }
-  if(spec.k==='c'){ const pile=Math.floor(i/5)%4, j=i%5; return {x:330+(pile%2)*165+j*3,y:140+j*40+Math.floor(pile/2)*215}; }
-  if(spec.k==='d'){ const j=i%10; return {x:620+j*16+Math.floor(j/5)*24,y:210+Math.floor(i/10)%3*160}; }
-  if(spec.k==='u') return posDe(i,total==null?i+1:total,{x1:852,x2:950,y0:118,dy:92,d:22});
+  // blocs à 115 %
+  if(spec.k==='m'){ const j=i%10; return {x:100+j*4,y:175+j*34+(j>=5?24:0)}; }
+  if(spec.k==='c'){ const pile=Math.floor(i/5)%4, j=i%5; return {x:360+(pile%2)*185+j*3,y:145+j*40+Math.floor(pile/2)*215}; }
+  if(spec.k==='d'){ const j=i%10; return {x:710+j*18+Math.floor(j/5)*12,y:199+Math.floor(i/10)%3*166}; }
+  if(spec.k==='u') return posDe(i,total==null?i+1:total,{x1:952,x2:1050,y0:118,dy:92,d:22});
   return null;
 }
 const partDe=y=>A.split&&A.mode==='cubes' ? (y<337?'a':'b') : null;
@@ -1488,9 +1574,9 @@ function calculerRangement(){
     A.items=out;
   } else {
     const tri=A.items.slice().sort((a,b)=>b.v-a.v), b=tri.filter(i=>i.v>=5), c=tri.filter(i=>i.v<5);
-    b.forEach((it,i)=>{ it.x=70+(i%7)*134; it.y=Math.min(588,46+Math.floor(i/7)*70); });
-    const y0=b.length?46+Math.ceil(b.length/7)*70+6:40;
-    c.forEach((it,j)=>{ it.x=40+(j%14)*68; it.y=Math.min(588,y0+Math.floor(j/14)*66); });
+    b.forEach((it,i)=>{ it.x=75+(i%7)*140; it.y=Math.min(584,48+Math.floor(i/7)*76); });
+    const y0=b.length?48+Math.ceil(b.length/7)*76+6:42;
+    c.forEach((it,j)=>{ it.x=42+(j%14)*74; it.y=Math.min(584,y0+Math.floor(j/14)*72); });
     A.items=tri;
   }
 }
@@ -1500,11 +1586,11 @@ const LENT=1;  // multiplicateur de durée
 function transit(g,ms){ g._ms=ms*LENT; g.style.transition=`opacity ${ms*LENT}ms ease`; }
 /* En mode « 2 nombres », chaque partie est deux fois moins haute : les blocs sont dessinés à 75 % */
 const ECH_DEUX=.75;
-function echA(g){ return (typeof A!=='undefined' && A.split && A.mode==='cubes' && g && g.ownerSVGElement===asvg) ? ECH_DEUX : 1; }
+function echA(g){ return (typeof A!=='undefined' && g && g.ownerSVGElement===asvg) ? echelleAtelier() : 1; }
 function posStyle(g,x,y,s){ const ms=g._ms||0; g._ms=0; bougerVers(g,x,y,0,s!=null?s:echA(g),ms); }
 const pause=ms=>attendre(ms*LENT);
 function formeCible(k,i,cx,cy){
-  const e=(A.split&&A.mode==='cubes')?ECH_DEUX:1;
+  const e=echelleAtelier();
   if(k==='u') return {x:cx,y:cy+(-63+14*i)*e};      // 10 unités en colonne = 1 barre
   if(k==='d') return {x:cx+(-63+14*i)*e,y:cy};      // 10 barres côte à côte = 1 plaque
   if(k==='c') return {x:cx+3*i*e,y:cy-3*i*e};      // 10 plaques empilées = 1 gros cube
@@ -1558,9 +1644,9 @@ async function echangerA(){
       else {
         const m=`On échange pour avoir le moins possible de pièces et de billets.`; msgA(m,'bien'); dire(m);
         A.items.forEach(it=>it.g.classList.add('selec')); await pause(900);
-        A.items.forEach((it,i)=>{ transit(it.g,1600); posStyle(it.g,500+i*2,310-i*2); });
+        A.items.forEach((it,i)=>{ transit(it.g,1600); posStyle(it.g,550+i*2,310-i*2); });
         await pause(1800);
-        const neufs=cibles.map((v,i)=>{ const g=nouveauG({v}); posStyle(g,500+i*2,310-i*2); g.style.opacity=0; return {v,x:500,y:310,g}; });
+        const neufs=cibles.map((v,i)=>{ const g=nouveauG({v}); posStyle(g,550+i*2,310-i*2); g.style.opacity=0; return {v,x:550,y:310,g}; });
         $('#asvg').getBoundingClientRect();
         neufs.forEach(n=>{ transit(n.g,1000); n.g.style.opacity=1; });
         A.items.forEach(it=>{ transit(it.g,1000); it.g.style.opacity=0; });
@@ -1606,18 +1692,18 @@ function dessinerAtelier(){
   asvg.innerHTML='';
   if(A.mode==='cubes' && A.tableau){
     const f=el('g',{},asvg);
-    [250,600,800].forEach(x=>el('line',{x1:x,y1:10,x2:x,y2:610,class:'sep'},f));
+    [250,700,900].forEach(x=>el('line',{x1:x,y1:10,x2:x,y2:610,class:'sep'},f));
     if(A.split){
-      if(A.alerte){ const X={m:[6,244],c:[256,344],d:[606,194],u:[806,188]};
+      if(A.alerte){ const X={m:[6,238],c:[256,438],d:[706,188],u:[906,188]};
         const [xm,wm]=X[A.alerte.k]; el('rect',{x:xm,y:8,width:wm,height:324,rx:12,class:'col-manque'},f);
         if(A.alerte.sup){ const [xs,ws]=X[A.alerte.sup]; el('rect',{x:xs,y:8,width:ws,height:324,rx:12,class:'col-casser'},f); } }
       const za=A.partActive==='b'?{y:340,h:276}:{y:6,h:328};
-      el('rect',{x:4,y:za.y,width:992,height:za.h,rx:12,class:'zone-active'},f);
-      el('line',{x1:6,y1:337,x2:994,y2:337,class:'ligne-addition'},f); el('text',{x:24,y:385,class:'signe-plus'},f).textContent=A.op==='-'?'−':'+';
+      el('rect',{x:4,y:za.y,width:VBW-8,height:za.h,rx:12,class:'zone-active'},f);
+      el('line',{x1:6,y1:337,x2:VBW-6,y2:337,class:'ligne-addition'},f); el('text',{x:24,y:385,class:'signe-plus'},f).textContent=A.op==='-'?'−':'+';
     }
     if(!A.cache && A.items.length){
       /* nombre d'objets écrit en bas de chaque colonne (en haut et en bas en mode addition) */
-      const COLX={m:125,c:425,d:700,u:900};
+      const COLX={m:125,c:475,d:800,u:1000};
       partsA().forEach(pt=>{
         const objets=A.items.filter(i=>(i.part||null)===pt);
         if(!objets.length) return;
@@ -1633,10 +1719,10 @@ function dessinerAtelier(){
         if(A.split){ const t=objets.reduce((s,i)=>s+valItem(i),0); el('text',{x:16,y:pt==='a'?110:440,class:'nombre-part'},f).textContent=t; }
       });
     }
-    [['milliers',125,'r-m'],['centaines',425,'r-c'],['dizaines',700,'r-d'],['unités',900,'r-u']].forEach(([t,x,c])=>{ el('text',{x,y:40,class:'titre-col '+c+'-svg'},f).textContent=t; });
+    [['milliers',125,'r-m'],['centaines',475,'r-c'],['dizaines',800,'r-d'],['unités',1000,'r-u']].forEach(([t,x,c])=>{ el('text',{x,y:40,class:'titre-col '+c+'-svg'},f).textContent=t; });
   }
   const couche=el('g',{id:'aCouche'},asvg);
-  if(!A.items.length) el('text',{x:500,y:320,class:'vide-txt'},couche).textContent = A.mode==='cubes'?'Fais glisser ici les cubes.':'Fais glisser ici les pièces et les billets.';
+  if(!A.items.length) el('text',{x:VBW/2,y:320,class:'vide-txt'},couche).textContent = A.mode==='cubes'?'Fais glisser ici les cubes.':'Fais glisser ici les pièces et les billets.';
   A.items.forEach(it=>{
     const g=it.k?dessinerBloc(it.k,couche):dessinerArgent(it.v,couche);
     posStyle(g,it.x,it.y); g.classList.add('retirable'); it.g=g;
@@ -1646,16 +1732,29 @@ function dessinerAtelier(){
       if(A.casser){ ev.preventDefault(); return casserA(it); }
       g.style.opacity=.25;
       glisser(ev,fantomeA(it),(dedans,moved,cx,cy)=>{
+        cacherPoubelle();
         const ancienne=it.part||null;
         if(moved&&dedans){ const p=versSvgDe(asvg,cx,cy); Object.assign(it,bornerA(it,p.x,p.y)); it.si=undefined; it.part=partDe(it.y); if(it.part) A.partActive=it.part; A.items.splice(A.items.indexOf(it),1); A.items.push(it); }
         else if(moved) A.items.splice(A.items.indexOf(it),1);
         if(moved && it.k && A.tableau){ rangerColonne(it.k,ancienne); if((it.part||null)!==ancienne) rangerColonne(it.k,it.part); }
         dessinerAtelier();
       },asvg);
+      montrerPoubelle();
     });
   });
   majPanneauA();
 }
+/* Poubelle : quand on fait glisser un objet du plateau, une bande rouge apparaît sous le plateau ;
+   lâcher l'objet en dessous (ou n'importe où hors du plateau) l'enlève */
+function montrerPoubelle(){
+  if(!gl) return;
+  const pb=$('#aPoubelle'), r=asvg.getBoundingClientRect();
+  const top=Math.min(r.bottom+6, innerHeight-80), h=Math.max(70,Math.min(150,innerHeight-top-6));
+  Object.assign(pb.style,{left:r.left+'px',width:r.width+'px',top:top+'px',height:h+'px'});
+  pb.hidden=false; pb.classList.remove('chaude');
+  gl.surBouge=ev=>{ const rr=asvg.getBoundingClientRect(); pb.classList.toggle('chaude', ev.clientY>rr.bottom||ev.clientX<rr.left||ev.clientX>rr.right||ev.clientY<rr.top); };
+}
+function cacherPoubelle(){ const pb=$('#aPoubelle'); if(pb){ pb.hidden=true; pb.classList.remove('chaude'); } }
 function lettres3(n){ if(n<100) return lettres(n); const c=Math.floor(n/100), r=n%100; return (c>1?lettres(c)+' ':'')+'cent'+(c>1&&r===0?'s':'')+(r?' '+lettres(r):''); }
 function lettresN(n){ if(n<1000) return lettres3(n); const m=Math.floor(n/1000), r=n%1000; return (m>1?lettres3(m).replace(/vingts$/,'vingt').replace(/cents$/,'cent')+' ':'')+'mille'+(r?' '+lettres3(r):''); }
 function chiffresColores(n){
@@ -1793,43 +1892,74 @@ function lireNumeration(s){
   return cnt;
 }
 
-/* ---- Entourer pour échanger ---- */
-let lasso=null;
-function dansPolygone(x,y,pts){
-  let dedans=false;
-  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
-    const [xi,yi]=pts[i],[xj,yj]=pts[j];
-    if(((yi>y)!==(yj>y)) && x<(xj-xi)*(y-yi)/(yj-yi)+xi) dedans=!dedans;
-  }
-  return dedans;
+/* ---- Entourer pour échanger ----
+   Plus besoin de fermer une boucle : l'élève touche les objets un par un, ou passe le doigt dessus.
+   Le contour orange se dessine tout seul autour de ce qui est choisi. Retoucher un objet le retire. */
+let peint=null;
+A.selSet=new Set();
+function itemSous(p){
+  for(let i=A.items.length-1;i>=0;i--){ const it=A.items[i], [hw,hh]=extA(it); if(Math.abs(p.x-it.x)<=hw+6&&Math.abs(p.y-it.y)<=hh+6) return it; }
+  return null;
+}
+function enveloppe(pts){
+  pts=pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]); if(pts.length<3) return pts;
+  const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+  const lo=[],hi=[];
+  for(const p of pts){ while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0) lo.pop(); lo.push(p); }
+  for(let i=pts.length-1;i>=0;i--){ const p=pts[i]; while(hi.length>=2&&cr(hi[hi.length-2],hi[hi.length-1],p)<=0) hi.pop(); hi.push(p); }
+  hi.pop(); lo.pop(); return lo.concat(hi);
+}
+function dessinerContour(){
+  if(A.contour&&A.contour.parentNode) A.contour.remove(); A.contour=null;
+  const sel=[...A.selSet]; if(!sel.length) return null;
+  const pts=[]; sel.forEach(it=>{ const [hw,hh]=extA(it), m=12; pts.push([it.x-hw-m,it.y-hh-m],[it.x+hw+m,it.y-hh-m],[it.x+hw+m,it.y+hh+m],[it.x-hw-m,it.y+hh+m]); });
+  const h=enveloppe(pts);
+  A.contour=el('path',{class:'lasso',d:'M'+h.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' L')+' Z'},asvg);
+  return A.contour;
+}
+function majSelection(finale){
+  A.items.forEach(it=>it.g&&it.g.classList.toggle('selec',A.selSet.has(it)));
+  const chemin=dessinerContour();
+  if(!finale) return;
+  if(!chemin){ fermerSel(true); return; }
+  const sel=[...A.selSet], r=evaluerSel(sel);
+  chemin.classList.toggle('mauvais',!r.ok && sel.length>=10);
+  A.sel={sel,L:{chemin},r};
+  $('#aLassoInfo').textContent=r.info;
+  $('#aLassoOk').disabled=!r.ok;
+  $('#aChoixLasso').hidden=false; $('#aTiroir').hidden=true;
+  msgA(r.ok?'Touche « Échanger », ou « Effacer la sélection » pour recommencer.':'Touche d\'autres objets, ou touche un objet entouré pour le retirer.',r.ok?'info':'mal');
+  if(r.ok) dire(r.phrase.replace(' !','')+'. Touche Échanger.'); else if(sel.length) dire(String(sel.length));
+}
+function peindre(p){
+  if(!peint) return;
+  const it=itemSous(p); if(!it||peint.vus.has(it)) return;
+  peint.vus.add(it);
+  if(peint.mode==='retirer') A.selSet.delete(it); else A.selSet.add(it);
+  majSelection(false);
 }
 asvg.addEventListener('pointerdown',ev=>{
   if(!A.entourer||A.busy) return;
   ev.preventDefault();
-  fermerSel(true);
-  const p=versSvgDe(asvg,ev.clientX,ev.clientY);
-  const chemin=el('path',{class:'lasso',d:`M${p.x},${p.y}`},asvg);
-  lasso={pts:[[p.x,p.y]],chemin};
-  window.addEventListener('pointermove',lassoBouge);
-  window.addEventListener('pointerup',lassoFin);
-  window.addEventListener('pointercancel',lassoFin);
+  const p=versSvgDe(asvg,ev.clientX,ev.clientY), it0=itemSous(p);
+  peint={mode:(it0&&A.selSet.has(it0))?'retirer':'ajouter',vus:new Set(),der:p};
+  peindre(p);
+  window.addEventListener('pointermove',peintBouge);
+  window.addEventListener('pointerup',peintFin);
+  window.addEventListener('pointercancel',peintFin);
 });
-function lassoBouge(ev){
-  if(!lasso) return;
-  const p=versSvgDe(asvg,ev.clientX,ev.clientY), der=lasso.pts[lasso.pts.length-1];
-  if(Math.hypot(p.x-der[0],p.y-der[1])<5) return;
-  lasso.pts.push([p.x,p.y]);
-  lasso.chemin.setAttribute('d','M'+lasso.pts.map(q=>q.join(',')).join(' L')+' Z');
+function peintBouge(ev){
+  if(!peint) return;
+  const p=versSvgDe(asvg,ev.clientX,ev.clientY), d=peint.der, n=Math.max(1,Math.ceil(Math.hypot(p.x-d.x,p.y-d.y)/8));
+  for(let i=1;i<=n;i++) peindre({x:d.x+(p.x-d.x)*i/n,y:d.y+(p.y-d.y)*i/n});   // aucun objet sauté, même si le doigt va vite
+  peint.der=p;
 }
-function lassoFin(){
-  window.removeEventListener('pointermove',lassoBouge);
-  window.removeEventListener('pointerup',lassoFin);
-  window.removeEventListener('pointercancel',lassoFin);
-  if(!lasso) return;
-  const L=lasso; lasso=null;
-  if(L.pts.length<4){ L.chemin.remove(); return; }
-  const sel=A.items.filter(it=>dansPolygone(it.x,it.y,L.pts));
-  proposerSel(sel,L);
+function peintFin(){
+  window.removeEventListener('pointermove',peintBouge);
+  window.removeEventListener('pointerup',peintFin);
+  window.removeEventListener('pointercancel',peintFin);
+  if(!peint) return; peint=null;
+  majSelection(true);
 }
 function evaluerSel(sel){
   if(!sel.length) return {ok:false,info:A.mode==='cubes'?'Rien n\'est entouré.':'Aucune pièce entourée.'};
@@ -1863,13 +1993,18 @@ function proposerSel(sel,L){
 function fermerSel(effacerDessin){
   const S0=A.sel; A.sel=null;
   const box=$('#aChoixLasso'); if(box) box.hidden=true; const tr=$('#aTiroir'); if(tr) tr.hidden=false;
-  if(S0&&effacerDessin!==false){ S0.sel.forEach(it=>it.g&&it.g.classList.remove('selec')); if(S0.L.chemin.parentNode) S0.L.chemin.remove(); }
+  if(effacerDessin!==false){
+    if(A.selSet){ A.selSet.forEach(it=>it.g&&it.g.classList.remove('selec')); A.selSet.clear(); }
+    if(A.contour&&A.contour.parentNode) A.contour.remove(); A.contour=null;
+    if(S0&&S0.L&&S0.L.chemin&&S0.L.chemin.parentNode) S0.L.chemin.remove();
+  }
 }
 $('#aLassoEff').addEventListener('click',()=>{ if(A.busy) return; fermerSel(true); msgA('Sélection effacée. Entoure à nouveau.','info'); });
 $('#aLassoOk').addEventListener('click',async()=>{
   if(A.busy||!A.sel||!A.sel.r.ok) return;
   const {sel,L,r}=A.sel; A.sel=null; $('#aChoixLasso').hidden=true; $('#aTiroir').hidden=false;
   L.chemin.classList.add('ok-lasso'); msgA(r.phrase,'bien'); dire(r.phrase);
+  A.selSet.clear(); A.contour=null;
   A.busy=true; setTimeout(()=>{ if(L.chemin.parentNode) L.chemin.remove(); },1600);
   try{ await animerRegroupement(sel,r.nouveau); } finally { A.busy=false; dessinerAtelier(); }
 });
@@ -1879,7 +2014,7 @@ $('#aEntourer').addEventListener('click',()=>{
   A.entourer=!A.entourer; if(A.entourer&&A.casser){ A.casser=false; $('#aCasser').setAttribute('aria-pressed',false); $('#aCasser').classList.remove('enfonce'); }
   if(!A.entourer) fermerSel(true);
   $('#aEntourer').setAttribute('aria-pressed',A.entourer); $('#aEntourer').classList.toggle('enfonce',A.entourer);
-  msgA(A.entourer?(A.mode==='cubes'?'Entoure 10 cubes pareils avec le doigt pour les échanger.':'Entoure des pièces ou des billets pour les échanger contre un seul.'):'',A.entourer?'info':'');
+  msgA(A.entourer?(A.mode==='cubes'?'Touche 10 cubes pareils (ou passe le doigt dessus) : ils s\'entourent tout seuls.':'Touche les pièces ou les billets à échanger : ils s\'entourent tout seuls.'):'',A.entourer?'info':'');
 });
 
 function basculerDeux(etat,silencieux){
@@ -2006,6 +2141,43 @@ async function enleverBas(){
 function sommePart(pt){ return A.items.filter(i=>(i.part||null)===pt).reduce((s,i)=>s+valItem(i),0); }
 function comptesPart(pt){ const c={}; ['m','c','d','u'].forEach(k=>c[k]=A.items.filter(i=>i.k===k&&(i.part||null)===pt).length); return c; }
 
+/* Compter avec moi : chaque objet reçoit le nombre compté jusqu'ici (milliers, puis centaines, dizaines, unités) */
+async function compterA(){
+  if(A.busy) return;
+  if(!A.items.length){ const m='Il n\'y a rien à compter.'; msgA(m,'info'); dire(m); return; }
+  activerCasser(false); if(A.entourer) $('#aEntourer').click();
+  dessinerAtelier(); A.busy=true; $('#aCompter').disabled=true;
+  const couche=el('g',{},asvg), e=echelleAtelier(), mon=A.mode!=='cubes';
+  const res=[];
+  try{
+    for(const pt of partsA()){
+      let lot=A.items.filter(i=>(i.part||null)===pt);
+      if(!lot.length) continue;
+      lot=mon ? lot.sort((a,b)=>b.v-a.v||a.y-b.y||a.x-b.x)
+              : ['m','c','d','u'].flatMap(k=>lot.filter(i=>i.k===k).sort(triRang));
+      if(A.split){ const m=pt==='a'?'Le nombre du haut.':'Le nombre du bas.'; msgA(m,'info'); dire(m); await attendre(1300); }
+      let n=0;
+      for(const it of lot){
+        n+=valItem(it);
+        it.g&&it.g.classList.add('selec');
+        const y = it.k==='d' ? it.y-58*e : it.k==='c'||it.k==='m' ? it.y : it.v>=5 ? it.y : it.y;
+        const txt=String(n), r=14+txt.length*6;
+        couche.innerHTML='';   // une seule bulle : celle de l'objet qu'on vient de compter
+        const b=el('g',{class:'bulle'},couche); el('circle',{cx:it.x,cy:y,r},b); el('text',{x:it.x,y,style:'font-size:22px'},b).textContent=txt;
+        msgA(mon?`${n} €`:String(n),'info'); dire(mon?n+' euros':n);
+        await attendre(it.k==='u'?750:it.k==='d'?900:1100);
+        if(!$('#atelier').classList.contains('actif')) return;
+      }
+      res.push(n);
+    }
+    const tot=res.reduce((a,b)=>a+b,0);
+    let m;
+    if(A.split&&res.length===2) m=`En haut : ${res[0]}. En bas : ${res[1]}.`;
+    else m=mon?`En tout : ${tot} €.`:`En tout : ${tot.toLocaleString('fr-FR')}.`;
+    msgA(m,'bien'); dire(m.replace(/\./g,'').replace(':',''));
+  } finally { A.busy=false; $('#aCompter').disabled=false; }
+}
+$('#aCompter').addEventListener('click',compterA);
 $('#btnAtelier').addEventListener('click',()=>{ montrer('atelier'); changerMode(A.mode,false); dessinerAtelier(); });
 
 
