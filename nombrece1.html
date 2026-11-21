@@ -321,8 +321,68 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 #plateau,#atelier .plateau{position:relative}
 canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
 .miroir-actif canvas.miroir{display:block}
-.miroir-actif #svg,.miroir-actif #asvg{opacity:0}
+.miroir-actif #svg,.miroir-actif #asvg,.miroir-actif #clAnim,.miroir-actif #clBande{opacity:0}
 .miroir-actif .table-rangement{transition:none}
+
+/* ===== Calculer en ligne ===== */
+.calcul-btn{border-color:#E8590C;border-style:dashed}
+#calcul.actif{display:flex;flex-direction:column;max-width:none;overflow:hidden;padding:8px 12px;
+  height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+#calcul .rond{width:44px;height:44px;font-size:1.2rem}
+#calcul .outil{min-height:clamp(38px,5.6vh,52px);padding:3px 12px;font-size:clamp(.85rem,2vh,1.02rem)}
+#calcul .onglet{min-height:clamp(38px,5.4vh,48px);padding:3px 12px;font-size:clamp(.85rem,2vh,1rem)}
+.cl-entete{flex:none;flex-wrap:wrap;margin-bottom:2px}
+.cl-entete .titre-atelier{flex:0 1 auto}
+.cl-saisie{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto}
+.cl-lab{font-weight:700;color:var(--doux)}
+#clSaisie{font-size:1.4rem;width:10em;min-height:46px;font-weight:700}
+.cl-bande-box{flex:none;height:clamp(70px,14vh,128px);position:relative}
+.cl-bande-box svg{display:block;width:100%;height:100%}
+.cl-reglages{flex:none;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:2px 0 6px}
+.cl-strats{display:flex;flex-wrap:wrap;gap:6px}
+.cl-strat{min-height:clamp(36px,5vh,46px);padding:3px 12px;border-radius:22px;border:2px solid #E8590C;background:var(--tableau);color:#B4470A;font-weight:700;font-size:clamp(.8rem,1.9vh,.95rem)}
+.cl-strat.actif{background:#E8590C;color:#fff}
+.cl-plateau{flex:1;min-height:0;position:relative}
+.cl-plateau svg{position:absolute;inset:0;width:100%;height:100%}
+.cl-commandes{flex:none;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:6px}
+.cl-vitesse,.cl-pas{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--doux);font-size:.95rem}
+.cl-vitesse input{width:130px}
+.cl-pas input{width:24px;height:24px}
+.cl-suivant{background:#E8590C!important;border-color:#E8590C!important;color:#fff!important}
+.cl-message{flex:none;min-height:1.3em;margin:3px 0 0;text-align:center;font-weight:700;font-size:clamp(.95rem,2.4vh,1.25rem)}
+.cl-operation{flex:none;text-align:center;font-size:clamp(2.2rem,8.5vh,5rem);font-weight:700;line-height:1.05;border-top:3px solid var(--trait);padding-top:2px}
+.cl-op{color:var(--doux)} .cl-q{color:#E8590C} .cl-res{background:#DDF3E6;border-radius:12px;padding:0 10px}
+.cl-vide{font-size:1.3rem;color:var(--doux);font-weight:400}
+.clb-fond{fill:var(--tableau);stroke:var(--trait);stroke-width:2}
+.clb-diz{stroke:#C8362B;stroke-width:3} .clb-uni{stroke:var(--doux);stroke-width:1}
+.clb-num{font-size:20px;font-weight:700;fill:var(--encre);text-anchor:middle}
+.clb-mot{font-size:16px;font-weight:700;fill:#C8362B;text-anchor:middle}
+.clb-zone{fill:#E8590C;fill-opacity:.18;stroke:#E8590C;stroke-width:3}
+.clb-marque circle{fill:#1F8A52;stroke:#fff;stroke-width:2} .clb-marque text{font-size:15px;font-weight:700;fill:#fff;text-anchor:middle}
+.cl-zoomrect{fill:#E8590C;fill-opacity:.15;stroke:#E8590C;stroke-width:3}
+.clz-fond{fill:var(--tableau);stroke:var(--trait);stroke-width:2}
+.clz-diz{stroke:#C8362B;stroke-width:4} .clz-uni{stroke:var(--doux);stroke-width:1.5}
+.cl-txt{font-weight:700;fill:var(--encre)}
+.cl-doux{fill:var(--doux)}
+.cl-mot{fill:#C8362B}
+.cl-arc{fill:none;stroke-width:4;stroke-linecap:round}
+.cl-jeton circle{fill:#1F8A52;stroke:#fff;stroke-width:3} .cl-jeton-t{fill:#fff}
+.cl-drapeau{fill:#FBE3E7;stroke:#C23A4E;stroke-width:3} .cl-drap-t{fill:#C23A4E}
+.cl-ecart{fill:#E8590C}
+.cl-cube{stroke:#1D2B4F;stroke-width:1.2}
+.cl-boite{fill:none;stroke:var(--doux);stroke-width:2.5;stroke-dasharray:6 4}
+.cl-boite.pleine{stroke:#C8362B;stroke-width:4;stroke-dasharray:none;fill:#C8362B;fill-opacity:.07}
+.cl-boite.ouverte{stroke:#E8590C;stroke-width:4;stroke-dasharray:10 5}
+.cl-boite.pointille{stroke-dasharray:4 4}
+.cl-paume{fill:#F4C7A1;stroke:#8A5A3B;stroke-width:2}
+.cl-doigt{fill:#E9B48C;stroke:#8A5A3B;stroke-width:2}
+.cl-doigt.leve{stroke:#1D2B4F;stroke-width:2.5}
+.cl-bulle-tete{fill:var(--tableau);stroke:var(--doux);stroke-width:3}
+.cl-tete-n{fill:#1F8A52}
+.cl-diz-t{fill:#C8362B} .cl-uni-t{fill:#2F63D6}
+.cl-fleche-c{stroke:var(--doux);stroke-width:2.5;fill:none}
+.cl-op-t{fill:var(--doux)}
 
 @media (prefers-reduced-motion: reduce){
   .obj,.table-rangement{transition:none}
@@ -361,6 +421,7 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
     <section class="choix">
       <button class="grand principal" data-mode="rituel">Rituel du jour<small id="descRituel">les activités choisies, en alternance</small></button>
       <div id="boutonsActs" class="choix"></div>
+      <button class="grand calcul-btn" id="btnCalcul">Calculer en ligne<small>l'enseignant écrit un calcul, les élèves cherchent sur l'ardoise, puis on regarde comment faire : bande numérique, boîtes, doigts ou chiffres</small></button>
       <button class="grand atelier-btn" id="btnAtelier">Atelier libre des nombres<small>placer librement cubes (unité, dizaine, centaine, millier) ou monnaie, écrire la quantité, transformer chiffres, lettres, cubes et monnaie</small></button>
     </section>
 
@@ -414,6 +475,42 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
       <button id="btnSuivant" class="grand principal" hidden>Suivant</button>
     </div>
   </div>
+</main>
+
+<!-- CALCUL EN LIGNE -->
+<main id="calcul" class="ecran">
+  <div class="barre cl-entete">
+    <button class="rond" id="clMaison" aria-label="Retour à l'accueil">⌂</button>
+    <h2 class="titre-atelier">Calculer en ligne</h2>
+    <form id="clForm" class="cl-saisie" autocomplete="off">
+      <label for="clSaisie" class="cl-lab">Calcul</label>
+      <input type="text" id="clSaisie" inputmode="text" placeholder="38 + 25 ou 63 − 25" spellcheck="false">
+      <button type="submit" class="outil ok-btn" id="clAfficher">Afficher</button>
+      <button type="button" class="outil" id="clHasard">Au hasard</button>
+    </form>
+  </div>
+  <div class="cl-bande-box"><svg id="clBande" viewBox="0 0 1100 128" role="img" aria-label="Bande numérique de 0 à 100"></svg></div>
+  <div class="cl-reglages">
+    <div class="onglets" role="group" aria-label="Façon de montrer">
+      <button class="onglet actif" data-clmode="bande">Bande numérique</button>
+      <button class="onglet" data-clmode="boites">Boîtes et cubes</button>
+      <button class="onglet" data-clmode="doigts">Doigts</button>
+      <button class="onglet" data-clmode="chiffres">Chiffres</button>
+    </div>
+    <div class="cl-strats" id="clStrats" role="group" aria-label="Méthode de calcul"></div>
+  </div>
+  <div class="plateau cl-plateau"><svg id="clAnim" viewBox="0 0 1100 420" role="img" aria-label="Animation du calcul"></svg></div>
+  <div class="cl-commandes">
+    <button class="outil ok-btn" id="clJouer">▶ Montrer comment calculer</button>
+    <button class="outil" id="clPause" disabled>⏸ Pause</button>
+    <button class="outil cl-suivant" id="clSuivant" hidden>Étape suivante ▶</button>
+    <button class="outil" id="clRejouer" disabled>↺ Recommencer</button>
+    <label class="cl-vitesse">Lent <input type="range" id="clVitesse" min="0.4" max="2.2" step="0.1" value="1"> Rapide</label>
+    <label class="cl-pas"><input type="checkbox" id="clPas"> Pas à pas</label>
+    <button class="outil" id="clReponse" disabled>Réponse</button>
+  </div>
+  <p class="cl-message" id="clMessage" aria-live="polite"></p>
+  <div class="cl-operation" id="clOperation" aria-live="polite"><span class="cl-vide">Écris un calcul en haut, puis touche « Afficher ».</span></div>
 </main>
 
 <!-- ATELIER -->
@@ -585,7 +682,7 @@ $('#chkMiroir').addEventListener('change',e=>{ data.reglages.miroir=e.target.che
 $('#chkAuto').addEventListener('change',e=>{ data.reglages.auto=e.target.checked; sauver(); });
 document.querySelector('[data-mode="rituel"]').addEventListener('click',()=>demarrer('rituel'));
 
-function montrer(id){ document.querySelectorAll('.ecran').forEach(s=>s.classList.toggle('actif',s.id===id)); window.scrollTo(0,0); document.body.classList.toggle('fige',id==='jeu'||id==='atelier'); ajusterPlateaux(); }
+function montrer(id){ document.querySelectorAll('.ecran').forEach(s=>s.classList.toggle('actif',s.id===id)); window.scrollTo(0,0); document.body.classList.toggle('fige',id==='jeu'||id==='atelier'||id==='calcul'); ajusterPlateaux(); }
 /* Taille du plateau calculée en pixels (au lieu d'un SVG étiré en %), plus sûr pour les navigateurs de TBI */
 function ajusterPlateaux(){
   [['#plateau','#svg'],['#atelier .plateau','#asvg']].forEach(([pc,sc])=>{
@@ -2185,11 +2282,11 @@ $('#btnAtelier').addEventListener('click',()=>{ montrer('atelier'); changerMode(
    Certains TBI affichent mal les dessins SVG (points de couleur au hasard).
    Le plateau SVG reste en place (invisible) pour les gestes de l'élève,
    et une copie en image est peinte dans un canvas calculé par le processeur. */
-const PROPS=['fill','fill-opacity','stroke','stroke-width','stroke-opacity','stroke-dasharray','stroke-linejoin','stroke-linecap','opacity','display','visibility','font-size','font-weight','font-family','text-anchor','dominant-baseline'];
+const PROPS=['fill','fill-opacity','stroke','stroke-width','stroke-opacity','stroke-dasharray','stroke-dashoffset','stroke-linejoin','stroke-linecap','opacity','display','visibility','font-size','font-weight','font-family','text-anchor','dominant-baseline'];
 const cacheStyle=new WeakMap();
 const miroirs=[];
 function styleEnLigne(src){
-  const cle=(src.getAttribute('class')||'')+'|'+(src.getAttribute('style')||'')+'|'+(src.parentNode&&src.parentNode.getAttribute?src.parentNode.getAttribute('class'):'')+'|'+document.documentElement.dataset.cleTheme+'|'+(src.ownerSVGElement&&src.ownerSVGElement.parentNode?src.ownerSVGElement.parentNode.className:'');
+  const cle=(src.getAttribute('class')||'')+'|'+(src.getAttribute('style')||'')+'|'+(src.getAttribute('opacity')||'')+'|'+(src.parentNode&&src.parentNode.getAttribute?src.parentNode.getAttribute('class'):'')+'|'+document.documentElement.dataset.cleTheme+'|'+(src.ownerSVGElement&&src.ownerSVGElement.parentNode?src.ownerSVGElement.parentNode.className:'');
   const c=cacheStyle.get(src); if(c&&c.cle===cle) return c.st;
   const cs=getComputedStyle(src);
   const st=PROPS.map(p=>{ const v=cs.getPropertyValue(p); return v?`${p}:${v}`:''; }).filter(Boolean).join(';');
@@ -2246,6 +2343,554 @@ function dansZoneGeste(t){ return t && t.closest && t.closest('.plateau,.tiroir,
 document.addEventListener('touchstart',e=>{ if(document.body.classList.contains('fige') && e.target.closest && e.target.closest('.plateau')) e.preventDefault(); },{passive:false});
 document.addEventListener('touchmove',e=>{ if(gl||drag||lasso||(document.body.classList.contains('fige')&&dansZoneGeste(e.target))) e.preventDefault(); },{passive:false});
 document.addEventListener('gesturestart',e=>{ if(document.body.classList.contains('fige')) e.preventDefault(); },{passive:false});
+
+/* ================= CALCULER EN LIGNE =================
+   Méthodes retenues (recherche sur le calcul en ligne et la droite numérique vide) :
+   - « sauts » (dizaines puis unités, en passant par la dizaine) : la plus sûre, surtout en soustraction ;
+   - « compenser » quand le 2e nombre finit par 6, 7, 8 ou 9 (+19 = +20 − 1) ;
+   - « dizaines et unités séparées » (addition) : intuitive, mais plus d'erreurs en soustraction ;
+   - « chercher l'écart en avançant » (soustraction par addition) quand les deux nombres sont proches. */
+const CL={op:null,mode:'bande',strat:null,vitesse:1,pas:false,pause:false,attente:false,tok:0,joue:false,valeur:null};
+const clBande=$('#clBande'), clAnim=$('#clAnim');
+const ANNUL={annule:true};
+const NOM_DIZ={0:'zéro',10:'dix',20:'vingt',30:'trente',40:'quarante',50:'cinquante',60:'soixante',70:'soixante-dix',80:'quatre-vingts',90:'quatre-vingt-dix',100:'cent'};
+const COUL={d:'#C8362B',u:'#2F63D6',vers:'#E8590C',corr:'#7A3FC1',ajout:'#E8590C'};
+const sgn=n=>n<0?'−':'+';
+
+/* ---------- lecture du calcul ---------- */
+function lireCalcul(t){
+  const m=String(t).replace(/\s+/g,'').match(/^(\d{1,3})([+\-−–])(\d{1,3})$/);
+  if(!m) return {err:'Écris un calcul comme 38 + 25 ou 63 − 25.'};
+  const a=+m[1], b=+m[3], plus=m[2]==='+';
+  const r=plus?a+b:a-b;
+  if(a>100||b>100) return {err:'Les nombres doivent aller de 0 à 100.'};
+  if(r<0) return {err:'Pour une soustraction, le premier nombre doit être le plus grand.'};
+  if(r>100) return {err:'Le résultat doit rester jusqu\'à 100 (la bande s\'arrête à 100).'};
+  return {a,b,plus,r};
+}
+function strategies(op){
+  const {a,b,plus}=op, u=b%10, B=b+(10-u)%10, L=[];
+  L.push({id:'sauts',nom:plus?'Sauts : dizaines, puis unités':'Sauts en arrière : dizaines, puis unités'});
+  if(u>=6 && b>10-u-1 && (plus?a+B<=100:B<=a)) L.push({id:'comp',nom:plus?`Compenser : +${B} puis −${B-b}`:`Compenser : −${B} puis +${B-b}`});
+  if(plus && a>=10 && b>=10) L.push({id:'split',nom:'Dizaines et unités séparées',seul:'chiffres'});
+  if(!plus && b>0) L.push({id:'ecart',nom:`Chercher l'écart : de ${b} à ${a}`});
+  let def='sauts';
+  if(!plus && b>=10 && a-b<b && a-b<=30) def='ecart';
+  L.forEach(s=>s.conseil=s.id===def);
+  return {liste:L,def};
+}
+/* une suite de groupes de sauts ; chaque groupe = des parties (10, 10 ou 2…) */
+function plan(op,strat){
+  const {a,b,plus}=op, G=[], s=plus?1:-1;
+  let dep=a, cur=a, ecart=false;
+  const groupe=(delta,type,parts)=>{ G.push({delta,type,parts:parts||[delta],de:cur,a:cur+delta}); cur+=delta; };
+  const dizaines=(n)=>{ const T=Math.floor(Math.abs(n)/10); if(T) groupe(Math.sign(n)*10*T,'d',Array(T).fill(Math.sign(n)*10)); };
+  if(strat==='ecart'){
+    ecart=true; dep=b; cur=b;
+    const c=(10-b%10)%10;
+    if(c && b+c<=a) groupe(c,'vers');
+    dizaines(a-cur);
+    if(a-cur>0) groupe(a-cur,'u');
+  } else if(strat==='comp'){
+    const B=b+(10-b%10)%10;
+    dizaines(s*B);
+    groupe(-s*(B-b),'corr');
+  } else {
+    dizaines(s*b);
+    const u=b%10;
+    if(u){
+      const r=cur%10;
+      if(plus && r && r+u>10){ groupe(10-r,'vers'); groupe(u-(10-r),'u'); }
+      else if(!plus && r && u>r){ groupe(-r,'vers'); groupe(-(u-r),'u'); }
+      else groupe(s*u,'u');
+    }
+  }
+  const pos=[dep]; G.forEach(g=>{ let v=g.de; g.parts.forEach(p=>{ v+=p; pos.push(v); }); });
+  return {dep,groupes:G,ecart,pos,min:Math.min(...pos),max:Math.max(...pos)};
+}
+function phraseGroupe(g,P){
+  if(P.ecart) return `de ${g.de} à ${g.a} : + ${g.delta}`;
+  return `${g.de} ${sgn(g.delta)} ${Math.abs(g.delta)} = ${g.a}`;
+}
+
+/* ---------- attente réglable (vitesse, pause, arrêt) ---------- */
+async function att(ms){
+  const t=CL.tok; let reste=ms/CL.vitesse;
+  while(reste>0){ await attendre(Math.min(reste,40)); if(t!==CL.tok) throw ANNUL; if(!CL.pause) reste-=40; }
+}
+async function attendreEtape(){
+  if(!CL.pas) return;
+  const t=CL.tok; CL.attente=true; $('#clSuivant').hidden=false; $('#clSuivant').disabled=false;
+  while(CL.attente){ await attendre(60); if(t!==CL.tok) throw ANNUL; }
+  $('#clSuivant').disabled=true;
+}
+const clDire=t=>{ dire(String(t).replace(/−/g,' moins ').replace(/\+/g,' plus ')); };
+function msgCL(t){ $('#clMessage').textContent=t||''; }
+const dur=ms=>ms/CL.vitesse;
+
+/* ---------- bande numérique du haut ---------- */
+const BX0=34, BX1=1066, bx=v=>BX0+(BX1-BX0)*v/100;
+function dessinerBandeHaut(){
+  clBande.innerHTML='';
+  const g=el('g',{},clBande);
+  el('rect',{x:BX0,y:30,width:BX1-BX0,height:26,rx:4,class:'clb-fond'},g);
+  for(let v=0;v<=100;v++){
+    const x=bx(v), diz=v%10===0;
+    el('line',{x1:x,y1:diz?24:(v%5===0?36:42),x2:x,y2:56,class:diz?'clb-diz':'clb-uni'},g);
+  }
+  for(let v=0;v<=100;v+=10){
+    const x=bx(v);
+    el('text',{x,y:20,class:'clb-num'},g).textContent=v;
+    el('text',{x,y:(v/10)%2?100:80,class:'clb-mot'},g).textContent=NOM_DIZ[v];
+  }
+  CL.zoneHaut=el('rect',{x:0,y:22,width:0,height:38,rx:6,class:'clb-zone',style:'display:none'},clBande);
+  CL.marqueHaut=el('g',{class:'clb-marque',style:'display:none'},clBande);
+  el('circle',{r:16,cx:0,cy:0},CL.marqueHaut);
+  CL.marqueTxt=el('text',{x:0,y:6},CL.marqueHaut);
+}
+function marquerHaut(v){
+  if(v==null){ CL.marqueHaut.style.display='none'; return; }
+  CL.marqueHaut.style.display=''; CL.marqueTxt.textContent=v;
+  bougerVers(CL.marqueHaut,bx(v),43,0,1,dur(500));
+}
+function zoneHaut(lo,hi){
+  if(lo==null){ CL.zoneHaut.style.display='none'; return; }
+  Object.entries({x:bx(lo)-6,width:bx(hi)-bx(lo)+12}).forEach(([k,v])=>CL.zoneHaut.setAttribute(k,v));
+  CL.zoneHaut.style.display='';
+}
+
+/* ---------- écriture colorée (dizaines en rouge, unités en bleu) ---------- */
+function tspansNombre(t,n,taille){
+  const s=String(n);
+  s.split('').forEach((c,i)=>{ const r=s.length-1-i; el('tspan',{fill:r===0?COUL.u:r===1?COUL.d:'#2E8B47'},t).textContent=c; });
+}
+function texteNb(parent,x,y,n,taille,ancre){
+  const t=el('text',{x,y,class:'cl-txt','font-size':taille,'text-anchor':ancre||'middle'},parent);
+  tspansNombre(t,n,taille); return t;
+}
+function texte(parent,x,y,s,taille,cls,ancre){
+  const t=el('text',{x,y,class:'cl-txt '+(cls||''),'font-size':taille,'text-anchor':ancre||'middle'},parent);
+  t.textContent=s; return t;
+}
+
+/* ---------- opération en bas ---------- */
+function afficherOperation(rep){
+  const o=CL.op, z=$('#clOperation');
+  if(!o){ z.innerHTML='<span class="cl-vide">Écris un calcul en haut, puis touche « Afficher ».</span>'; return; }
+  const nb=n=>String(n).split('').map((c,i,arr)=>{ const r=arr.length-1-i; return `<span style="color:${r===0?COUL.u:r===1?COUL.d:'#2E8B47'}">${c}</span>`; }).join('');
+  z.innerHTML=`${nb(o.a)} <span class="cl-op">${o.plus?'+':'−'}</span> ${nb(o.b)} <span class="cl-op">=</span> ${rep?`<span class="cl-res">${nb(o.r)}</span>`:'<span class="cl-q">?</span>'}`;
+}
+
+/* ---------- préparation ---------- */
+function nouveauCalcul(op){
+  arreter();
+  CL.op=op; const S_=strategies(op); CL.strats=S_.liste; CL.strat=S_.def;
+  afficherOperation(false); construireStrats(); msgCL('Les élèves cherchent sur leur ardoise… puis touche « Montrer comment calculer ».');
+  ['#clJouer','#clReponse'].forEach(s=>$(s).disabled=false);
+  marquerHaut(null); zoneHaut(null);
+  scèneInitiale();
+}
+function construireStrats(){
+  const z=$('#clStrats'); z.innerHTML='';
+  if(!CL.op) return;
+  CL.strats.forEach(s=>{
+    const b=document.createElement('button'); b.className='cl-strat'+(s.id===CL.strat?' actif':'');
+    b.innerHTML=(s.conseil?'★ ':'')+s.nom; b.title=s.conseil?'Méthode conseillée pour ce calcul':'';
+    b.addEventListener('click',()=>{ CL.strat=s.id; if(s.seul&&CL.mode!==s.seul) choisirMode(s.seul,true); arreter(); construireStrats(); scèneInitiale(); });
+    z.appendChild(b);
+  });
+}
+function choisirMode(m,silence){
+  CL.mode=m; document.querySelectorAll('[data-clmode]').forEach(b=>b.classList.toggle('actif',b.dataset.clmode===m));
+  const s=CL.strats&&CL.strats.find(x=>x.id===CL.strat);
+  if(s&&s.seul&&s.seul!==m){ CL.strat='sauts'; construireStrats(); }
+  if(!silence){ arreter(); scèneInitiale(); }
+}
+function arreter(){
+  CL.tok++; CL.joue=false; CL.pause=false; CL.attente=false;
+  $('#clPause').disabled=true; $('#clPause').textContent='⏸ Pause'; $('#clSuivant').hidden=true;
+  $('#clRejouer').disabled=!CL.op; $('#clJouer').disabled=!CL.op;
+}
+function scèneInitiale(){
+  clAnim.innerHTML='';
+  if(!CL.op){ texte(clAnim,550,210,'Écris un calcul en haut de l\'écran.',34,'cl-doux'); return; }
+  const o=CL.op;
+  texte(clAnim,550,190,'Cherche sur ton ardoise :',30,'cl-doux');
+  const t=el('text',{x:550,y:270,class:'cl-txt','font-size':72,'text-anchor':'middle'},clAnim);
+  tspansNombre(t,o.a); el('tspan',{fill:'#5B6785'},t).textContent=` ${o.plus?'+':'−'} `; tspansNombre(t,o.b);
+  el('tspan',{fill:'#5B6785'},t).textContent=' = ?';
+}
+
+/* ---------- lancement ---------- */
+async function jouer(){
+  if(!CL.op) return;
+  arreter(); const tok=CL.tok; CL.joue=true;
+  $('#clPause').disabled=false; $('#clRejouer').disabled=false; $('#clJouer').disabled=true;
+  if(CL.pas){ $('#clSuivant').hidden=false; $('#clSuivant').disabled=true; }
+  afficherOperation(false); zoneHaut(null);
+  const P=CL.strat==='split'?null:plan(CL.op,CL.strat);
+  try{
+    if(CL.strat==='split') await animSplit();
+    else if(CL.mode==='bande') await animBande(P);
+    else if(CL.mode==='boites') await animBoites(P);
+    else if(CL.mode==='doigts') await animDoigts(P);
+    else await animChiffres(P);
+    if(tok!==CL.tok) return;
+    afficherOperation(true);
+    const o=CL.op, f=`${o.a} ${o.plus?'+':'−'} ${o.b} = ${o.r}`;
+    msgCL(f); clDire(f);
+  }catch(e){ if(e!==ANNUL) throw e; return; }
+  finally{ if(tok===CL.tok){ CL.joue=false; $('#clPause').disabled=true; $('#clSuivant').hidden=true; $('#clJouer').disabled=false; } }
+}
+
+/* ===== 1. Bande numérique avec zoom ===== */
+async function animBande(P){
+  const o=CL.op;
+  let lo=Math.max(0,Math.floor(P.min/10)*10), hi=Math.min(100,Math.ceil(P.max/10)*10);
+  if(hi-lo<10){ if(hi<100) hi=lo+10; else lo=hi-10; }
+  clAnim.innerHTML='';
+  // zoom : la zone choisie sur la bande du haut grandit jusqu'au plateau
+  zoneHaut(lo,hi); msgCL(`On regarde la bande de ${lo} à ${hi}.`);
+  const X0=50,X1=1050,Y=250;
+  const xv=v=>X0+(X1-X0)*(v-lo)/(hi-lo);
+  const r=el('rect',{x:550-(hi-lo)*0.6,y:6,width:(hi-lo)*1.2,height:12,rx:6,class:'cl-zoomrect'},clAnim);
+  await animer(dur(900),t=>{ const w=(hi-lo)*1.2+(X1-X0+40-(hi-lo)*1.2)*t, h=12+(150-12)*t;
+    r.setAttribute('x',550-w/2); r.setAttribute('width',w); r.setAttribute('y',6+(Y-110-6)*t); r.setAttribute('height',h); });
+  r.remove();
+  const g=el('g',{class:'cl-zoom'},clAnim);
+  const n=hi-lo, pas=(X1-X0)/n;
+  el('rect',{x:X0-14,y:Y-34,width:X1-X0+28,height:54,rx:8,class:'clz-fond'},g);
+  for(let v=lo;v<=hi;v++){
+    const x=xv(v), diz=v%10===0;
+    el('line',{x1:x,y1:diz?Y-40:Y-26,x2:x,y2:Y+20,class:diz?'clz-diz':'clz-uni'},g);
+    const serre=pas<40, bas_=serre&&(v-lo)%2===1;
+    if(pas>=17 || diz || (pas>=9&&v%5===0)){ texteNb(g,x,Y+(bas_?72:48),v,diz?28:Math.min(24,pas*(serre?1.05:0.6))); }
+    if(diz) texte(g,x,Y+(serre?104:82),NOM_DIZ[v],20,'cl-mot');
+  }
+  const arcs=el('g',{},clAnim), labs=el('g',{},clAnim);
+  // jeton
+  const jet=el('g',{class:'cl-jeton'},clAnim);
+  el('circle',{r:26,cx:0,cy:0},jet); const jt=texte(jet,0,9,'',24,'cl-jeton-t');
+  const poser_=(v,ms)=>{ jt.textContent=v; bougerVers(jet,xv(v),Y-62,0,1,ms); };
+  if(P.ecart){
+    const dr=el('g',{},clAnim); el('path',{d:`M${xv(o.a)},${Y-34} v-58 h34 l-8,12 l8,12 h-34`,class:'cl-drapeau'},dr);
+    texte(dr,xv(o.a)+4,Y-100,String(o.a),24,'cl-drap-t');
+  }
+  poser_(P.dep,0); marquerHaut(P.dep);
+  msgCL(P.ecart?`On part de ${P.dep} et on avance jusqu'à ${o.a}.`:`On part de ${P.dep}.`); clDire(P.ecart?`On part de ${P.dep}. On avance jusqu'à ${o.a}.`:`On part de ${P.dep}.`);
+  await att(1600);
+  let somme=[];
+  let boite=null; if(P.ecart){ boite=texte(clAnim,550,40,'',30,'cl-ecart'); }
+  for(const G of P.groupes){
+    await attendreEtape();
+    let v=G.de;
+    for(const p of G.parts){
+      const a=v, b=v+p, xa=xv(a), xb=xv(b), dessous=false;
+      const h=Math.min(120,24+Math.abs(xb-xa)*0.45)*(dessous?-1:1);
+      const yA=dessous?Y+22:Y-36, path=`M${xa},${yA} Q${(xa+xb)/2},${yA-h*1.6} ${xb},${yA}`;
+      const col=G.type==='d'?COUL.d:G.type==='u'?COUL.u:G.type==='vers'?COUL.vers:COUL.corr;
+      const pth=el('path',{d:path,class:'cl-arc',stroke:col},arcs);
+      if(G.type==='corr') pth.setAttribute('stroke-width',5);
+      el('path',{d:`M${xb},${yA} l${p>0?-11:11},${dessous?10:-10}`,class:'cl-arc',stroke:col},arcs);
+      const L=pth.getTotalLength?pth.getTotalLength():300;
+      pth.style.strokeDasharray=L; pth.style.strokeDashoffset=L;
+      await animer(dur(700),t=>{ pth.style.strokeDashoffset=L*(1-t); });
+      const lb=texte(labs,(xa+xb)/2,yA-h*0.85+(dessous?28:-6),`${sgn(p)}${Math.abs(p)}`,24,'cl-lab-arc'); lb.style.fill=col;
+      poser_(b,dur(600)); marquerHaut(b); clDire(b);
+      v=b; await att(950);
+    }
+    somme.push(Math.abs(G.delta));
+    if(P.ecart){ boite.textContent=`écart : ${somme.join(' + ')}${somme.length>1?' = '+somme.reduce((x,y)=>x+y,0):''}`; }
+    msgCL(phraseGroupe(G,P)); clDire(phraseGroupe(G,P)); await att(1800);
+  }
+  if(P.ecart){ const e=somme.reduce((x,y)=>x+y,0); boite.textContent=`écart : ${somme.join(' + ')} = ${e}`; msgCL(`De ${o.b} à ${o.a}, il y a ${e}.`); clDire(`De ${o.b} à ${o.a}, il y a ${e}.`); await att(2200); }
+}
+function animer(ms,f){
+  return new Promise(res=>{ const t0=performance.now(), tok=CL.tok;
+    (function pas_(now){ if(tok!==CL.tok){ res(); return; } const t=Math.min(1,(now-t0)/ms); f(adoucir(t)); if(t<1) requestAnimationFrame(pas_); else res(); })(t0); });
+}
+
+/* ===== 2. Boîtes de 10 et cubes ===== */
+async function animBoites(P){
+  const o=CL.op; clAnim.innerHTML='';
+  const C=22, BW=2*C+10, BH=5*C+10, PAS=BW+16;
+  const Yh=40, Yb=250;
+  const slotX=(i)=>40+i*PAS+Math.floor(i/5)*22;
+  const haut=el('g',{},clAnim), bas=el('g',{},clAnim);
+  texte(clAnim,1090,Yh+BH/2,'',1,'');
+  const titreH=texte(clAnim,40,Yh-12,'',22,'cl-doux','start'), titreB=texte(clAnim,40,Yb-12,'',22,'cl-doux','start');
+  const compteur=texte(clAnim,1060,Yh+BH/2+14,'',44,'cl-compte','end');
+  function cube(parent,col){ const g=el('g',{},parent); el('rect',{x:-C/2+2,y:-C/2+2,width:C-4,height:C-4,rx:3,fill:col,class:'cl-cube'},g); return g; }
+  function cadre(parent){ const g=el('g',{},parent); el('rect',{x:-BW/2,y:-BH/2,width:BW,height:BH,rx:8,class:'cl-boite'},g); return g; }
+  const cel=(k)=>({x:(k%2?1:-1)*(C/2+1), y:-BH/2+5+C/2+Math.floor(k/2)*C});
+  // état du haut : liste de boîtes {cadre, cubes:[g]}
+  const boites=[];
+  function placer(ms){ boites.forEach((b,i)=>{ b.x=slotX(i); bougerVers(b.cadre,b.x,Yh+BH/2,0,1,ms); b.cubes.forEach((c,k)=>{ const p=cel(k); bougerVers(c,b.x+p.x,Yh+BH/2+p.y,0,1,ms); }); }); }
+  function pleine(b){ b.cadre.firstChild.classList.toggle('pleine',b.cubes.length===10); }
+  function total(){ return boites.reduce((s,b)=>s+b.cubes.length,0); }
+  function majCompteur(){ compteur.textContent=P.ecart?`écart : ${ecart}`:total(); }
+  function nouvelleBoite(){ const b={cadre:cadre(haut),cubes:[],x:slotX(boites.length)}; bougerVers(b.cadre,b.x,Yh+BH/2,0,1,0); boites.push(b); return b; }
+  function remplirDepart(n,col){
+    while(n>0){ const b=nouvelleBoite(); const k=Math.min(10,n); for(let i=0;i<k;i++){ const c=cube(haut,col); const p=cel(i); bougerVers(c,b.x+p.x,Yh+BH/2+p.y,0,1,0); b.cubes.push(c); } pleine(b); n-=k; }
+  }
+  // réserve du bas : ce qu'on ajoute (ou ce qu'on enlève)
+  let ecart=0;
+  remplirDepart(P.dep,COUL.u);
+  titreH.textContent=P.ecart?`On part de ${P.dep} et on veut arriver à ${o.a}.`:`Le premier nombre : ${P.dep}`;
+  majCompteur(); marquerHaut(P.dep);
+  const reserve={boites:[],cubes:[]};
+  const ajoutTotal=P.groupes.filter(g=>g.delta>0).reduce((s,g)=>s+g.delta,0);
+  if(!P.ecart && o.plus){
+    // le 2e nombre est posé en bas, en orange
+    let n=ajoutTotal, i=0;
+    const nB=Math.floor(n/10), nC=n%10;
+    for(let j=0;j<nB;j++){ const b={cadre:cadre(bas),cubes:[]}; const x=slotX(i++); bougerVers(b.cadre,x,Yb+BH/2,0,1,0); b.x=x; for(let k=0;k<10;k++){ const c=cube(bas,COUL.ajout); const p=cel(k); bougerVers(c,x+p.x,Yb+BH/2+p.y,0,1,0); b.cubes.push(c); } b.cadre.firstChild.classList.add('pleine'); reserve.boites.push(b); }
+    if(nC){ const x=slotX(i); const bc=cadre(bas); bougerVers(bc,x,Yb+BH/2,0,1,0); bc.firstChild.classList.add('pointille'); for(let k=0;k<nC;k++){ const c=cube(bas,COUL.ajout); const p=cel(k); bougerVers(c,x+p.x,Yb+BH/2+p.y,0,1,0); reserve.cubes.push(c); } reserve.boiteVide=bc; }
+    titreB.textContent=CL.strat==='comp'?`On ajoute ${ajoutTotal} (un peu trop), puis on enlèvera ${ajoutTotal-o.b}.`:`On ajoute ${o.b}.`;
+  } else if(!o.plus && !P.ecart){
+    titreB.textContent=`On enlève ${o.b} :`;
+  } else titreB.textContent='Ce qu\'on ajoute pour arriver :';
+  let basX=0; // position des objets enlevés, en bas
+  await att(1800);
+  for(const G of P.groupes){
+    await attendreEtape();
+    for(const p of G.parts){
+      if(G.type==='d'){
+        if(p>0){
+          // une boîte pleine arrive : elle se place avant la boîte entamée
+          const part=boites.length&&boites[boites.length-1].cubes.length<10?boites.pop():null;
+          let b;
+          if(reserve.boites.length){ b=reserve.boites.shift(); b.cadre.remove(); }
+          const nb={cadre:cadre(haut),cubes:[]}; const sx=b?b.x:1060, sy=b?Yb+BH/2:Yb+BH/2;
+          bougerVers(nb.cadre,sx,sy,0,1,0);
+          for(let k=0;k<10;k++){ const c=b?b.cubes[k]:cube(haut,COUL.ajout); if(b){ haut.appendChild(c); } else { const q=cel(k); bougerVers(c,sx+q.x,sy+q.y,0,1,0); } nb.cubes.push(c); }
+          nb.cadre.firstChild.classList.add('pleine');
+          boites.push(nb); if(part) boites.push(part);
+          placer(dur(900)); if(P.ecart){ ecart+=10; }
+          await att(1000);
+        } else {
+          // on enlève une boîte pleine
+          let idx=-1; for(let i=boites.length-1;i>=0;i--){ if(boites[i].cubes.length===10){ idx=i; break; } }
+          const b=boites.splice(idx,1)[0]; const x=slotX(basX); basX++;
+          bougerVers(b.cadre,x,Yb+BH/2,0,1,dur(900)); b.cubes.forEach((c,k)=>{ const q=cel(k); bougerVers(c,x+q.x,Yb+BH/2+q.y,0,1,dur(900)); });
+          setTimeout(()=>{ [b.cadre,...b.cubes].forEach(e=>e.setAttribute('opacity',.3)); },dur(950));
+          placer(dur(900)); await att(1000);
+        }
+      } else {
+        const k=Math.abs(p);
+        for(let j=0;j<k;j++){
+          if(p>0){
+            let b=boites[boites.length-1];
+            if(!b||b.cubes.length===10) b=nouvelleBoite();
+            let c;
+            if(reserve.cubes.length){ c=reserve.cubes.shift(); haut.appendChild(c); }
+            else { c=cube(haut,G.type==='corr'?COUL.corr:COUL.ajout); bougerVers(c,1060,Yb+BH/2,0,1,0); }
+            const q=cel(b.cubes.length); b.cubes.push(c);
+            bougerVers(c,b.x+q.x,Yh+BH/2+q.y,0,1,dur(650));
+            if(reserve.boiteVide&&!reserve.cubes.length){ reserve.boiteVide.remove(); reserve.boiteVide=null; }
+            if(P.ecart) ecart++;
+            await att(700); pleine(b);
+            if(b.cubes.length===10){ msgCL('10 cubes : la boîte est pleine, c\'est 1 dizaine !'); clDire('La boîte est pleine : une dizaine !'); await att(1300); }
+          } else {
+            let b=boites[boites.length-1];
+            if(b && b.cubes.length===10 && boites.length){
+              // plus de cubes seuls : on ouvre une boîte pleine
+              b.cadre.firstChild.classList.remove('pleine'); b.cadre.firstChild.classList.add('ouverte');
+              msgCL('Il n\'y a plus de cubes seuls : on ouvre une boîte de 10.'); clDire('On ouvre une boîte de 10.'); await att(1500);
+            }
+            const c=b.cubes.pop(); const x=slotX(basX)+(j%2?C/2:-C/2), y=Yb+BH/2+Math.floor(j/2)*C-2*C;
+            bougerVers(c,x,y,0,1,dur(650));
+            setTimeout(()=>c.setAttribute('opacity',.3),dur(700));
+            if(!b.cubes.length){ b.cadre.remove(); boites.pop(); }
+            pleine(b);
+            await att(650);
+          }
+          majCompteur(); marquerHaut(total());
+        }
+        if(p<0) basX++;
+      }
+      majCompteur(); marquerHaut(total());
+    }
+    msgCL(phraseGroupe(G,P)); clDire(phraseGroupe(G,P)); await att(1800);
+  }
+  if(P.ecart){ msgCL(`On a ajouté ${ecart} cubes orange : de ${o.b} à ${o.a}, il y a ${ecart}.`); clDire(`On a ajouté ${ecart}.`); await att(2200); }
+}
+
+/* ===== 3. Avec les doigts ===== */
+function main_(parent,x,y,gauche,titre){
+  const g=el('g',{transform:`translate(${x} ${y})`},parent);
+  const doigts=[];
+  const X=[ -36,-12,12,36 ], H=[62,74,70,56];
+  el('rect',{x:-50,y:0,width:100,height:92,rx:30,class:'cl-paume'},g);
+  for(let i=0;i<4;i++){ const d=el('rect',{x:X[i]-10,y:-14,width:20,height:28,rx:10,class:'cl-doigt'},g); d._h=H[i]; doigts.push(d); }
+  const pouce=el('rect',{x:gauche?40:-60,y:18,width:20,height:26,rx:10,class:'cl-doigt'},g); pouce._h=46;
+  // ordre de comptage : pouce, puis index… (comme on compte sur ses doigts en France)
+  const ordre=[pouce,...(gauche?doigts.slice().reverse():doigts)];
+  texte(g,0,124,titre,18,'cl-doux');
+  return ordre;
+}
+function baisserDoigt(d){ if(d._y0==null) return; d.setAttribute('y',d._y0); d.setAttribute('height',d._h0); d.style.fill=''; d.classList.remove('leve'); }
+function leverDoigt(d,col,ms){
+  d.style.fill=col; d.classList.add('leve');
+  if(d._y0==null){ d._y0=+d.getAttribute('y'); d._h0=+d.getAttribute('height'); }
+  const h0=d._h0, y0=d._y0, h1=d._h;
+  return animer(ms,t=>{ const h=h0+(h1-h0)*t; d.setAttribute('height',h); d.setAttribute('y',y0-(h-h0)); });
+}
+async function animDoigts(P){
+  const o=CL.op; clAnim.innerHTML='';
+  const tete=el('g',{transform:'translate(150 200)'},clAnim);
+  el('ellipse',{rx:120,ry:96,class:'cl-bulle-tete'},tete);
+  texte(tete,0,-50,P.ecart?'Je pars de':'Dans ma tête',22,'cl-doux');
+  const tv=texte(tete,0,26,String(P.dep),76,'cl-tete-n');
+  el('path',{d:'M-40,96 l-16,40 l44,-36',class:'cl-bulle-tete'},tete);
+  const nT=P.groupes.filter(g=>g.type==='d').reduce((s,g)=>s+g.parts.length,0);
+  const nU=P.groupes.filter(g=>g.type!=='d').reduce((s,g)=>s+Math.abs(g.delta),0);
+  texte(clAnim,560,40,'dizaines : 1 doigt = 10',22,'cl-diz-t');
+  texte(clAnim,900,40,'unités : 1 doigt = 1',22,'cl-uni-t');
+  const dT=[...main_(clAnim,480,150,true,'main 1'),...main_(clAnim,640,150,false,'main 2')];
+  const dU=[...main_(clAnim,820,150,true,'main 1'),...main_(clAnim,980,150,false,'main 2')];
+  const bilan=texte(clAnim,700,400,'',28,'cl-ecart');
+  marquerHaut(P.dep);
+  msgCL(P.ecart?`Je pars de ${P.dep}. Je lève un doigt pour chaque pas jusqu'à ${o.a}.`:`Je garde ${P.dep} dans ma tête.`);
+  clDire(P.ecart?`Je pars de ${P.dep}.`:`Je garde ${P.dep} dans ma tête.`);
+  await att(1700);
+  let iT=0,iU=0,v=P.dep;
+  for(const G of P.groupes){
+    await attendreEtape();
+    const col=G.type==='d'?COUL.d:G.type==='u'?COUL.u:G.type==='vers'?COUL.vers:COUL.corr;
+    if(G.type==='d'){
+      msgCL(`Je compte de 10 en 10 ${G.delta>0?'en avançant':'en reculant'}.`); await att(900);
+      for(const p of G.parts){ v+=p; tv.textContent=v; marquerHaut(v); if(iT<dT.length) await leverDoigt(dT[iT++],col,dur(350)); clDire(v); await att(900); }
+    } else {
+      if(G.type==='corr'){ msgCL(`J'ai pris ${Math.abs(G.delta)} de trop : je ${G.delta<0?'recule':'avance'} de ${Math.abs(G.delta)}.`); clDire(`Je corrige de ${Math.abs(G.delta)}.`); await att(1600); }
+      else if(G.type==='vers'){ msgCL(`Je vais d'abord jusqu'à la dizaine : ${G.a}.`); clDire(`D'abord jusqu'à ${G.a}.`); await att(1500); }
+      const s=Math.sign(G.delta);
+      for(let j=0;j<Math.abs(G.delta);j++){
+        if(iU>=10){ // 10 doigts d'unité levés = 1 doigt de dizaine
+          msgCL('10 doigts d\'unité, c\'est 1 dizaine : je baisse mes 10 doigts et je lève 1 doigt de dizaine.'); clDire('10 unités, c\'est une dizaine.');
+          await att(1200); dU.forEach(baisserDoigt); iU=0; if(iT<dT.length) await leverDoigt(dT[iT++],COUL.d,dur(350)); await att(900);
+        }
+        v+=s; tv.textContent=v; marquerHaut(v); await leverDoigt(dU[iU++],col,dur(300)); clDire(v); await att(750);
+      }
+    }
+    msgCL(phraseGroupe(G,P)); await att(1300);
+  }
+  if(P.ecart){ const e=o.r; bilan.textContent=`${iT} doigt${iT>1?'s':''} de dizaine et ${iU} doigt${iU>1?'s':''} d'unité : l'écart est ${e}`; clDire(`J'ai levé ${iT} doigts de dizaine et ${iU} doigts d'unité : l'écart est ${e}.`); await att(2800); }
+}
+
+/* ===== 4. Seulement les chiffres ===== */
+function largeur(n,t){ return String(n).length*t*0.56; }
+async function voler(parent,deX,deY,aX,aY,contenu,taille,col){
+  const g=el('g',{},parent); bougerVers(g,deX,deY,0,1,0);
+  const t=el('text',{x:0,y:0,class:'cl-txt','font-size':taille,'text-anchor':'middle'},g);
+  if(typeof contenu==='number') tspansNombre(t,contenu); else { t.textContent=contenu; if(col) t.style.fill=col; }
+  bougerVers(g,aX,aY,0,1,dur(800)); await att(850); return g;
+}
+async function ligneCalcul(parent,y,elems,src){
+  // elems : [{v|s, de:{x,y}}] — chaque morceau arrive depuis sa source
+  let x=560; const T=46;
+  for(const e of elems){
+    const w=(e.v!=null?largeur(e.v,T):e.s.length*T*0.5)+14;
+    const cx=x+w/2;
+    if(e.de) await voler(parent,e.de.x,e.de.y,cx,y,e.v!=null?e.v:e.s,T,e.col);
+    else { const t=e.v!=null?texteNb(parent,cx,y,e.v,T):texte(parent,cx,y,e.s,T,'',''); if(e.col) t.style.fill=e.col; t.setAttribute('opacity',0); await animer(dur(500),k=>t.setAttribute('opacity',k)); }
+    e.x=cx; x+=w;
+  }
+  return elems;
+}
+async function animChiffres(P){
+  const o=CL.op; clAnim.innerHTML='';
+  const g=el('g',{},clAnim);
+  // l'opération en haut à gauche
+  const T=56, y0=70;
+  const xa=120, xop=xa+largeur(o.a,T)/2+30, xb=xop+30+largeur(o.b,T)/2;
+  texteNb(g,xa,y0,o.a,T); texte(g,xop,y0,o.plus?'+':'−',T,'cl-op-t'); const tb=texteNb(g,xb,y0,o.b,T);
+  marquerHaut(P.dep);
+  await att(900);
+  // décomposition du 2e nombre (ou du chemin pour l'écart)
+  const decomp=[]; const yD=160;
+  if(!P.ecart){
+    const parts=P.groupes.map(G=>({v:Math.abs(G.delta),G}));
+    const tot=parts.filter(p=>p.G.type!=='corr').reduce((s,p)=>s+p.v,0);
+    let txt;
+    if(CL.strat==='comp'){ txt=`${o.b} = ${tot} − ${tot-o.b}`; }
+    else txt=`${o.b} = ${parts.map(p=>p.v).join(' + ')}`;
+    el('path',{d:`M${xb},${y0+16} L${xb},${yD-44}`,class:'cl-fleche-c'},g);
+    const t=texte(g,xb,yD,txt,40,'cl-decomp'); t.setAttribute('opacity',0);
+    await animer(dur(600),k=>t.setAttribute('opacity',k));
+    msgCL(CL.strat==='comp'?`${o.b}, c'est ${tot} moins ${tot-o.b}.`:`On décompose ${o.b} : ${parts.map(p=>p.v).join(' + ')}.`);
+    clDire(CL.strat==='comp'?`${o.b}, c'est ${tot} moins ${tot-o.b}.`:`${o.b}, c'est ${parts.map(p=>p.v).join(' plus ')}.`);
+    await att(2200);
+  } else {
+    texte(g,xa,yD,`De ${o.b}, j'avance jusqu'à ${o.a}.`,30,'cl-doux','start');
+    msgCL(`On cherche l'écart entre ${o.b} et ${o.a} en avançant.`); clDire(`On cherche combien il faut ajouter à ${o.b} pour arriver à ${o.a}.`);
+    await att(2000);
+  }
+  // les lignes de calcul, à droite
+  let y=80, prev={x:xa,y:y0}; const ecarts=[];
+  for(const G of P.groupes){
+    await attendreEtape();
+    const op=G.delta<0?'−':'+', d=Math.abs(G.delta);
+    const L=await ligneCalcul(g,y,[{v:G.de,de:prev},{s:op},{v:d,de:{x:xb,y:yD}},{s:'='},{v:G.a}]);
+    const lb=L[4]; prev={x:lb.x,y};
+    marquerHaut(G.a); clDire(`${G.de} ${op} ${d} = ${G.a}`);
+    ecarts.push(d);
+    if(G.type==='vers'){ const t=texte(g,1080,y,'dizaine !',22,'cl-vers','end'); t.style.fill=COUL.vers; }
+    y+=72; await att(1600);
+  }
+  if(P.ecart){
+    const e=ecarts.reduce((s,x)=>s+x,0);
+    await ligneCalcul(g,y,[{s:'écart :'},{s:ecarts.join(' + ')},{s:'='},{v:e}]);
+    clDire(`L'écart est ${ecarts.join(' plus ')} égale ${e}.`); await att(2200);
+  }
+}
+/* « Dizaines et unités séparées » (addition) : montré avec les chiffres */
+async function animSplit(){
+  const o=CL.op; clAnim.innerHTML='';
+  const g=el('g',{},clAnim), T=56, y0=70;
+  const da=Math.floor(o.a/10)*10, ua=o.a%10, db=Math.floor(o.b/10)*10, ub=o.b%10;
+  const xa=150, xb=420;
+  texteNb(g,xa,y0,o.a,T); texte(g,(xa+xb)/2,y0,'+',T,'cl-op-t'); texteNb(g,xb,y0,o.b,T);
+  await att(900);
+  const yD=160;
+  for(const [x,d,u] of [[xa,da,ua],[xb,db,ub]]){
+    el('path',{d:`M${x-8},${y0+16} L${x-44},${yD-40}`,class:'cl-fleche-c'},g); el('path',{d:`M${x+8},${y0+16} L${x+44},${yD-40}`,class:'cl-fleche-c'},g);
+    texteNb(g,x-52,yD,d,40); texteNb(g,x+52,yD,u,40);
+  }
+  msgCL(`On sépare les dizaines et les unités : ${o.a} = ${da} + ${ua} et ${o.b} = ${db} + ${ub}.`); clDire(`${o.a}, c'est ${da} plus ${ua}. ${o.b}, c'est ${db} plus ${ub}.`);
+  await att(2600); await attendreEtape();
+  let y=80;
+  await ligneCalcul(g,y,[{v:da,de:{x:xa-52,y:yD}},{s:'+'},{v:db,de:{x:xb-52,y:yD}},{s:'='},{v:da+db}]);
+  clDire(`${da} plus ${db} égale ${da+db}`); y+=72; await att(1600); await attendreEtape();
+  await ligneCalcul(g,y,[{v:ua,de:{x:xa+52,y:yD}},{s:'+'},{v:ub,de:{x:xb+52,y:yD}},{s:'='},{v:ua+ub}]);
+  clDire(`${ua} plus ${ub} égale ${ua+ub}`); y+=72; await att(1600); await attendreEtape();
+  await ligneCalcul(g,y,[{v:da+db},{s:'+'},{v:ua+ub},{s:'='},{v:o.r}]);
+  clDire(`${da+db} plus ${ua+ub} égale ${o.r}`); marquerHaut(o.r); await att(1600);
+}
+
+/* ---------- commandes ---------- */
+$('#clForm').addEventListener('submit',ev=>{
+  ev.preventDefault();
+  const r=lireCalcul($('#clSaisie').value);
+  if(r.err){ msgCL(r.err); return; }
+  nouveauCalcul(r); $('#clSaisie').blur();
+});
+$('#clHasard').addEventListener('click',()=>{
+  let op;
+  do{ const plus=Math.random()<.5, a=rnd(12,89), b=rnd(5,plus?Math.min(60,100-a):a-3); op=lireCalcul(`${a}${plus?'+':'-'}${b}`); }while(op.err);
+  $('#clSaisie').value=`${op.a} ${op.plus?'+':'−'} ${op.b}`; nouveauCalcul(op);
+});
+$('#clJouer').addEventListener('click',jouer);
+$('#clRejouer').addEventListener('click',jouer);
+$('#clPause').addEventListener('click',()=>{ CL.pause=!CL.pause; $('#clPause').textContent=CL.pause?'▶ Continuer':'⏸ Pause'; if(CL.pause&&'speechSynthesis' in window) speechSynthesis.cancel(); });
+$('#clSuivant').addEventListener('click',()=>{ CL.attente=false; });
+$('#clVitesse').addEventListener('input',e=>{ CL.vitesse=+e.target.value; });
+$('#clPas').addEventListener('change',e=>{ CL.pas=e.target.checked; if(!CL.pas){ CL.attente=false; $('#clSuivant').hidden=true; } else if(CL.joue){ $('#clSuivant').hidden=false; } });
+$('#clReponse').addEventListener('click',()=>{ if(!CL.op) return; afficherOperation(true); marquerHaut(CL.op.r); const o=CL.op; clDire(`${o.a} ${o.plus?'+':'−'} ${o.b} = ${o.r}`); });
+document.querySelectorAll('[data-clmode]').forEach(b=>b.addEventListener('click',()=>choisirMode(b.dataset.clmode)));
+$('#clMaison').addEventListener('click',()=>{ arreter(); if('speechSynthesis' in window) speechSynthesis.cancel(); majAccueil(); montrer('accueil'); });
+creerMiroir(clAnim); creerMiroir(clBande); appliquerMiroir();
+$('#btnCalcul').addEventListener('click',()=>{ montrer('calcul'); dessinerBandeHaut(); if(!CL.op) scèneInitiale(); });
 
 majAccueil();
 })();
