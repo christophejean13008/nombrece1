@@ -2445,7 +2445,7 @@ function msgCL(t){ $('#clMessage').textContent=t||''; }
 const dur=ms=>ms/CL.vitesse;
 
 /* ---------- bande numérique du haut ---------- */
-let BX0=20, BX1=1080, BVW=1100; const BVH=122, bx=v=>BX0+(BX1-BX0)*v/100;
+let BX0=20, BX1=1080, BVW=1100; const BVH=132, bx=v=>BX0+(BX1-BX0)*v/100;
 function dessinerBandeHaut(){
   // le dessin prend exactement la forme de la place disponible : la bande va d'un bord à l'autre de la page
   const box=clBande.parentNode, W=box.clientWidth||1100, H=box.clientHeight||196;
@@ -2455,12 +2455,13 @@ function dessinerBandeHaut(){
   const g=el('g',{},clBande);
   // en haut : les dizaines en lettres ; au milieu : la bande ; en bas : tous les nombres sur une seule ligne
   el('rect',{x:BX0,y:56,width:BX1-BX0,height:30,rx:5,class:'clb-fond'},g);
-  const pas=(BX1-BX0)/100, fu=pas*0.64, fd=pas*0.74;
+  const pas=(BX1-BX0)/100, fu=pas*0.64, fd=pas*1.75;
   for(let v=0;v<=100;v++){
     const x=bx(v), diz=v%10===0;
     el('line',{x1:x,y1:diz?50:(v%5===0?66:73),x2:x,y2:86,class:diz?'clb-diz':'clb-uni'},g);
-    const t=el('text',{x,y:86+fd+4,class:diz?'clb-ud':'clb-u'},g); t.textContent=v;
-    t.setAttribute('font-size',v===100?fd*0.8:diz?fd:fu);
+    // les chefs de famille (0, 10, 20…) : en rouge, plus gros et un peu plus bas que les autres nombres
+    const t=el('text',{x:x+(v===100?-pas*0.6:0),y:diz?86+fu+fd+3:86+fu+4,class:diz?'clb-ud':'clb-u'},g); t.textContent=v;
+    t.setAttribute('font-size',v===100?fd*0.85:diz?fd:fu);
   }
   for(let v=0;v<=100;v+=10){
     const t=el('text',{x:bx(v)+(v===0?-6:v===100?6:0),y:(v/10)%2?44:20,class:'clb-mot'},g); t.textContent=NOM_DIZ[v];
