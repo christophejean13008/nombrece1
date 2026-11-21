@@ -391,6 +391,12 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
 .cl-diz-t{fill:#C8362B} .cl-uni-t{fill:#2F63D6}
 .cl-fleche-c{stroke:var(--doux);stroke-width:2.5;fill:none}
 .cl-op-t{fill:var(--doux)}
+.cl-branche{fill:none;stroke:#E8590C;stroke-width:4;stroke-linecap:round}
+.cl-complement{fill:none;stroke:#E8590C;stroke-width:3;stroke-dasharray:7 5}
+.clr-fond{fill:var(--tableau);stroke:#E8590C;stroke-width:3}
+.clr-titre{fill:#B4470A}
+.clr-ligne{fill:transparent;stroke:none}
+.clr-ligne.actif{fill:#FDE3D2;stroke:#E8590C;stroke-width:3}
 
 @media (prefers-reduced-motion: reduce){
   .obj,.table-rangement{transition:none}
@@ -2582,6 +2588,44 @@ async function jouer(){
   finally{ if(tok===CL.tok){ CL.joue=false; $('#clPause').disabled=true; $('#clSuivant').hidden=true; $('#clJouer').disabled=false; } }
 }
 
+/* ===== Passage à la dizaine : on casse les unités pour faire le complément à 10 ===== */
+let RC=null;   // rappel des compléments à 10 affiché pendant l'animation
+function preparerRappel(P,vertical){
+  RC=null;
+  const G=P.groupes.find(x=>x.type==='vers'); if(!G||!CL.op.plus) return;
+  const g=el('g',{class:'cl-rappel'},clAnim), lignes={};
+  if(vertical){
+    el('rect',{x:952,y:8,width:140,height:404,rx:14,class:'clr-fond'},g);
+    texte(g,1022,40,'Compléments',20,'clr-titre'); texte(g,1022,62,'à 10',20,'clr-titre');
+    for(let i=1;i<=9;i++){ const y=96+(i-1)*35;
+      const r=el('rect',{x:962,y:y-26,width:120,height:34,rx:8,class:'clr-ligne'},g);
+      const t=el('text',{x:1022,y,class:'cl-txt','font-size':26,'text-anchor':'middle'},g);
+      el('tspan',{fill:COUL.u},t).textContent=i; el('tspan',{},t).textContent=' + '; el('tspan',{fill:COUL.vers},t).textContent=10-i;
+      lignes[i]={r,t}; }
+  } else {
+    texte(g,20,404,'Compléments à 10 :',22,'clr-titre','start');
+    for(let i=1;i<=9;i++){ const x=285+(i-1)*92;
+      const r=el('rect',{x:x-40,y:378,width:80,height:36,rx:8,class:'clr-ligne'},g);
+      const t=el('text',{x,y:404,class:'cl-txt','font-size':24,'text-anchor':'middle'},g);
+      el('tspan',{fill:COUL.u},t).textContent=i; el('tspan',{},t).textContent='+'; el('tspan',{fill:COUL.vers},t).textContent=10-i;
+      lignes[i]={r,t}; }
+  }
+  RC={lignes};
+}
+async function avantGroupe(G){
+  if(G.type!=='vers') return;
+  const c=Math.abs(G.delta), suite=CL.op.b%10-c, r=((G.de%10)+10)%10;
+  if(CL.op.plus){
+    if(RC&&RC.lignes[r]) RC.lignes[r].r.classList.add('actif');
+    const m=`Pour aller à la dizaine : ${r} + ${c} = 10. Je casse le ${CL.op.b%10} : ${CL.op.b%10} = ${c} + ${suite}.`;
+    msgCL(m); clDire(`Pour aller à la dizaine, ${r} plus ${c} égale 10. Je casse le ${CL.op.b%10} en ${c} plus ${suite}.`);
+  } else {
+    const m=`Pour arriver à ${G.a}, j'enlève d'abord ${c}. Je casse le ${CL.op.b%10} : ${CL.op.b%10} = ${c} + ${suite}.`;
+    msgCL(m); clDire(`Pour arriver à ${G.a}, j'enlève d'abord ${c}. Je casse le ${CL.op.b%10} en ${c} plus ${suite}.`);
+  }
+  await att(3200);
+}
+
 /* ===== 1. Bande numérique avec zoom ===== */
 async function animBande(P){
   const o=CL.op;
@@ -2606,6 +2650,7 @@ async function animBande(P){
     if(pas>=17 || diz || (pas>=9&&v%5===0)){ texteNb(g,x,Y+(bas_?72:48),v,diz?28:Math.min(24,pas*(serre?1.05:0.6))); }
     if(diz) texte(g,x,Y+(serre?104:82),NOM_DIZ[v],20,'cl-mot');
   }
+  preparerRappel(P,false);
   const arcs=el('g',{},clAnim), labs=el('g',{},clAnim);
   // jeton
   const jet=el('g',{class:'cl-jeton'},clAnim);
@@ -2621,9 +2666,12 @@ async function animBande(P){
   let somme=[];
   let boite=null; if(P.ecart){ boite=texte(clAnim,550,40,'',30,'cl-ecart'); }
   for(const G of P.groupes){
-    await attendreEtape();
+    await attendreEtape(); await avantGroupe(G);
     let v=G.de;
-    for(const p of G.parts){
+    // les dizaines par sauts de 10 ; les unités une par une (+1, +1… ou −1, −1…)
+    const sauts=G.type==='d'?G.parts:Array(Math.abs(G.delta)).fill(Math.sign(G.delta));
+    const un=G.type!=='d';
+    for(const p of sauts){
       const a=v, b=v+p, xa=xv(a), xb=xv(b), dessous=false;
       const h=Math.min(120,24+Math.abs(xb-xa)*0.45)*(dessous?-1:1);
       const yA=dessous?Y+22:Y-36, path=`M${xa},${yA} Q${(xa+xb)/2},${yA-h*1.6} ${xb},${yA}`;
@@ -2633,10 +2681,10 @@ async function animBande(P){
       el('path',{d:`M${xb},${yA} l${p>0?-11:11},${dessous?10:-10}`,class:'cl-arc',stroke:col},arcs);
       const L=pth.getTotalLength?pth.getTotalLength():300;
       pth.style.strokeDasharray=L; pth.style.strokeDashoffset=L;
-      await animer(dur(700),t=>{ pth.style.strokeDashoffset=L*(1-t); });
-      const lb=texte(labs,(xa+xb)/2,yA-h*0.85+(dessous?28:-6),`${sgn(p)}${Math.abs(p)}`,24,'cl-lab-arc'); lb.style.fill=col;
+      await animer(dur(un?380:700),t=>{ pth.style.strokeDashoffset=L*(1-t); });
+      const lb=texte(labs,(xa+xb)/2,yA-h*0.85+(dessous?28:-6),`${sgn(p)}${Math.abs(p)}`,un?19:24,'cl-lab-arc'); lb.style.fill=col;
       poser_(b,dur(600)); marquerHaut(b); clDire(b);
-      v=b; await att(950);
+      v=b; await att(un?650:950);
     }
     somme.push(Math.abs(G.delta));
     if(P.ecart){ boite.textContent=`écart : ${somme.join(' + ')}${somme.length>1?' = '+somme.reduce((x,y)=>x+y,0):''}`; }
@@ -2655,6 +2703,7 @@ async function animBoites(P){
   const C=22, BW=2*C+10, BH=5*C+10, PAS=BW+16;
   const Yh=40, Yb=250;
   const slotX=(i)=>40+i*PAS+Math.floor(i/5)*22;
+  preparerRappel(P,false);
   const haut=el('g',{},clAnim), bas=el('g',{},clAnim);
   texte(clAnim,1090,Yh+BH/2,'',1,'');
   const titreH=texte(clAnim,40,Yh-12,'',22,'cl-doux','start'), titreB=texte(clAnim,40,Yb-12,'',22,'cl-doux','start');
@@ -2692,7 +2741,7 @@ async function animBoites(P){
   let basX=0; // position des objets enlevés, en bas
   await att(1800);
   for(const G of P.groupes){
-    await attendreEtape();
+    await attendreEtape(); await avantGroupe(G);
     for(const p of G.parts){
       if(G.type==='d'){
         if(p>0){
@@ -2789,13 +2838,14 @@ async function animDoigts(P){
   const dT=[...main_(clAnim,480,150,true,'main 1'),...main_(clAnim,640,150,false,'main 2')];
   const dU=[...main_(clAnim,820,150,true,'main 1'),...main_(clAnim,980,150,false,'main 2')];
   const bilan=texte(clAnim,700,400,'',28,'cl-ecart');
+  preparerRappel(P,false);
   marquerHaut(P.dep);
   msgCL(P.ecart?`Je pars de ${P.dep}. Je lève un doigt pour chaque pas jusqu'à ${o.a}.`:`Je garde ${P.dep} dans ma tête.`);
   clDire(P.ecart?`Je pars de ${P.dep}.`:`Je garde ${P.dep} dans ma tête.`);
   await att(1700);
   let iT=0,iU=0,v=P.dep;
   for(const G of P.groupes){
-    await attendreEtape();
+    await attendreEtape(); await avantGroupe(G);
     const col=G.type==='d'?COUL.d:G.type==='u'?COUL.u:G.type==='vers'?COUL.vers:COUL.corr;
     if(G.type==='d'){
       msgCL(`Je compte de 10 en 10 ${G.delta>0?'en avançant':'en reculant'}.`); await att(900);
@@ -2847,18 +2897,31 @@ async function animChiffres(P){
   marquerHaut(P.dep);
   await att(900);
   // décomposition du 2e nombre (ou du chemin pour l'écart)
-  const decomp=[]; const yD=160;
-  if(!P.ecart){
+  const yD=160; const src={};
+  preparerRappel(P,true);
+  if(!P.ecart && CL.strat!=='comp'){
+    // 65 = 5 + 60 : les unités d'abord, puis les dizaines
+    const u=o.b%10, T=o.b-u;
+    el('path',{d:`M${xb},${y0+16} L${xb},${yD-44}`,class:'cl-fleche-c'},g);
+    const morceaux=[{v:o.b},{s:'='}]; if(u) morceaux.push({v:u,k:'u'}); if(u&&T) morceaux.push({s:'+'}); if(T) morceaux.push({v:T,k:'d'});
+    let x=60; const T2=40;
+    for(const m of morceaux){
+      const w=(m.v!=null?largeur(m.v,T2):T2*0.5)+14, cx=x+w/2;
+      const t=m.v!=null?texteNb(g,cx,yD,m.v,T2):texte(g,cx,yD,m.s,T2,'cl-op-t');
+      t.setAttribute('opacity',0); await animer(dur(350),k=>t.setAttribute('opacity',k));
+      if(m.k) src[m.k]={x:cx,y:yD,t}; x+=w;
+    }
+    msgCL(`On décompose ${o.b} : ${u&&T?`${u} + ${T}`:o.b}. On commence par les unités.`);
+    clDire(u&&T?`${o.b}, c'est ${u} plus ${T}. On commence par les unités.`:`On ajoute ${o.b}.`);
+    await att(2200);
+  } else if(CL.strat==='comp'){
     const parts=P.groupes.map(G=>({v:Math.abs(G.delta),G}));
     const tot=parts.filter(p=>p.G.type!=='corr').reduce((s,p)=>s+p.v,0);
-    let txt;
-    if(CL.strat==='comp'){ txt=`${o.b} = − ${tot-o.b} + ${tot}`; }
-    else txt=`${o.b} = ${parts.map(p=>p.v).join(' + ')}`;
     el('path',{d:`M${xb},${y0+16} L${xb},${yD-44}`,class:'cl-fleche-c'},g);
-    const t=texte(g,xb,yD,txt,40,'cl-decomp'); t.setAttribute('opacity',0);
+    const t=texte(g,60,yD,`${o.b} = − ${tot-o.b} + ${tot}`,40,'cl-decomp','start'); t.setAttribute('opacity',0);
     await animer(dur(600),k=>t.setAttribute('opacity',k));
-    msgCL(CL.strat==='comp'?`${o.b}, c'est ${tot} moins ${tot-o.b}.`:`On décompose ${o.b} : ${parts.map(p=>p.v).join(' + ')}.`);
-    clDire(CL.strat==='comp'?`${o.b}, c'est ${tot} moins ${tot-o.b}.`:`${o.b}, c'est ${parts.map(p=>p.v).join(' plus ')}.`);
+    src.corr={x:200,y:yD}; src.d={x:300,y:yD};
+    msgCL(`${o.b}, c'est ${tot} moins ${tot-o.b}.`); clDire(`${o.b}, c'est ${tot} moins ${tot-o.b}.`);
     await att(2200);
   } else {
     texte(g,xa,yD,`De ${o.b}, j'avance jusqu'à ${o.a}.`,30,'cl-doux','start');
@@ -2869,12 +2932,26 @@ async function animChiffres(P){
   let y=80, prev={x:xa,y:y0}; const ecarts=[];
   for(const G of P.groupes){
     await attendreEtape();
+    if(G.type==='vers' && src.u && !P.ecart){
+      // on casse les unités : le 5 se sépare en 2 + 3, avec des branches qui poussent
+      const c=Math.abs(G.delta), reste=o.b%10-c, U=src.u;
+      U.t.style.fill=COUL.vers;
+      const x1=U.x-34, x2=U.x+34, yS=yD+92;
+      const b1=el('path',{d:`M${U.x-6},${yD+12} L${x1},${yS-34}`,class:'cl-branche'},g), b2=el('path',{d:`M${U.x+6},${yD+12} L${x2},${yS-34}`,class:'cl-branche'},g);
+      [b1,b2].forEach(b=>{ const L=b.getTotalLength?b.getTotalLength():60; b.style.strokeDasharray=L; b.style.strokeDashoffset=L; });
+      await animer(dur(700),k=>{ [b1,b2].forEach(b=>{ b.style.strokeDashoffset=(+b.style.strokeDasharray)*(1-k); }); });
+      const t1=texteNb(g,x1,yS,c,40), t2=texteNb(g,x2,yS,reste,40); t1.style.fill=COUL.vers;
+      [t1,t2].forEach(t=>t.setAttribute('opacity',0)); await animer(dur(500),k=>[t1,t2].forEach(t=>t.setAttribute('opacity',k)));
+      const cad=el('rect',{x:x1-30,y:yS-36,width:60,height:48,rx:10,class:'cl-complement'},g);
+      await avantGroupe(G);
+      src.vers={x:x1,y:yS}; src.u={x:x2,y:yS,t:t2};
+    } else await avantGroupe(G);
     const op=G.delta<0?'−':'+', d=Math.abs(G.delta);
-    const L=await ligneCalcul(g,y,[{v:G.de,de:prev},{s:op},{v:d,de:{x:xb,y:yD}},{s:'='},{v:G.a}]);
+    const s0=G.type==='d'?src.d:G.type==='corr'?src.corr:G.type==='vers'?src.vers:src.u;
+    const L=await ligneCalcul(g,y,[{v:G.de,de:prev},{s:op},{v:d,de:s0||{x:xb,y:y0}},{s:'='},{v:G.a}]);
     const lb=L[4]; prev={x:lb.x,y};
     marquerHaut(G.a); clDire(`${G.de} ${op} ${d} = ${G.a}`);
     ecarts.push(d);
-    if(G.type==='vers'){ const t=texte(g,960,y,'dizaine !',22,'cl-vers','start'); t.style.fill=COUL.vers; }
     y+=72; await att(1600);
   }
   if(P.ecart){
