@@ -326,40 +326,46 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
 
 /* ===== Calculer en ligne ===== */
 .calcul-btn{border-color:#E8590C;border-style:dashed}
-#calcul.actif{display:flex;flex-direction:column;max-width:none;overflow:hidden;padding:8px 12px;
+#calcul.actif{display:flex;flex-direction:column;max-width:none;overflow:hidden;padding:6px 10px;
   height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
   height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
-#calcul .rond{width:44px;height:44px;font-size:1.2rem}
-#calcul .outil{min-height:clamp(38px,5.6vh,52px);padding:3px 12px;font-size:clamp(.85rem,2vh,1.02rem)}
-#calcul .onglet{min-height:clamp(38px,5.4vh,48px);padding:3px 12px;font-size:clamp(.85rem,2vh,1rem)}
-.cl-entete{flex:none;flex-wrap:wrap;margin-bottom:2px}
-.cl-entete .titre-atelier{flex:0 1 auto}
-.cl-saisie{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto}
-.cl-lab{font-weight:700;color:var(--doux)}
-#clSaisie{font-size:1.4rem;width:10em;min-height:46px;font-weight:700}
-.cl-bande-box{flex:none;height:clamp(70px,14vh,128px);position:relative}
+#calcul .rond{width:40px;height:40px;font-size:1.1rem;flex:none}
+#calcul .outil{min-height:clamp(34px,5vh,46px);padding:2px 10px;font-size:clamp(.8rem,1.8vh,.95rem)}
+#calcul .onglet{min-height:clamp(34px,5vh,46px);padding:2px 12px;font-size:clamp(.8rem,1.8vh,.95rem)}
+/* 1re partie */
+.cl-bande-box{flex:none;width:100%;aspect-ratio:1100/172;max-height:34vh;position:relative;margin:0 auto}
 .cl-bande-box svg{display:block;width:100%;height:100%}
-.cl-reglages{flex:none;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:2px 0 6px}
-.cl-strats{display:flex;flex-wrap:wrap;gap:6px}
-.cl-strat{min-height:clamp(36px,5vh,46px);padding:3px 12px;border-radius:22px;border:2px solid #E8590C;background:var(--tableau);color:#B4470A;font-weight:700;font-size:clamp(.8rem,1.9vh,.95rem)}
+.cl-operation{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(3.5rem,min(24vh,13vw),15rem);font-weight:700;line-height:1;white-space:nowrap}
+.cl-op{color:var(--doux)} .cl-q{color:#E8590C} .cl-res{background:#DDF3E6;border-radius:.15em;padding:0 .12em}
+.cl-vide{font-size:1.4rem;color:var(--doux);font-weight:400;white-space:normal}
+.cl-bas{flex:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;border-top:2px solid var(--trait);padding-top:6px}
+.cl-saisie{display:flex;gap:6px;align-items:center}
+#clSaisie{font-size:1.1rem;width:7.5em;min-height:clamp(34px,5vh,46px);font-weight:700;padding:2px 8px}
+.cl-sep{width:2px;align-self:stretch;background:var(--trait);margin:0 4px}
+.cl-voir{font-weight:700;color:var(--doux);font-size:.95rem}
+.cl-go{border-color:#E8590C!important;color:#B4470A!important}
+.cl-go:disabled{opacity:.45}
+.cl-strats{display:flex;flex-wrap:wrap;gap:4px}
+.cl-strat{min-height:clamp(30px,4.4vh,40px);padding:2px 10px;border-radius:20px;border:2px solid #E8590C;background:var(--tableau);color:#B4470A;font-weight:700;font-size:clamp(.72rem,1.6vh,.85rem)}
 .cl-strat.actif{background:#E8590C;color:#fff}
-.cl-plateau{flex:1;min-height:0;position:relative}
+.cl-message{flex:none;min-height:1.3em;margin:2px 0;text-align:center;font-weight:700;font-size:clamp(.95rem,2.6vh,1.35rem)}
+/* 2e partie : l'animation en très grand */
+.cl-anim-barre,.cl-plateau{display:none}
+#calcul.anim .cl-bande-box,#calcul.anim .cl-operation,#calcul.anim .cl-bas{display:none}
+#calcul.anim .cl-anim-barre{display:flex;flex:none;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-bottom:4px}
+#calcul.anim .cl-plateau{display:block;flex:1;min-height:0;position:relative}
 .cl-plateau svg{position:absolute;inset:0;width:100%;height:100%}
-.cl-commandes{flex:none;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:6px}
-.cl-vitesse,.cl-pas{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--doux);font-size:.95rem}
-.cl-vitesse input{width:130px}
-.cl-pas input{width:24px;height:24px}
+.cl-op-petit{font-size:clamp(1.6rem,5vh,2.6rem);font-weight:700;padding:0 10px;white-space:nowrap}
+.cl-vitesse,.cl-pas{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--doux);font-size:.9rem}
+.cl-vitesse input{width:110px}
+.cl-pas input{width:22px;height:22px}
 .cl-suivant{background:#E8590C!important;border-color:#E8590C!important;color:#fff!important}
-.cl-message{flex:none;min-height:1.3em;margin:3px 0 0;text-align:center;font-weight:700;font-size:clamp(.95rem,2.4vh,1.25rem)}
-.cl-operation{flex:none;text-align:center;font-size:clamp(2.2rem,8.5vh,5rem);font-weight:700;line-height:1.05;border-top:3px solid var(--trait);padding-top:2px}
-.cl-op{color:var(--doux)} .cl-q{color:#E8590C} .cl-res{background:#DDF3E6;border-radius:12px;padding:0 10px}
-.cl-vide{font-size:1.3rem;color:var(--doux);font-weight:400}
 .clb-fond{fill:var(--tableau);stroke:var(--trait);stroke-width:2}
-.clb-diz{stroke:#C8362B;stroke-width:3} .clb-uni{stroke:var(--doux);stroke-width:1}
-.clb-num{font-size:20px;font-weight:700;fill:var(--encre);text-anchor:middle}
-.clb-mot{font-size:16px;font-weight:700;fill:#C8362B;text-anchor:middle}
+.clb-diz{stroke:#C8362B;stroke-width:4} .clb-uni{stroke:var(--doux);stroke-width:1.6}
+.clb-num{font-size:32px;font-weight:700;fill:var(--encre);text-anchor:middle}
+.clb-mot{font-size:23px;font-weight:700;fill:#C8362B;text-anchor:middle}
 .clb-zone{fill:#E8590C;fill-opacity:.18;stroke:#E8590C;stroke-width:3}
-.clb-marque circle{fill:#1F8A52;stroke:#fff;stroke-width:2} .clb-marque text{font-size:15px;font-weight:700;fill:#fff;text-anchor:middle}
+.clb-marque circle{fill:#1F8A52;stroke:#fff;stroke-width:2} .clb-marque text{font-size:19px;font-weight:700;fill:#fff;text-anchor:middle}
 .cl-zoomrect{fill:#E8590C;fill-opacity:.15;stroke:#E8590C;stroke-width:3}
 .clz-fond{fill:var(--tableau);stroke:var(--trait);stroke-width:2}
 .clz-diz{stroke:#C8362B;stroke-width:4} .clz-uni{stroke:var(--doux);stroke-width:1.5}
@@ -478,39 +484,45 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
 </main>
 
 <!-- CALCUL EN LIGNE -->
+<!-- 1re partie : la bande en haut, le calcul en grand au milieu, les commandes en petit en bas.
+     2e partie : l'animation choisie en très grand. -->
 <main id="calcul" class="ecran">
-  <div class="barre cl-entete">
-    <button class="rond" id="clMaison" aria-label="Retour à l'accueil">⌂</button>
-    <h2 class="titre-atelier">Calculer en ligne</h2>
-    <form id="clForm" class="cl-saisie" autocomplete="off">
-      <label for="clSaisie" class="cl-lab">Calcul</label>
-      <input type="text" id="clSaisie" inputmode="text" placeholder="38 + 25 ou 63 − 25" spellcheck="false">
-      <button type="submit" class="outil ok-btn" id="clAfficher">Afficher</button>
-      <button type="button" class="outil" id="clHasard">Au hasard</button>
-    </form>
-  </div>
-  <div class="cl-bande-box"><svg id="clBande" viewBox="0 0 1100 128" role="img" aria-label="Bande numérique de 0 à 100"></svg></div>
-  <div class="cl-reglages">
+  <div class="cl-bande-box"><svg id="clBande" viewBox="0 0 1100 172" role="img" aria-label="Bande numérique de 0 à 100"></svg></div>
+  <div class="cl-anim-barre">
+    <button class="outil" id="clRetour">← Retour au calcul</button>
+    <div class="cl-op-petit" id="clOpPetit"></div>
     <div class="onglets" role="group" aria-label="Façon de montrer">
-      <button class="onglet actif" data-clmode="bande">Bande numérique</button>
-      <button class="onglet" data-clmode="boites">Boîtes et cubes</button>
+      <button class="onglet actif" data-clmode="bande">Bande</button>
+      <button class="onglet" data-clmode="boites">Boîtes</button>
       <button class="onglet" data-clmode="doigts">Doigts</button>
       <button class="onglet" data-clmode="chiffres">Chiffres</button>
     </div>
-    <div class="cl-strats" id="clStrats" role="group" aria-label="Méthode de calcul"></div>
-  </div>
-  <div class="plateau cl-plateau"><svg id="clAnim" viewBox="0 0 1100 420" role="img" aria-label="Animation du calcul"></svg></div>
-  <div class="cl-commandes">
-    <button class="outil ok-btn" id="clJouer">▶ Montrer comment calculer</button>
+    <button class="outil" id="clJouer" hidden>▶</button>
     <button class="outil" id="clPause" disabled>⏸ Pause</button>
     <button class="outil cl-suivant" id="clSuivant" hidden>Étape suivante ▶</button>
     <button class="outil" id="clRejouer" disabled>↺ Recommencer</button>
     <label class="cl-vitesse">Lent <input type="range" id="clVitesse" min="0.4" max="2.2" step="0.1" value="1"> Rapide</label>
     <label class="cl-pas"><input type="checkbox" id="clPas"> Pas à pas</label>
+  </div>
+  <div class="plateau cl-plateau"><svg id="clAnim" viewBox="0 0 1100 420" role="img" aria-label="Animation du calcul"></svg></div>
+  <p class="cl-message" id="clMessage" aria-live="polite"></p>
+  <div class="cl-operation" id="clOperation" aria-live="polite"><span class="cl-vide">Écris un calcul en bas, puis touche « Afficher ».</span></div>
+  <div class="cl-bas">
+    <button class="rond" id="clMaison" aria-label="Retour à l'accueil">⌂</button>
+    <form id="clForm" class="cl-saisie" autocomplete="off">
+      <input type="text" id="clSaisie" inputmode="text" placeholder="38 + 25" spellcheck="false" aria-label="Calcul">
+      <button type="submit" class="outil ok-btn" id="clAfficher">Afficher</button>
+      <button type="button" class="outil" id="clHasard">Au hasard</button>
+    </form>
+    <span class="cl-sep"></span>
+    <span class="cl-voir">Voir comment faire :</span>
+    <button class="outil cl-go" data-cljouer="bande" disabled>Bande</button>
+    <button class="outil cl-go" data-cljouer="boites" disabled>Boîtes</button>
+    <button class="outil cl-go" data-cljouer="doigts" disabled>Doigts</button>
+    <button class="outil cl-go" data-cljouer="chiffres" disabled>Chiffres</button>
+    <div class="cl-strats" id="clStrats" role="group" aria-label="Méthode de calcul"></div>
     <button class="outil" id="clReponse" disabled>Réponse</button>
   </div>
-  <p class="cl-message" id="clMessage" aria-live="polite"></p>
-  <div class="cl-operation" id="clOperation" aria-live="polite"><span class="cl-vide">Écris un calcul en haut, puis touche « Afficher ».</span></div>
 </main>
 
 <!-- ATELIER -->
@@ -2429,29 +2441,29 @@ function msgCL(t){ $('#clMessage').textContent=t||''; }
 const dur=ms=>ms/CL.vitesse;
 
 /* ---------- bande numérique du haut ---------- */
-const BX0=34, BX1=1066, bx=v=>BX0+(BX1-BX0)*v/100;
+const BX0=26, BX1=1074, bx=v=>BX0+(BX1-BX0)*v/100;
 function dessinerBandeHaut(){
   clBande.innerHTML='';
   const g=el('g',{},clBande);
-  el('rect',{x:BX0,y:30,width:BX1-BX0,height:26,rx:4,class:'clb-fond'},g);
+  el('rect',{x:BX0,y:42,width:BX1-BX0,height:40,rx:5,class:'clb-fond'},g);
   for(let v=0;v<=100;v++){
     const x=bx(v), diz=v%10===0;
-    el('line',{x1:x,y1:diz?24:(v%5===0?36:42),x2:x,y2:56,class:diz?'clb-diz':'clb-uni'},g);
+    el('line',{x1:x,y1:diz?34:(v%5===0?54:64),x2:x,y2:82,class:diz?'clb-diz':'clb-uni'},g);
   }
   for(let v=0;v<=100;v+=10){
     const x=bx(v);
-    el('text',{x,y:20,class:'clb-num'},g).textContent=v;
-    el('text',{x,y:(v/10)%2?100:80,class:'clb-mot'},g).textContent=NOM_DIZ[v];
+    el('text',{x,y:30,class:'clb-num'},g).textContent=v;
+    el('text',{x,y:(v/10)%2?160:112,class:'clb-mot'},g).textContent=NOM_DIZ[v];
   }
-  CL.zoneHaut=el('rect',{x:0,y:22,width:0,height:38,rx:6,class:'clb-zone',style:'display:none'},clBande);
+  CL.zoneHaut=el('rect',{x:0,y:36,width:0,height:54,rx:8,class:'clb-zone',style:'display:none'},clBande);
   CL.marqueHaut=el('g',{class:'clb-marque',style:'display:none'},clBande);
-  el('circle',{r:16,cx:0,cy:0},CL.marqueHaut);
-  CL.marqueTxt=el('text',{x:0,y:6},CL.marqueHaut);
+  el('circle',{r:20,cx:0,cy:0},CL.marqueHaut);
+  CL.marqueTxt=el('text',{x:0,y:7},CL.marqueHaut);
 }
 function marquerHaut(v){
   if(v==null){ CL.marqueHaut.style.display='none'; return; }
   CL.marqueHaut.style.display=''; CL.marqueTxt.textContent=v;
-  bougerVers(CL.marqueHaut,bx(v),43,0,1,dur(500));
+  bougerVers(CL.marqueHaut,bx(v),62,0,1,dur(500));
 }
 function zoneHaut(lo,hi){
   if(lo==null){ CL.zoneHaut.style.display='none'; return; }
@@ -2476,17 +2488,20 @@ function texte(parent,x,y,s,taille,cls,ancre){
 /* ---------- opération en bas ---------- */
 function afficherOperation(rep){
   const o=CL.op, z=$('#clOperation');
-  if(!o){ z.innerHTML='<span class="cl-vide">Écris un calcul en haut, puis touche « Afficher ».</span>'; return; }
+  if(!o){ z.innerHTML='<span class="cl-vide">Écris un calcul en bas, puis touche « Afficher ».</span>'; $('#clOpPetit').innerHTML=''; return; }
   const nb=n=>String(n).split('').map((c,i,arr)=>{ const r=arr.length-1-i; return `<span style="color:${r===0?COUL.u:r===1?COUL.d:'#2E8B47'}">${c}</span>`; }).join('');
   z.innerHTML=`${nb(o.a)} <span class="cl-op">${o.plus?'+':'−'}</span> ${nb(o.b)} <span class="cl-op">=</span> ${rep?`<span class="cl-res">${nb(o.r)}</span>`:'<span class="cl-q">?</span>'}`;
+  $('#clOpPetit').innerHTML=z.innerHTML;
 }
 
 /* ---------- préparation ---------- */
 function nouveauCalcul(op){
   arreter();
   CL.op=op; const S_=strategies(op); CL.strats=S_.liste; CL.strat=S_.def;
-  afficherOperation(false); construireStrats(); msgCL('Les élèves cherchent sur leur ardoise… puis touche « Montrer comment calculer ».');
+  afficherOperation(false); construireStrats(); msgCL('Les élèves cherchent sur leur ardoise.');
   ['#clJouer','#clReponse'].forEach(s=>$(s).disabled=false);
+  document.querySelectorAll('[data-cljouer]').forEach(b=>b.disabled=false);
+  phase(1);
   marquerHaut(null); zoneHaut(null);
   scèneInitiale();
 }
@@ -2504,8 +2519,16 @@ function choisirMode(m,silence){
   CL.mode=m; document.querySelectorAll('[data-clmode]').forEach(b=>b.classList.toggle('actif',b.dataset.clmode===m));
   const s=CL.strats&&CL.strats.find(x=>x.id===CL.strat);
   if(s&&s.seul&&s.seul!==m){ CL.strat='sauts'; construireStrats(); }
-  if(!silence){ arreter(); scèneInitiale(); }
+  if(!silence){ arreter(); scèneInitiale(); if($('#calcul').classList.contains('anim')) jouer(); }
 }
+/* 1 : bande + calcul en grand ; 2 : animation en très grand */
+function phase(n){
+  $('#calcul').classList.toggle('anim',n===2);
+  if(n===1){ arreter(); msgCL(CL.op?'Les élèves cherchent sur leur ardoise.':''); }
+  requestAnimationFrame(()=>{ if(typeof appliquerMiroir==='function') appliquerMiroir(); });
+}
+document.querySelectorAll('[data-cljouer]').forEach(b=>b.addEventListener('click',()=>{ if(!CL.op) return; choisirMode(b.dataset.cljouer,true); phase(2); jouer(); }));
+$('#clRetour').addEventListener('click',()=>phase(1));
 function arreter(){
   CL.tok++; CL.joue=false; CL.pause=false; CL.attente=false;
   $('#clPause').disabled=true; $('#clPause').textContent='⏸ Pause'; $('#clSuivant').hidden=true;
@@ -2513,7 +2536,7 @@ function arreter(){
 }
 function scèneInitiale(){
   clAnim.innerHTML='';
-  if(!CL.op){ texte(clAnim,550,210,'Écris un calcul en haut de l\'écran.',34,'cl-doux'); return; }
+  if(!CL.op){ texte(clAnim,550,210,'Écris un calcul en bas de l\'écran.',34,'cl-doux'); return; }
   const o=CL.op;
   texte(clAnim,550,190,'Cherche sur ton ardoise :',30,'cl-doux');
   const t=el('text',{x:550,y:270,class:'cl-txt','font-size':72,'text-anchor':'middle'},clAnim);
@@ -2551,7 +2574,7 @@ async function animBande(P){
   clAnim.innerHTML='';
   // zoom : la zone choisie sur la bande du haut grandit jusqu'au plateau
   zoneHaut(lo,hi); msgCL(`On regarde la bande de ${lo} à ${hi}.`);
-  const X0=50,X1=1050,Y=250;
+  const X0=75,X1=1025,Y=250;
   const xv=v=>X0+(X1-X0)*(v-lo)/(hi-lo);
   const r=el('rect',{x:550-(hi-lo)*0.6,y:6,width:(hi-lo)*1.2,height:12,rx:6,class:'cl-zoomrect'},clAnim);
   await animer(dur(900),t=>{ const w=(hi-lo)*1.2+(X1-X0+40-(hi-lo)*1.2)*t, h=12+(150-12)*t;
@@ -2888,9 +2911,9 @@ $('#clVitesse').addEventListener('input',e=>{ CL.vitesse=+e.target.value; });
 $('#clPas').addEventListener('change',e=>{ CL.pas=e.target.checked; if(!CL.pas){ CL.attente=false; $('#clSuivant').hidden=true; } else if(CL.joue){ $('#clSuivant').hidden=false; } });
 $('#clReponse').addEventListener('click',()=>{ if(!CL.op) return; afficherOperation(true); marquerHaut(CL.op.r); const o=CL.op; clDire(`${o.a} ${o.plus?'+':'−'} ${o.b} = ${o.r}`); });
 document.querySelectorAll('[data-clmode]').forEach(b=>b.addEventListener('click',()=>choisirMode(b.dataset.clmode)));
-$('#clMaison').addEventListener('click',()=>{ arreter(); if('speechSynthesis' in window) speechSynthesis.cancel(); majAccueil(); montrer('accueil'); });
+$('#clMaison').addEventListener('click',()=>{ phase(1); arreter(); if('speechSynthesis' in window) speechSynthesis.cancel(); majAccueil(); montrer('accueil'); });
 creerMiroir(clAnim); creerMiroir(clBande); appliquerMiroir();
-$('#btnCalcul').addEventListener('click',()=>{ montrer('calcul'); dessinerBandeHaut(); if(!CL.op) scèneInitiale(); });
+$('#btnCalcul').addEventListener('click',()=>{ montrer('calcul'); phase(1); dessinerBandeHaut(); if(!CL.op) scèneInitiale(); });
 
 majAccueil();
 })();
