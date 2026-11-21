@@ -333,7 +333,7 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
 #calcul .outil{min-height:clamp(34px,5vh,46px);padding:2px 10px;font-size:clamp(.8rem,1.8vh,.95rem)}
 #calcul .onglet{min-height:clamp(34px,5vh,46px);padding:2px 12px;font-size:clamp(.8rem,1.8vh,.95rem)}
 /* 1re partie */
-.cl-bande-box{flex:none;width:calc(100% + 20px);margin:0 -10px;height:clamp(150px,34vh,380px);position:relative}
+.cl-bande-box{flex:none;width:calc(100% + 20px);margin:0 -10px;height:clamp(110px,24vh,300px);position:relative}
 .cl-bande-box svg{display:block;width:100%;height:100%}
 .cl-operation{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(3.5rem,min(24vh,13vw),15rem);font-weight:700;line-height:1;white-space:nowrap}
 .cl-op{color:var(--doux)} .cl-q{color:#E8590C} .cl-res{background:#DDF3E6;border-radius:.15em;padding:0 .12em}
@@ -364,9 +364,10 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
 .clb-diz{stroke:#C8362B;stroke-width:4} .clb-uni{stroke:var(--doux);stroke-width:1.6}
 .clb-num{font-size:32px;font-weight:700;fill:var(--encre);text-anchor:middle}
 .clb-u{font-weight:700;fill:var(--encre);text-anchor:middle}
-.clb-mot{font-size:23px;font-weight:700;fill:#C8362B;text-anchor:middle}
+.clb-ud{font-weight:800;fill:#C8362B;text-anchor:middle}
+.clb-mot{font-size:21px;font-weight:700;fill:#C8362B;text-anchor:middle}
 .clb-zone{fill:#E8590C;fill-opacity:.18;stroke:#E8590C;stroke-width:3}
-.clb-marque circle{fill:#1F8A52;stroke:#fff;stroke-width:2} .clb-marque text{font-size:19px;font-weight:700;fill:#fff;text-anchor:middle}
+.clb-marque circle{fill:#1F8A52;stroke:#fff;stroke-width:2} .clb-marque text{font-size:13px;font-weight:700;fill:#fff;text-anchor:middle}
 .cl-zoomrect{fill:#E8590C;fill-opacity:.15;stroke:#E8590C;stroke-width:3}
 .clz-fond{fill:var(--tableau);stroke:var(--trait);stroke-width:2}
 .clz-diz{stroke:#C8362B;stroke-width:4} .clz-uni{stroke:var(--doux);stroke-width:1.5}
@@ -2444,7 +2445,7 @@ function msgCL(t){ $('#clMessage').textContent=t||''; }
 const dur=ms=>ms/CL.vitesse;
 
 /* ---------- bande numérique du haut ---------- */
-let BX0=20, BX1=1080, BVW=1100; const BVH=212, bx=v=>BX0+(BX1-BX0)*v/100;
+let BX0=20, BX1=1080, BVW=1100; const BVH=122, bx=v=>BX0+(BX1-BX0)*v/100;
 function dessinerBandeHaut(){
   // le dessin prend exactement la forme de la place disponible : la bande va d'un bord à l'autre de la page
   const box=clBande.parentNode, W=box.clientWidth||1100, H=box.clientHeight||196;
@@ -2452,23 +2453,23 @@ function dessinerBandeHaut(){
   clBande.setAttribute('viewBox',`0 0 ${BVW} ${BVH}`);
   clBande.innerHTML='';
   const g=el('g',{},clBande);
-  el('rect',{x:BX0,y:42,width:BX1-BX0,height:36,rx:5,class:'clb-fond'},g);
-  const pas=(BX1-BX0)/100, fu=Math.max(11,Math.min(20,pas*1.45));
+  // en haut : les dizaines en lettres ; au milieu : la bande ; en bas : tous les nombres sur une seule ligne
+  el('rect',{x:BX0,y:56,width:BX1-BX0,height:30,rx:5,class:'clb-fond'},g);
+  const pas=(BX1-BX0)/100, fu=pas*0.64, fd=pas*0.74;
   for(let v=0;v<=100;v++){
     const x=bx(v), diz=v%10===0;
-    el('line',{x1:x,y1:diz?34:(v%5===0?52:62),x2:x,y2:78,class:diz?'clb-diz':'clb-uni'},g);
-    // les nombres sur 3 rangées décalées, pour qu'ils ne se touchent pas
-    if(!diz){ const t=el('text',{x,y:98+((v%10)-1)%3*19,class:'clb-u'},g); t.textContent=v; t.setAttribute('font-size',fu); }
+    el('line',{x1:x,y1:diz?50:(v%5===0?66:73),x2:x,y2:86,class:diz?'clb-diz':'clb-uni'},g);
+    const t=el('text',{x,y:86+fd+4,class:diz?'clb-ud':'clb-u'},g); t.textContent=v;
+    t.setAttribute('font-size',v===100?fd*0.8:diz?fd:fu);
   }
   for(let v=0;v<=100;v+=10){
-    const x=bx(v);
-    el('text',{x,y:30,class:'clb-num'},g).textContent=v;
-    el('text',{x,y:(v/10)%2?204:172,class:'clb-mot'},g).textContent=NOM_DIZ[v];
+    const t=el('text',{x:bx(v)+(v===0?-6:v===100?6:0),y:(v/10)%2?44:20,class:'clb-mot'},g); t.textContent=NOM_DIZ[v];
+    if(v===0) t.setAttribute('style','text-anchor:start'); if(v===100) t.setAttribute('style','text-anchor:end');
   }
-  CL.zoneHaut=el('rect',{x:0,y:34,width:0,height:52,rx:8,class:'clb-zone',style:'display:none'},clBande);
+  CL.zoneHaut=el('rect',{x:0,y:48,width:0,height:44,rx:8,class:'clb-zone',style:'display:none'},clBande);
   CL.marqueHaut=el('g',{class:'clb-marque',style:'display:none'},clBande);
-  el('circle',{r:19,cx:0,cy:0},CL.marqueHaut);
-  CL.marqueTxt=el('text',{x:0,y:7},CL.marqueHaut);
+  el('circle',{r:14,cx:0,cy:0},CL.marqueHaut);
+  CL.marqueTxt=el('text',{x:0,y:5},CL.marqueHaut);
   if(CL.zone) zoneHaut(...CL.zone); if(CL.marque!=null){ const m=CL.marque; CL.marque=null; marquerHaut(m,true); }
 }
 window.addEventListener('resize',()=>{ if($('#calcul').classList.contains('actif')) requestAnimationFrame(dessinerBandeHaut); });
@@ -2476,7 +2477,7 @@ function marquerHaut(v,instant){
   CL.marque=v;
   if(v==null){ CL.marqueHaut.style.display='none'; return; }
   CL.marqueHaut.style.display=''; CL.marqueTxt.textContent=v;
-  bougerVers(CL.marqueHaut,bx(v),60,0,1,instant?0:dur(500));
+  bougerVers(CL.marqueHaut,bx(v),71,0,1,instant?0:dur(500));
 }
 function zoneHaut(lo,hi){
   CL.zone=lo==null?null:[lo,hi];
