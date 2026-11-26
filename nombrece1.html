@@ -349,8 +349,9 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
 .tn-pion{cursor:grab}
 .tn-tenu{cursor:grabbing}
 .tn-feu{fill:#FFFFFF;stroke:#3B4256;stroke-width:3}
-.tn-visiere{fill:none;stroke:#3B4256;stroke-width:2.5}
-.tn-lampe{fill:#E4E6EB;stroke:#7E8594;stroke-width:2}
+.tn-visiere{fill:none;stroke:#3B4256;stroke-width:2.2;stroke-linecap:round}
+.tn-prise{fill:#FFFFFF;fill-opacity:.001;stroke:none}
+.tn-lampe{fill:#EEF0F3;stroke:#9AA1AE;stroke-width:2}
 .tn-fleche{fill:#FFFFFF;stroke:#3B4256;stroke-width:3;stroke-linejoin:round}
 .tn-fleche-t{font-size:24px;font-weight:800;fill:#1D2B4F;text-anchor:middle}
 .tn-saut{fill:none;stroke-width:5;stroke-linecap:round}
@@ -2416,9 +2417,9 @@ new MutationObserver(()=>miroirs.forEach(m=>{ m.sale=true; planifierMiroir(m); }
 appliquerMiroir();
 
 /* iPad (Safari) : sans cela, entourer ou faire glisser fait bouger toute la page */
-function dansZoneGeste(t){ return t && t.closest && t.closest('.plateau,.tiroir,.tiroir-a,.tiroir-fab'); }
-document.addEventListener('touchstart',e=>{ if(document.body.classList.contains('fige') && e.target.closest && e.target.closest('.plateau')) e.preventDefault(); },{passive:false});
-document.addEventListener('touchmove',e=>{ if(gl||drag||lasso||(document.body.classList.contains('fige')&&dansZoneGeste(e.target))) e.preventDefault(); },{passive:false});
+function dansZoneGeste(t){ return t && t.closest && t.closest('.plateau,.tn-plateau,.tiroir,.tiroir-a,.tiroir-fab'); }
+document.addEventListener('touchstart',e=>{ if(document.body.classList.contains('fige') && e.target.closest && e.target.closest('.plateau,.tn-plateau')) e.preventDefault(); },{passive:false});
+document.addEventListener('touchmove',e=>{ if(gl||drag||peint||(document.body.classList.contains('fige')&&dansZoneGeste(e.target))) e.preventDefault(); },{passive:false});
 document.addEventListener('gesturestart',e=>{ if(document.body.classList.contains('fige')) e.preventDefault(); },{passive:false});
 
 /* ================= CALCULER EN LIGNE =================
@@ -3116,17 +3117,21 @@ function dessinerTableau(){
   TN.sens=1; dessinerFaceFleche();
 }
 function pionFeu(coul){
+  // comme le pion imprimé : boîtier blanc, 3 lampes rondes en creux, une petite visière au-dessus de chacune
   const g=el('g',{class:'tn-pion'},tCouches.pions), c=el('g',{},g);
-  el('rect',{x:-21,y:-30,width:42,height:62,rx:9,class:'tn-feu'},c);
-  [-17,0,17].forEach((dy,i)=>{
-    el('path',{d:`M-10,${dy-6} A10,10 0 0 1 10,${dy-6}`,class:'tn-visiere'},c);
+  el('rect',{x:-44,y:-46,width:88,height:92,rx:12,class:'tn-prise'},g);   // zone de prise plus large pour le doigt
+  el('rect',{x:-20,y:-33,width:40,height:66,rx:9,class:'tn-feu'},c);
+  [-19,0,19].forEach((dy,i)=>{
     const on=(coul==='rouge'&&i===0)||(coul==='vert'&&i===2);
-    el('circle',{cx:0,cy:dy,r:6.5,class:'tn-lampe',style:on?`fill:${coul==='rouge'?'#E23B2E':'#1F9E4B'}`:''},c);
+    el('circle',{cx:0,cy:dy,r:6.5,class:'tn-lampe',style:on?`fill:${coul==='rouge'?'#E23B2E':'#1F9E4B'};stroke:${coul==='rouge'?'#9E1F16':'#126B31'}`:''},c);
+    // petite visière : un arc fin juste au-dessus de la lampe, sans toucher la lampe d'au-dessus
+    el('path',{d:`M-8.5,${(dy-3.1).toFixed(1)} A9,9 0 0 1 8.5,${(dy-3.1).toFixed(1)}`,class:'tn-visiere'},c);
   });
   g._corps=c; brancherPion(g,coul); return g;
 }
 function pionFleche(){
   const g=el('g',{class:'tn-pion tn-pion-fleche'},tCouches.pions), c=el('g',{},g);
+  el('rect',{x:-50,y:-38,width:100,height:76,rx:12,class:'tn-prise'},g);
   c._forme=el('path',{class:'tn-fleche'},c);
   c._txt=el('text',{x:-6,y:9,class:'tn-fleche-t'},c);
   g._corps=c; brancherPion(g,'fleche'); return g;
@@ -3145,11 +3150,12 @@ function posPion(k,v){
   // feu et flèche dans le même trou : le feu à gauche, la flèche à droite
   return k==='fleche'?{x:p.x+18,y:p.y}:{x:p.x-34,y:p.y};
 }
-function ecrirePos(g,x,y){ g._x=x; g._y=y; g.setAttribute('transform',`translate(${x.toFixed(1)} ${y.toFixed(1)})`); }
+function ecrirePos(g,x,y){ g._x=x; g._y=y; g.setAttribute('transform',`translate(${x.toFixed(1)} ${y.toFixed(1)})`+(g._s&&g._s!==1?` scale(${g._s})`:'')); }
 function placerPion(k,v,ms){
   TN.pions[k]=v;
   const relayer=()=>Object.keys(TN.pions).forEach(o=>{ const q=posPion(o,TN.pions[o]); const g=TN.objets[o]; if(o===k) return; if(g._x!==q.x||g._y!==q.y) deplacerG(g,q.x,q.y,250); });
   const q=posPion(k,v); relayer();
+  TN.objets[k]._s=v==null?(k==='fleche'?1.2:1.6):1;
   return deplacerG(TN.objets[k],q.x,q.y,ms);
 }
 function deplacerG(g,x,y,ms,haut){
@@ -3176,19 +3182,26 @@ function tournerFleche(sens,ms){
 function brancherPion(g,k){
   g.addEventListener('pointerdown',ev=>{
     if(TN.joue) return;
-    ev.preventDefault();
-    const p0=versSvgDe(tsvg,ev.clientX,ev.clientY), dx=g._x-p0.x, dy=g._y-p0.y; let bouge=false;
-    tCouches.pions.appendChild(g); g.classList.add('tn-tenu');
-    const mv=e=>{ const p=versSvgDe(tsvg,e.clientX,e.clientY); if(Math.hypot(p.x-p0.x,p.y-p0.y)>12) bouge=true; if(bouge) ecrirePos(g,p.x+dx,p.y+dy); };
-    const up=e=>{
-      window.removeEventListener('pointermove',mv); window.removeEventListener('pointerup',up); window.removeEventListener('pointercancel',up);
+    ev.preventDefault(); ev.stopPropagation();
+    // le doigt reste « attaché » au tableau, même si le pion change de place dans le dessin (indispensable sur les écrans tactiles)
+    try{ tsvg.setPointerCapture(ev.pointerId); }catch(e){}
+    const id=ev.pointerId, p0=versSvgDe(tsvg,ev.clientX,ev.clientY), dx=g._x-p0.x, dy=g._y-p0.y; let bouge=false, fini=false;
+    const mv=e=>{ if(e.pointerId!==id) return; const p=versSvgDe(tsvg,e.clientX,e.clientY);
+      if(!bouge&&Math.hypot(p.x-p0.x,p.y-p0.y)>12){ bouge=true; g.classList.add('tn-tenu'); tCouches.pions.appendChild(g); }
+      if(bouge){ e.preventDefault(); ecrirePos(g,p.x+dx,p.y+dy); } };
+    const fin=e=>{
+      if(e.pointerId!==id||fini) return; fini=true;
+      tsvg.removeEventListener('pointermove',mv); tsvg.removeEventListener('pointerup',fin); tsvg.removeEventListener('pointercancel',fin);
+      window.removeEventListener('pointermove',mv); window.removeEventListener('pointerup',fin); window.removeEventListener('pointercancel',fin);
+      try{ tsvg.releasePointerCapture(id); }catch(x){}
       g.classList.remove('tn-tenu');
-      if(!bouge){ if(k==='fleche') tournerFleche(-TN.sens); else placerPion(k,TN.pions[k],200); return; }
+      if(e.type==='pointercancel'||!bouge){ if(!bouge&&e.type!=='pointercancel'&&k==='fleche') tournerFleche(-TN.sens); else placerPion(k,TN.pions[k],200); return; }
       const p=versSvgDe(tsvg,e.clientX,e.clientY), v=tCaseSous(p.x,p.y);
       placerPion(k,v,250);
       if(v!=null){ tMarquer(v); if(k==='fleche') dire(v); }
     };
-    window.addEventListener('pointermove',mv); window.addEventListener('pointerup',up); window.addEventListener('pointercancel',up);
+    tsvg.addEventListener('pointermove',mv); tsvg.addEventListener('pointerup',fin); tsvg.addEventListener('pointercancel',fin);
+    window.addEventListener('pointermove',mv); window.addEventListener('pointerup',fin); window.addEventListener('pointercancel',fin);
   });
 }
 function tMarquer(v,coul){
