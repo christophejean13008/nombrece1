@@ -369,6 +369,8 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
 .tn-pad rect{fill:#FFF3E8;stroke:#E8590C;stroke-width:3}
 .tn-pad text{font-weight:800;fill:#B4470A;text-anchor:middle}
 .tn-pad.off{opacity:.3;cursor:default}
+.tn-case-coche{fill:#FFFFFF!important;stroke:#E8590C;stroke-width:3}
+.tn-coche{fill:none;stroke:#1F8A52;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
 .tn-code{display:inline-flex;gap:.25em;align-items:center;flex-wrap:nowrap}
 .tn-code .mv{display:inline-block;padding:0 .18em;border-radius:.15em;background:#FFF3E8;color:#B4470A;border:3px solid #E8590C;font-size:.8em;line-height:1.1}
 .tn-code .mv.d{color:#C8362B;border-color:#C8362B;background:#FDE9E7}
@@ -3114,7 +3116,7 @@ const TN={op:null,tok:0,vitesse:1,pause:false,pas:false,attente:false,joue:false
 const tsvg=$('#tnSvg');
 const TCW=118, TCH=88, TGX=290, TGY=40, TVBW=1720, TVBH=1048;
 const TMOTS=[[],['dix'],['vingt'],['trente'],['quarante'],['cinquante'],['soixante'],['soixante-','dix'],['quatre-','vingts'],['quatre-','vingt-dix'],['cent']];
-const TRAY={vert:{x:1615,y:620},rouge:{x:1615,y:775},fleche:{x:1615,y:930}};
+const TRAY={vert:{x:1615,y:648},rouge:{x:1615,y:795},fleche:{x:1615,y:942}};
 function tCase(v){ const r=Math.floor(v/10), c=v===100?0:v%10; return {x:TGX+c*TCW+TCW/2, top:TGY+r*TCH, y:TGY+r*TCH+72, yn:TGY+r*TCH+48}; }
 function tCaseSous(x,y){
   if(x<TGX||x>TGX+10*TCW||y<TGY||y>TGY+11*TCH) return null;
@@ -3150,18 +3152,26 @@ function dessinerTableau(){
   tCouches.grandN=el('text',{x:1615,y:165,class:'tn-grand-n'},tCouches.grand);
   // la croix des déplacements
   tCouches.pad=el('g',{style:'display:none'},tsvg);
-  [[-10,'−10','↑',1615,268],[-1,'−1','←',1570,365],[1,'+1','→',1660,365],[10,'+10','↓',1615,462]].forEach(([d,l,f,x,y])=>{
+  [[-10,'−10','↑',1615,254],[-1,'−1','←',1570,344],[1,'+1','→',1660,344],[10,'+10','↓',1615,434]].forEach(([d,l,f,x,y])=>{
     const b=el('g',{class:'tn-pad','data-d':d},tCouches.pad);
     el('rect',{x:x-42,y:y-42,width:84,height:84,rx:14},b);
     el('text',{x,y:y-4,style:'font-size:34px'},b).textContent=f;
     el('text',{x,y:y+30,style:'font-size:24px'},b).textContent=l;
     b.addEventListener('pointerdown',ev=>{ ev.preventDefault(); ev.stopPropagation(); croixBouger(d); });
   });
+  // juste sous la croix : montrer ou cacher les pointillés des cases où l'on peut aller
+  const bt=el('g',{class:'tn-pad tn-bascule'},tCouches.pad);
+  el('rect',{x:1534,y:486,width:162,height:44,rx:12},bt);
+  tCouches.basculeCase=el('rect',{x:1546,y:496,width:24,height:24,rx:5,class:'tn-case-coche'},bt);
+  tCouches.basculeV=el('path',{d:'M1551,508 l6,6 l10,-12',class:'tn-coche'},bt);
+  el('text',{x:1632,y:515,style:'font-size:19px'},bt).textContent='pointillés';
+  bt.addEventListener('pointerdown',ev=>{ ev.preventDefault(); ev.stopPropagation(); TN.pointilles=!TN.pointilles; majBascule(); if(TN.pos!=null) croixAller(TN.pos,false); });
+  majBascule();
   el('rect',{x:1530,y:540,width:170,height:500,rx:22,class:'tn-reserve'},tsvg);
   el('text',{x:1615,y:574,class:'tn-res-t',style:'font-size:28px'},tsvg).textContent='Pions';
   [['vert','départ'],['rouge','arrivée'],['fleche','+1 / −1']].forEach(([k,l])=>{
-    el('rect',{x:TRAY[k].x-55,y:TRAY[k].y-58,width:110,height:116,rx:14,class:'tn-place'},tsvg);
-    const t=el('text',{x:TRAY[k].x,y:TRAY[k].y+84,class:'tn-res-l',style:'font-size:22px'},tsvg); t.textContent=l;
+    el('rect',{x:TRAY[k].x-55,y:TRAY[k].y-56,width:110,height:108,rx:14,class:'tn-place'},tsvg);
+    const t=el('text',{x:TRAY[k].x,y:TRAY[k].y+76,class:'tn-res-l',style:'font-size:22px'},tsvg); t.textContent=l;
   });
   tCouches.voisins=el('g',{},tsvg);
   tCouches.traces=el('g',{},tsvg);
@@ -3413,11 +3423,13 @@ function apresFeuVert(v){
 }
 
 /* ---------- Se déplacer selon une croix ---------- */
+TN.pointilles=true;
+function majBascule(){ if(tCouches.basculeV) tCouches.basculeV.style.display=TN.pointilles?'':'none'; }
 function croixEffacer(){ if(TN.pos!=null) tMarquer(TN.pos); TN.pos=null; if(tCouches.voisins) tCouches.voisins.innerHTML=''; }
 function croixPeut(v,d){ const w=v+d; if(w<0||w>100) return false; return true; }
 function majPad(){
   if(!tCouches.pad) return;
-  tCouches.pad.querySelectorAll('.tn-pad').forEach(b=>b.classList.toggle('off',TN.pos==null||!croixPeut(TN.pos,+b.dataset.d)));
+  tCouches.pad.querySelectorAll('.tn-pad[data-d]').forEach(b=>b.classList.toggle('off',TN.pos==null||!croixPeut(TN.pos,+b.dataset.d)));
 }
 function croixAller(v,parler){
   if(TN.pos!=null) tMarquer(TN.pos);           // on éteint la case qu'on quitte
@@ -3425,7 +3437,7 @@ function croixAller(v,parler){
   // les 4 cases voisines de la croix, en pointillé, avec ce qu'il faut faire pour y aller
   tCouches.voisins.innerHTML='';
   [[1,'+1'],[-1,'−1'],[10,'+10'],[-10,'−10']].forEach(([d,l])=>{
-    if(!croixPeut(v,d)) return; const w=v+d, p=tCase(w), x0=TGX+(w===100?0:w%10)*TCW;
+    if(!croixPeut(v,d)||!TN.pointilles) return; const w=v+d, p=tCase(w), x0=TGX+(w===100?0:w%10)*TCW;
     const g=el('g',{style:'cursor:pointer'},tCouches.voisins);
     el('rect',{x:x0+6,y:p.top+6,width:TCW-12,height:TCH-12,rx:8,class:'tn-voisin'},g);
     el('text',{x:p.x+36,y:p.top+80,class:'tn-voisin-t'},g).textContent=l;
