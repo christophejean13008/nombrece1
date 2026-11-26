@@ -321,8 +321,40 @@ th,td{border-bottom:1px solid var(--trait);padding:6px 8px;text-align:left}
 #plateau,#atelier .plateau{position:relative}
 canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
 .miroir-actif canvas.miroir{display:block}
-.miroir-actif #svg,.miroir-actif #asvg,.miroir-actif #clAnim,.miroir-actif #clBande{opacity:0}
+.miroir-actif #svg,.miroir-actif #asvg,.miroir-actif #clAnim,.miroir-actif #clBande,.miroir-actif #tnSvg{opacity:0}
 .miroir-actif .table-rangement{transition:none}
+
+/* ===== Tableau des nombres ===== */
+#tableau.actif{display:flex;flex-direction:column;max-width:none;overflow:hidden;padding:6px 10px;
+  height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+#tableau .rond{width:40px;height:40px;font-size:1.1rem;flex:none}
+#tableau .outil{min-height:clamp(34px,5vh,46px);padding:2px 10px;font-size:clamp(.8rem,1.8vh,.95rem)}
+#tnSaisie{font-size:1.1rem;width:7.5em;min-height:clamp(34px,5vh,46px);font-weight:700;padding:2px 8px}
+.tn-plateau{flex:1;min-height:0;position:relative}
+.tn-plateau svg{position:absolute;inset:0;width:100%;height:100%;touch-action:none;-webkit-user-select:none;user-select:none}
+.tn-operation{flex:none;text-align:center;font-size:clamp(2rem,7vh,4.2rem);font-weight:700;line-height:1.05;white-space:nowrap}
+.tn-cadre{fill:#1D2B4F}
+.tn-plaque{fill:#FBFAF5}
+.tn-case{fill:#FFFFFF;stroke:#C9CFDA;stroke-width:2}
+.tn-case.tn-pas1{fill:#DCE7FC} .tn-case.tn-pas10{fill:#FBDAD6} .tn-case.tn-depart{fill:#D4F1DE;stroke:#1F9E4B;stroke-width:4} .tn-case.tn-arrivee{fill:#FBDAD6;stroke:#E23B2E;stroke-width:4}
+.tn-num{font-size:52px;font-weight:800;fill:#111;text-anchor:middle}
+.tn-trou{fill:#B9BEC8;stroke:#7E8594;stroke-width:2}
+.tn-mot{font-size:32px;font-weight:800;fill:#111;text-anchor:end}
+.tn-titre{font-size:46px;font-weight:800;fill:#111;text-anchor:middle}
+.tn-reserve{fill:var(--tableau);stroke:var(--trait);stroke-width:3}
+.tn-res-t{font-size:34px;font-weight:800;fill:var(--doux);text-anchor:middle}
+.tn-res-l{font-size:24px;font-weight:700;fill:var(--doux);text-anchor:middle}
+.tn-place{fill:none;stroke:var(--trait);stroke-width:2.5;stroke-dasharray:8 6}
+.tn-pion{cursor:grab}
+.tn-tenu{cursor:grabbing}
+.tn-feu{fill:#FFFFFF;stroke:#3B4256;stroke-width:3}
+.tn-visiere{fill:none;stroke:#3B4256;stroke-width:2.5}
+.tn-lampe{fill:#E4E6EB;stroke:#7E8594;stroke-width:2}
+.tn-fleche{fill:#FFFFFF;stroke:#3B4256;stroke-width:3;stroke-linejoin:round}
+.tn-fleche-t{font-size:24px;font-weight:800;fill:#1D2B4F;text-anchor:middle}
+.tn-saut{fill:none;stroke-width:5;stroke-linecap:round}
+.tn-saut-t{font-size:26px;font-weight:800;text-anchor:middle;paint-order:stroke;stroke:#FFFFFF;stroke-width:6px;stroke-linejoin:round}
 
 /* ===== Calculer en ligne ===== */
 .calcul-btn{border-color:#E8590C;border-style:dashed}
@@ -436,6 +468,7 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
       <button class="grand principal" data-mode="rituel">Rituel du jour<small id="descRituel">les activités choisies, en alternance</small></button>
       <div id="boutonsActs" class="choix"></div>
       <button class="grand calcul-btn" id="btnCalcul">Calculer en ligne<small>l'enseignant écrit un calcul, les élèves cherchent sur l'ardoise, puis on regarde comment faire : bande numérique, boîtes, doigts ou chiffres</small></button>
+      <button class="grand calcul-btn" id="btnTableau">Se déplacer sur le tableau des nombres<small>le tableau de 0 à 100 avec ses pions : feu vert, feu rouge et flèche +1 / −1 ; on regarde la flèche faire le calcul</small></button>
       <button class="grand atelier-btn" id="btnAtelier">Atelier libre des nombres<small>placer librement cubes (unité, dizaine, centaine, millier) ou monnaie, écrire la quantité, transformer chiffres, lettres, cubes et monnaie</small></button>
     </section>
 
@@ -488,6 +521,30 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
       <p id="retour" aria-live="polite"></p>
       <button id="btnSuivant" class="grand principal" hidden>Suivant</button>
     </div>
+  </div>
+</main>
+
+<!-- TABLEAU DES NOMBRES -->
+<main id="tableau" class="ecran">
+  <div class="tn-plateau"><svg id="tnSvg" viewBox="0 0 1720 1048" role="img" aria-label="Tableau des nombres de 0 à 100 avec les pions"></svg></div>
+  <p class="cl-message" id="tnMessage" aria-live="polite"></p>
+  <div class="tn-operation" id="tnOperation" aria-live="polite"><span class="cl-vide">Écris un calcul, puis touche « Afficher ».</span></div>
+  <div class="cl-bas">
+    <button class="rond" id="tnMaison" aria-label="Retour à l'accueil">⌂</button>
+    <form id="tnForm" class="cl-saisie" autocomplete="off">
+      <input type="text" id="tnSaisie" placeholder="38 + 25" spellcheck="false" aria-label="Calcul">
+      <button type="submit" class="outil ok-btn" id="tnAfficher">Afficher</button>
+      <button type="button" class="outil" id="tnHasard">Au hasard</button>
+    </form>
+    <span class="cl-sep"></span>
+    <button class="outil cl-go" id="tnJouer" disabled>▶ Montrer avec la flèche</button>
+    <button class="outil" id="tnPause" disabled>⏸ Pause</button>
+    <button class="outil cl-suivant" id="tnSuivant" hidden>Étape suivante ▶</button>
+    <div class="cl-strats" id="tnStrats"></div>
+    <label class="cl-vitesse">Lent <input type="range" id="tnVitesse" min="0.4" max="2.2" step="0.1" value="1"> Rapide</label>
+    <label class="cl-pas"><input type="checkbox" id="tnPas"> Pas à pas</label>
+    <button class="outil" id="tnReponse" disabled>Réponse</button>
+    <button class="outil" id="tnRanger">Ranger les pions</button>
   </div>
 </main>
 
@@ -702,7 +759,7 @@ $('#chkMiroir').addEventListener('change',e=>{ data.reglages.miroir=e.target.che
 $('#chkAuto').addEventListener('change',e=>{ data.reglages.auto=e.target.checked; sauver(); });
 document.querySelector('[data-mode="rituel"]').addEventListener('click',()=>demarrer('rituel'));
 
-function montrer(id){ document.querySelectorAll('.ecran').forEach(s=>s.classList.toggle('actif',s.id===id)); window.scrollTo(0,0); document.body.classList.toggle('fige',id==='jeu'||id==='atelier'||id==='calcul'); ajusterPlateaux(); }
+function montrer(id){ document.querySelectorAll('.ecran').forEach(s=>s.classList.toggle('actif',s.id===id)); window.scrollTo(0,0); document.body.classList.toggle('fige',id==='jeu'||id==='atelier'||id==='calcul'||id==='tableau'); ajusterPlateaux(); }
 /* Taille du plateau calculée en pixels (au lieu d'un SVG étiré en %), plus sûr pour les navigateurs de TBI */
 function ajusterPlateaux(){
   [['#plateau','#svg'],['#atelier .plateau','#asvg']].forEach(([pc,sc])=>{
@@ -2302,7 +2359,7 @@ $('#btnAtelier').addEventListener('click',()=>{ montrer('atelier'); changerMode(
    Certains TBI affichent mal les dessins SVG (points de couleur au hasard).
    Le plateau SVG reste en place (invisible) pour les gestes de l'élève,
    et une copie en image est peinte dans un canvas calculé par le processeur. */
-const PROPS=['fill','fill-opacity','stroke','stroke-width','stroke-opacity','stroke-dasharray','stroke-dashoffset','stroke-linejoin','stroke-linecap','opacity','display','visibility','font-size','font-weight','font-family','text-anchor','dominant-baseline'];
+const PROPS=['paint-order','fill','fill-opacity','stroke','stroke-width','stroke-opacity','stroke-dasharray','stroke-dashoffset','stroke-linejoin','stroke-linecap','opacity','display','visibility','font-size','font-weight','font-family','text-anchor','dominant-baseline'];
 const cacheStyle=new WeakMap();
 const miroirs=[];
 function styleEnLigne(src){
@@ -3007,6 +3064,267 @@ document.querySelectorAll('[data-clmode]').forEach(b=>b.addEventListener('click'
 $('#clMaison').addEventListener('click',()=>{ phase(1); arreter(); if('speechSynthesis' in window) speechSynthesis.cancel(); majAccueil(); montrer('accueil'); });
 creerMiroir(clAnim); creerMiroir(clBande); appliquerMiroir();
 $('#btnCalcul').addEventListener('click',()=>{ montrer('calcul'); phase(1); dessinerBandeHaut(); if(!CL.op) scèneInitiale(); });
+
+/* ================= SE DÉPLACER SUR LE TABLEAU DES NOMBRES =================
+   Reprend le tableau imprimé en 3D : 10 colonnes (0-9, 10-19… 90-99, puis 100 seul),
+   les chefs de famille écrits en lettres à gauche, un trou sous chaque nombre.
+   Pions : feu vert (départ), feu rouge (arrivée), flèche +1 / −1 qu'on tourne. */
+const TN={op:null,tok:0,vitesse:1,pause:false,pas:false,attente:false,joue:false,
+  pions:{vert:null,rouge:null,fleche:null},sens:1};
+const tsvg=$('#tnSvg');
+const TCW=118, TCH=88, TGX=290, TGY=40, TVBW=1720, TVBH=1048;
+const TMOTS=[[],['dix'],['vingt'],['trente'],['quarante'],['cinquante'],['soixante'],['soixante-','dix'],['quatre-','vingts'],['quatre-','vingt-dix'],['cent']];
+const TRAY={vert:{x:1615,y:250},rouge:{x:1615,y:470},fleche:{x:1615,y:720}};
+function tCase(v){ const r=Math.floor(v/10), c=v===100?0:v%10; return {x:TGX+c*TCW+TCW/2, top:TGY+r*TCH, y:TGY+r*TCH+72, yn:TGY+r*TCH+48}; }
+function tCaseSous(x,y){
+  if(x<TGX||x>TGX+10*TCW||y<TGY||y>TGY+11*TCH) return null;
+  const c=Math.floor((x-TGX)/TCW), r=Math.floor((y-TGY)/TCH);
+  if(r===10) return c===0?100:null;
+  return r*10+c;
+}
+let tCouches={};
+function dessinerTableau(){
+  tsvg.innerHTML='';
+  const g=el('g',{},tsvg);
+  // la plaque et son cadre noir
+  el('rect',{x:10,y:10,width:1500,height:1028,rx:30,class:'tn-cadre'},g);
+  el('rect',{x:24,y:24,width:1472,height:1000,rx:20,class:'tn-plaque'},g);
+  tCouches.fond=el('g',{},tsvg);
+  const gg=el('g',{},tsvg);
+  for(let v=0;v<=100;v++){
+    const p=tCase(v), x0=TGX+(v===100?0:v%10)*TCW;
+    el('rect',{x:x0+3,y:p.top+3,width:TCW-6,height:TCH-6,rx:8,class:'tn-case','data-v':v},gg);
+    const t=el('text',{x:p.x,y:p.yn,class:'tn-num'},gg); t.textContent=v; if(v===100) t.setAttribute('font-size',44);
+    el('circle',{cx:p.x,cy:p.y,r:7,class:'tn-trou'},gg);
+  }
+  for(let r=1;r<=10;r++){
+    const L=TMOTS[r], yc=TGY+r*TCH+TCH/2;
+    L.forEach((m,i)=>{ const t=el('text',{x:TGX-14,y:yc+((i-(L.length-1)/2)*34)+11,class:'tn-mot'},gg); t.textContent=m; });
+  }
+  const tt=el('text',{x:TGX+TCW+(9*TCW)/2,y:TGY+10*TCH+TCH/2+15,class:'tn-titre'},gg); tt.textContent='Les nombres de 0 à 100';
+  // la réserve des pions
+  el('rect',{x:1530,y:80,width:170,height:780,rx:22,class:'tn-reserve'},tsvg);
+  const tr=el('text',{x:1615,y:130,class:'tn-res-t'},tsvg); tr.textContent='Pions';
+  [['vert','départ'],['rouge','arrivée'],['fleche','+1 / −1']].forEach(([k,l])=>{
+    el('rect',{x:TRAY[k].x-55,y:TRAY[k].y-60,width:110,height:120,rx:14,class:'tn-place'},tsvg);
+    const t=el('text',{x:TRAY[k].x,y:TRAY[k].y+92,class:'tn-res-l'},tsvg); t.textContent=l;
+  });
+  tCouches.traces=el('g',{},tsvg);
+  tCouches.pions=el('g',{},tsvg);
+  TN.objets={vert:pionFeu('vert'),rouge:pionFeu('rouge'),fleche:pionFleche()};
+  Object.keys(TN.objets).forEach(k=>{ TN.pions[k]=null; placerPion(k,null,0); });
+  TN.sens=1; dessinerFaceFleche();
+}
+function pionFeu(coul){
+  const g=el('g',{class:'tn-pion'},tCouches.pions), c=el('g',{},g);
+  el('rect',{x:-21,y:-30,width:42,height:62,rx:9,class:'tn-feu'},c);
+  [-17,0,17].forEach((dy,i)=>{
+    el('path',{d:`M-10,${dy-6} A10,10 0 0 1 10,${dy-6}`,class:'tn-visiere'},c);
+    const on=(coul==='rouge'&&i===0)||(coul==='vert'&&i===2);
+    el('circle',{cx:0,cy:dy,r:6.5,class:'tn-lampe',style:on?`fill:${coul==='rouge'?'#E23B2E':'#1F9E4B'}`:''},c);
+  });
+  g._corps=c; brancherPion(g,coul); return g;
+}
+function pionFleche(){
+  const g=el('g',{class:'tn-pion tn-pion-fleche'},tCouches.pions), c=el('g',{},g);
+  c._forme=el('path',{class:'tn-fleche'},c);
+  c._txt=el('text',{x:-6,y:9,class:'tn-fleche-t'},c);
+  g._corps=c; brancherPion(g,'fleche'); return g;
+}
+function dessinerFaceFleche(){
+  const c=TN.objets.fleche._corps;
+  if(TN.sens>0){ c._forme.setAttribute('d','M-34,-18 H12 V-26 L38,0 L12,26 V18 H-34 Z'); c._txt.setAttribute('x',-9); c._txt.textContent='+1'; }
+  else { c._forme.setAttribute('d','M34,-18 H-12 V-26 L-38,0 L-12,26 V18 H34 Z'); c._txt.setAttribute('x',9); c._txt.textContent='−1'; }
+}
+/* position d'un pion : sur une case (dans le trou) ou dans la réserve */
+function posPion(k,v){
+  if(v==null) return TRAY[k];
+  const p=tCase(v);
+  const partage=Object.keys(TN.pions).some(o=>o!==k&&TN.pions[o]===v);
+  if(!partage) return {x:p.x,y:p.y};
+  // feu et flèche dans le même trou : le feu à gauche, la flèche à droite
+  return k==='fleche'?{x:p.x+18,y:p.y}:{x:p.x-34,y:p.y};
+}
+function ecrirePos(g,x,y){ g._x=x; g._y=y; g.setAttribute('transform',`translate(${x.toFixed(1)} ${y.toFixed(1)})`); }
+function placerPion(k,v,ms){
+  TN.pions[k]=v;
+  const relayer=()=>Object.keys(TN.pions).forEach(o=>{ const q=posPion(o,TN.pions[o]); const g=TN.objets[o]; if(o===k) return; if(g._x!==q.x||g._y!==q.y) deplacerG(g,q.x,q.y,250); });
+  const q=posPion(k,v); relayer();
+  return deplacerG(TN.objets[k],q.x,q.y,ms);
+}
+function deplacerG(g,x,y,ms,haut){
+  const x0=g._x==null?x:g._x, y0=g._y==null?y:g._y;
+  if(!ms){ ecrirePos(g,x,y); return Promise.resolve(); }
+  const id=(g._anim=(g._anim||0)+1), t0=performance.now();
+  return new Promise(res=>{ (function f(now){
+    if(g._anim!==id){ res(); return; }
+    const t=Math.min(1,(now-t0)/ms), e=adoucir(t), bosse=(haut||0)*4*t*(1-t);
+    ecrirePos(g,x0+(x-x0)*e,y0+(y-y0)*e-bosse);
+    if(t<1) requestAnimationFrame(f); else res(); })(t0); });
+}
+/* la flèche tourne d'un demi-tour : +1 ⇄ −1 */
+function tournerFleche(sens,ms){
+  if(sens===TN.sens) return Promise.resolve();
+  const c=TN.objets.fleche._corps, t0=performance.now(); ms=ms||600; let change=false;
+  return new Promise(res=>{ (function f(now){
+    const t=Math.min(1,(now-t0)/ms), sx=Math.abs(Math.cos(Math.PI*t));
+    if(t>=.5&&!change){ change=true; TN.sens=sens; dessinerFaceFleche(); }
+    c.setAttribute('transform',`scale(${Math.max(.02,sx).toFixed(3)} 1)`);
+    if(t<1) requestAnimationFrame(f); else { c.removeAttribute('transform'); res(); } })(t0); });
+}
+/* glisser les pions avec le doigt ; toucher la flèche la fait tourner */
+function brancherPion(g,k){
+  g.addEventListener('pointerdown',ev=>{
+    if(TN.joue) return;
+    ev.preventDefault();
+    const p0=versSvgDe(tsvg,ev.clientX,ev.clientY), dx=g._x-p0.x, dy=g._y-p0.y; let bouge=false;
+    tCouches.pions.appendChild(g); g.classList.add('tn-tenu');
+    const mv=e=>{ const p=versSvgDe(tsvg,e.clientX,e.clientY); if(Math.hypot(p.x-p0.x,p.y-p0.y)>12) bouge=true; if(bouge) ecrirePos(g,p.x+dx,p.y+dy); };
+    const up=e=>{
+      window.removeEventListener('pointermove',mv); window.removeEventListener('pointerup',up); window.removeEventListener('pointercancel',up);
+      g.classList.remove('tn-tenu');
+      if(!bouge){ if(k==='fleche') tournerFleche(-TN.sens); else placerPion(k,TN.pions[k],200); return; }
+      const p=versSvgDe(tsvg,e.clientX,e.clientY), v=tCaseSous(p.x,p.y);
+      placerPion(k,v,250);
+      if(v!=null){ tMarquer(v); if(k==='fleche') dire(v); }
+    };
+    window.addEventListener('pointermove',mv); window.addEventListener('pointerup',up); window.addEventListener('pointercancel',up);
+  });
+}
+function tMarquer(v,coul){
+  const r=tsvg.querySelector(`.tn-case[data-v="${v}"]`); if(!r) return;
+  r.classList.remove('tn-pas1','tn-pas10','tn-depart','tn-arrivee'); if(coul) r.classList.add(coul);
+}
+function tEffacerTraces(){ tCouches.traces.innerHTML=''; tsvg.querySelectorAll('.tn-case').forEach(r=>r.classList.remove('tn-pas1','tn-pas10','tn-depart','tn-arrivee')); }
+
+/* ---------- attente réglable ---------- */
+async function tAtt(ms){ const t=TN.tok; let reste=ms/TN.vitesse; while(reste>0){ await attendre(Math.min(reste,40)); if(t!==TN.tok) throw ANNUL; if(!TN.pause) reste-=40; } }
+async function tEtape(){
+  if(!TN.pas) return;
+  const t=TN.tok; TN.attente=true; $('#tnSuivant').hidden=false; $('#tnSuivant').disabled=false;
+  while(TN.attente){ await attendre(60); if(t!==TN.tok) throw ANNUL; }
+  $('#tnSuivant').disabled=true;
+}
+const tDur=ms=>ms/TN.vitesse;
+function tMsg(t){ $('#tnMessage').textContent=t||''; }
+function tOperation(rep){
+  const o=TN.op, z=$('#tnOperation');
+  if(!o){ z.innerHTML='<span class="cl-vide">Écris un calcul, puis touche « Afficher ».</span>'; return; }
+  const nb=n=>String(n).split('').map((c,i,a)=>{ const r=a.length-1-i; return `<span style="color:${r===0?COUL.u:r===1?COUL.d:'#2E8B47'}">${c}</span>`; }).join('');
+  z.innerHTML=`${nb(o.a)} <span class="cl-op">${o.plus?'+':'−'}</span> ${nb(o.b)} <span class="cl-op">=</span> ${rep?`<span class="cl-res">${nb(o.r)}</span>`:'<span class="cl-q">?</span>'}`;
+}
+function tArreter(){
+  TN.tok++; TN.joue=false; TN.pause=false; TN.attente=false;
+  $('#tnPause').disabled=true; $('#tnPause').textContent='⏸ Pause'; $('#tnSuivant').hidden=true;
+  $('#tnJouer').disabled=!TN.op;
+}
+function tStrats(){
+  const z=$('#tnStrats'); z.innerHTML=''; if(!TN.op) return;
+  strategies(TN.op).liste.filter(s=>s.id!=='split').forEach(s=>{
+    const b=document.createElement('button'); b.className='cl-strat'+(s.id===TN.strat?' actif':''); b.innerHTML=(s.conseil?'★ ':'')+s.nom;
+    b.addEventListener('click',()=>{ TN.strat=s.id; tArreter(); tStrats(); }); z.appendChild(b);
+  });
+}
+
+/* ---------- l'animation du calcul ---------- */
+function tTrace(d,coul,ms){
+  const pth=el('path',{d,class:'tn-saut',stroke:coul},tCouches.traces);
+  const L=pth.getTotalLength?pth.getTotalLength():200; pth.style.strokeDasharray=L; pth.style.strokeDashoffset=L;
+  const f=TN.objets.fleche, t0=performance.now(), tok=TN.tok;
+  return new Promise(res=>{ (function g(now){ if(tok!==TN.tok){ res(); return; }
+    const t=Math.min(1,(now-t0)/ms), e=adoucir(t);
+    pth.style.strokeDashoffset=L*(1-e);
+    const q=pth.getPointAtLength?pth.getPointAtLength(L*e):{x:0,y:0};
+    ecrirePos(f,q.x,q.y+8);
+    if(t<1) requestAnimationFrame(g); else res(); })(t0); });
+}
+async function tSaut(de,a,lab,coul){
+  const p0=tCase(de), p1=tCase(a), dix=Math.abs(a-de)===10;
+  const r0=Math.floor(de/10), r1=Math.floor(a/10), y0=p0.y-8, y1=p1.y-8;
+  if(dix){
+    // +10 / −10 : la flèche descend (ou monte) d'une ligne, sur le bord droit de la case
+    const x=p0.x+40;
+    await tTrace(`M${x},${y0} Q${x+34},${(y0+y1)/2} ${x},${y1}`,coul,tDur(850));
+    const lb=el('text',{x:x+40,y:(y0+y1)/2+8,class:'tn-saut-t'},tCouches.traces); lb.textContent=lab; lb.style.fill=coul;
+  } else if(r0!==r1){
+    // passage à la ligne : on sort par un bord du tableau et on rentre par l'autre
+    const gauche=TGX-6, droite=TGX+10*TCW+6, mont=a>de;
+    const xs=mont?droite:gauche, xe=mont?gauche:droite;
+    await tTrace(`M${p0.x+18},${y0} Q${(p0.x+18+xs)/2},${y0-22} ${xs},${y0}`,coul,tDur(420));
+    TN.objets.fleche.style.opacity=.15; await tAtt(220); TN.objets.fleche.style.opacity='';
+    await tTrace(`M${xe},${y1} Q${(p1.x+18+xe)/2},${y1-22} ${p1.x+18},${y1}`,coul,tDur(420));
+    const z=el('text',{x:xs+(mont?30:-30),y:y0+8,class:'tn-saut-t'},tCouches.traces); z.textContent='↵'; z.style.fill=coul;
+  } else {
+    await tTrace(`M${p0.x+18},${y0} Q${(p0.x+p1.x)/2+18},${y0-24} ${p1.x+18},${y1}`,coul,tDur(480));
+  }
+  if(TN.tok&&TN.joue===false) throw ANNUL;
+  TN.pions.fleche=a; await placerPion('fleche',a,120);
+  tMarquer(a,dix?'tn-pas10':'tn-pas1');
+}
+async function tJouer(){
+  if(!TN.op) return;
+  tArreter(); const tok=TN.tok; TN.joue=true;
+  $('#tnPause').disabled=false; $('#tnJouer').disabled=true; if(TN.pas){ $('#tnSuivant').hidden=false; $('#tnSuivant').disabled=true; }
+  tOperation(false); tEffacerTraces();
+  const o=TN.op, P=plan(o,TN.strat);
+  try{
+    // on range les pions puis on pose le feu vert et la flèche
+    await Promise.all(['vert','rouge','fleche'].map(k=>placerPion(k,null,tDur(400))));
+    await tAtt(300);
+    tMsg(`On pose le feu vert sur ${P.dep}.`); dire(`On part de ${P.dep}.`);
+    await placerPion('vert',P.dep,tDur(900)); tMarquer(P.dep,'tn-depart'); await tAtt(700);
+    if(P.ecart){ tMsg(`On pose le feu rouge sur ${o.a} : c'est là qu'on veut arriver.`); dire(`On veut arriver à ${o.a}.`); await placerPion('rouge',o.a,tDur(900)); tMarquer(o.a,'tn-arrivee'); await tAtt(900); }
+    const sensDep=P.groupes.length&&P.groupes[0].delta<0?-1:1;
+    await placerPion('fleche',P.dep,tDur(800)); await tAtt(300);
+    if(TN.sens!==sensDep){ tMsg(sensDep<0?'On tourne la flèche sur −1 : on recule.':'On tourne la flèche sur +1 : on avance.'); await tournerFleche(sensDep,tDur(700)); await tAtt(500); }
+    let total=[];
+    for(const G of P.groupes){
+      await tEtape();
+      const s=Math.sign(G.delta);
+      if(s!==TN.sens){ tMsg(s<0?'On tourne la flèche : −1, on recule.':'On tourne la flèche : +1, on avance.'); dire(s<0?'On tourne la flèche.':'On tourne la flèche.'); await tournerFleche(s,tDur(700)); await tAtt(500); }
+      if(G.type==='vers') { const c=Math.abs(G.delta); tMsg(o.plus&&!P.ecart?`D'abord jusqu'à la dizaine : ${(G.de%10)} + ${c} = 10.`:`D'abord jusqu'à ${G.a}.`); dire(`D'abord jusqu'à ${G.a}.`); await tAtt(1300); }
+      else if(G.type==='d'){ tMsg(`Puis les dizaines : ${s>0?'je descends':'je monte'} d'une ligne pour chaque ${s>0?'+':'−'}10.`); dire(s>0?'Je descends d\'une ligne pour chaque dizaine.':'Je monte d\'une ligne pour chaque dizaine.'); await tAtt(1400); }
+      else if(G.type==='corr'){ tMsg(`On corrige : ${s>0?'+':'−'}${Math.abs(G.delta)}.`); await tAtt(1000); }
+      let v=G.de;
+      if(G.type==='d'){
+        for(const p of G.parts){ await tSaut(v,v+p,`${p>0?'+':'−'}10`,COUL.d); v+=p; dire(v); await tAtt(800); }
+      } else {
+        for(let i=0;i<Math.abs(G.delta);i++){ await tSaut(v,v+s,s>0?'+1':'−1',G.type==='vers'?COUL.vers:G.type==='corr'?COUL.corr:COUL.u); v+=s; dire(v); await tAtt(550); }
+      }
+      total.push(Math.abs(G.delta));
+      tMsg(phraseGroupe(G,P)); await tAtt(1300);
+    }
+    if(P.ecart){ const e=total.reduce((x,y)=>x+y,0); tMsg(`J'ai compté ${total.join(' + ')} = ${e} : de ${o.b} à ${o.a}, il y a ${e}.`); dire(`De ${o.b} à ${o.a}, il y a ${e}.`); await tAtt(2400); }
+    else { tMsg(`On pose le feu rouge sur ${o.r} : on est arrivé !`); await placerPion('rouge',o.r,tDur(900)); tMarquer(o.r,'tn-arrivee'); await tAtt(600); }
+    if(tok!==TN.tok) return;
+    tOperation(true); const fin=`${o.a} ${o.plus?'+':'−'} ${o.b} = ${o.r}`; tMsg(fin); dire(fin.replace('−',' moins ').replace('+',' plus '));
+  }catch(e){ if(e!==ANNUL) throw e; return; }
+  finally{ if(tok===TN.tok){ TN.joue=false; $('#tnPause').disabled=true; $('#tnSuivant').hidden=true; $('#tnJouer').disabled=false; } }
+}
+
+/* ---------- commandes ---------- */
+$('#tnForm').addEventListener('submit',ev=>{
+  ev.preventDefault();
+  const r=lireCalcul($('#tnSaisie').value);
+  if(r.err){ tMsg(r.err); return; }
+  tArreter(); TN.op=r; TN.strat=strategies(r).def; tStrats(); tOperation(false); tEffacerTraces();
+  ['#tnJouer','#tnReponse'].forEach(s=>$(s).disabled=false);
+  tMsg('Les élèves cherchent sur leur ardoise, ou avec leur tableau et leurs pions.'); $('#tnSaisie').blur();
+});
+$('#tnHasard').addEventListener('click',()=>{
+  let op; do{ const plus=Math.random()<.5, a=rnd(12,89), b=rnd(5,plus?Math.min(60,100-a):a-3); op=lireCalcul(`${a}${plus?'+':'-'}${b}`); }while(op.err);
+  $('#tnSaisie').value=`${op.a} ${op.plus?'+':'−'} ${op.b}`; $('#tnForm').requestSubmit?$('#tnForm').requestSubmit():$('#tnAfficher').click();
+});
+$('#tnJouer').addEventListener('click',tJouer);
+$('#tnPause').addEventListener('click',()=>{ TN.pause=!TN.pause; $('#tnPause').textContent=TN.pause?'▶ Continuer':'⏸ Pause'; if(TN.pause&&'speechSynthesis' in window) speechSynthesis.cancel(); });
+$('#tnSuivant').addEventListener('click',()=>{ TN.attente=false; });
+$('#tnVitesse').addEventListener('input',e=>{ TN.vitesse=+e.target.value; });
+$('#tnPas').addEventListener('change',e=>{ TN.pas=e.target.checked; if(!TN.pas){ TN.attente=false; $('#tnSuivant').hidden=true; } });
+$('#tnReponse').addEventListener('click',()=>{ if(!TN.op) return; tOperation(true); const o=TN.op; dire(`${o.a} ${o.plus?'plus':'moins'} ${o.b} égale ${o.r}`); });
+$('#tnRanger').addEventListener('click',()=>{ tArreter(); tEffacerTraces(); ['vert','rouge','fleche'].forEach(k=>placerPion(k,null,400)); tournerFleche(1,400); tMsg(''); });
+$('#tnMaison').addEventListener('click',()=>{ tArreter(); if('speechSynthesis' in window) speechSynthesis.cancel(); majAccueil(); montrer('accueil'); });
+$('#btnTableau').addEventListener('click',()=>{ montrer('tableau'); if(!tsvg.childNodes.length) dessinerTableau(); requestAnimationFrame(()=>appliquerMiroir()); });
+creerMiroir(tsvg); appliquerMiroir();
 
 majAccueil();
 })();
