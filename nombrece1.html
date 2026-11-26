@@ -3219,7 +3219,8 @@ function placerPion(k,v,ms){
   TN.pions[k]=v;
   const relayer=()=>Object.keys(TN.pions).forEach(o=>{ const q=posPion(o,TN.pions[o]); const g=TN.objets[o]; if(o===k) return; if(g._x!==q.x||g._y!==q.y) deplacerG(g,q.x,q.y,250); });
   const q=posPion(k,v); relayer();
-  TN.objets[k]._s=v==null?(k==='fleche'?1.2:1.6):1;
+  // sur le tableau, les feux sont plus petits pour laisser lire les nombres
+  TN.objets[k]._s=v==null?(k==='fleche'?1.2:1.6):(k==='fleche'?1:0.68);
   return deplacerG(TN.objets[k],q.x,q.y,ms);
 }
 function deplacerG(g,x,y,ms,haut){
