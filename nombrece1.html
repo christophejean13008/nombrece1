@@ -337,6 +337,16 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
 .tn-cadre{fill:#1D2B4F}
 .tn-plaque{fill:#FBFAF5}
 .tn-case{fill:#FFFFFF;stroke:#C9CFDA;stroke-width:2}
+.tn-case.tn-chef{fill:var(--c)}
+.tn-serpent{fill:none;stroke:#2B2F38;stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
+.tn-rond{stroke:#2B2F38;stroke-width:3}
+.tn-num-s{font-size:40px;font-weight:800;fill:#111;text-anchor:middle}
+.tn-vue rect.fond{fill:#FFFFFF;stroke:#1D2B4F;stroke-width:3}
+.tn-vue .seg{cursor:pointer}
+.tn-vue .seg rect{fill:transparent}
+.tn-vue .seg.actif rect{fill:#2F63D6}
+.tn-vue .seg text{font-size:17px;font-weight:800;fill:#1D2B4F;text-anchor:middle}
+.tn-vue .seg.actif text{fill:#FFFFFF}
 .tn-case.tn-pas1{fill:#DCE7FC} .tn-case.tn-pas10{fill:#FBDAD6} .tn-case.tn-depart{fill:#D4F1DE;stroke:#1F9E4B;stroke-width:4} .tn-case.tn-arrivee{fill:#FBDAD6;stroke:#E23B2E;stroke-width:4}
 .tn-num{font-size:52px;font-weight:800;fill:#111;text-anchor:middle}
 .tn-trou{fill:#B9BEC8;stroke:#7E8594;stroke-width:2}
@@ -3125,6 +3135,56 @@ function tCaseSous(x,y){
   return r*10+c;
 }
 let tCouches={};
+TN.vue='tableau';
+/* les couleurs des chefs de famille sur le serpent (comme la feuille coloriée) */
+const TCHEF=['#FFE45C','#FFB066','#FF8A80','#F7A8D0','#B9A2F0','#8FB3FF','#9EE3F5','#9BE0A8','#D4EC8F','#E0BE96','#D5DAE3'];
+const sCy=v=>tCase(v).top+38, S_XR=TGX+10*TCW-8, S_XL=TGX+8;
+/* le chemin du serpent entre la fin d'une ligne (…9) et le début de la suivante (…0) */
+function cheminRetour(r,inverse){
+  const y0=TGY+r*TCH+38, yR=y0+TCH/2, y1=y0+TCH, x9=tCase(r*10+9).x, x0=tCase(r*10+10).x;
+  if(!inverse) return `M${x9+20},${y0} H${S_XR} C${S_XR+36},${y0} ${S_XR+36},${yR} ${S_XR},${yR} H${S_XL} C${S_XL-36},${yR} ${S_XL-36},${y1} ${S_XL},${y1} H${x0-20}`;
+  return `M${x0-20},${y1} H${S_XL} C${S_XL-36},${y1} ${S_XL-36},${yR} ${S_XL},${yR} H${S_XR} C${S_XR+36},${yR} ${S_XR+36},${y0} ${S_XR},${y0} H${x9+20}`;
+}
+function dessinerPlan(){
+  const gg=tCouches.plan; gg.innerHTML='';
+  const serp=TN.vue==='serpent';
+  if(serp){
+    // un seul trait qui relie tous les nombres, de 0 à 100
+    let d=`M${tCase(0).x-62},${sCy(0)}`;
+    for(let r=0;r<10;r++){ d+=` H${tCase(r*10+9).x}`+cheminRetour(r).replace(/^M[^H]*/,''); }
+    el('path',{d,class:'tn-serpent'},gg);
+  }
+  for(let v=0;v<=100;v++){
+    const p=tCase(v), x0=TGX+(v===100?0:v%10)*TCW;
+    if(serp){
+      const chef=v%10===0;
+      const c=el('circle',{cx:p.x,cy:sCy(v),r:35,class:'tn-case tn-rond'+(chef?' tn-chef':''),'data-v':v},gg);
+      if(chef) c.style.setProperty('--c',TCHEF[v/10]);
+      const t=el('text',{x:p.x,y:sCy(v)+14,class:'tn-num-s'},gg); t.textContent=v; if(v===100) t.setAttribute('font-size',32);
+    } else {
+      el('rect',{x:x0+3,y:p.top+3,width:TCW-6,height:TCH-6,rx:8,class:'tn-case','data-v':v},gg);
+      const t=el('text',{x:p.x,y:p.yn,class:'tn-num'},gg); t.textContent=v; if(v===100) t.setAttribute('font-size',44);
+      el('circle',{cx:p.x,cy:p.y,r:7,class:'tn-trou'},gg);
+    }
+  }
+  for(let r=1;r<=10;r++){
+    const L=TMOTS[r], yc=serp?TGY+r*TCH+44:TGY+r*TCH+TCH/2;
+    L.forEach((m,i)=>{ const t=el('text',{x:serp?TGX-40:TGX-14,y:yc+((i-(L.length-1)/2)*(serp?30:34))+11,class:'tn-mot'},gg); t.textContent=m; if(serp) t.style.fontSize='28px'; });
+  }
+  const tt=el('text',{x:TGX+TCW+(9*TCW)/2,y:TGY+10*TCH+TCH/2+15,class:'tn-titre'},gg); tt.textContent='Les nombres de 0 à 100';
+}
+/* passer du tableau au serpent (et inversement) en gardant les pions où ils sont */
+function changerVue(k){
+  if(TN.vue===k) return;
+  if(TN.joue) tArreter();
+  TN.vue=k; dessinerPlan(); tEffacerTraces();
+  tsvg.querySelectorAll('.tn-vue .seg').forEach(b=>b.classList.toggle('actif',b.dataset.vue===k));
+  if(TN.mode==='croix'&&TN.pos!=null) croixAller(TN.pos,false);
+  if(TN.mode==='code'&&TN.pions.vert!=null) tMarquer(TN.pions.vert,'tn-depart');
+  if(TN.mode==='calcul'&&TN.pions.vert!=null) tMarquer(TN.pions.vert,'tn-depart');
+  if(TN.pions.rouge!=null) tMarquer(TN.pions.rouge,'tn-arrivee');
+  requestAnimationFrame(()=>appliquerMiroir());
+}
 function dessinerTableau(){
   tsvg.innerHTML='';
   const g=el('g',{},tsvg);
@@ -3132,39 +3192,37 @@ function dessinerTableau(){
   el('rect',{x:10,y:10,width:1500,height:1028,rx:30,class:'tn-cadre'},g);
   el('rect',{x:24,y:24,width:1472,height:1000,rx:20,class:'tn-plaque'},g);
   tCouches.fond=el('g',{},tsvg);
-  const gg=el('g',{},tsvg);
-  for(let v=0;v<=100;v++){
-    const p=tCase(v), x0=TGX+(v===100?0:v%10)*TCW;
-    el('rect',{x:x0+3,y:p.top+3,width:TCW-6,height:TCH-6,rx:8,class:'tn-case','data-v':v},gg);
-    const t=el('text',{x:p.x,y:p.yn,class:'tn-num'},gg); t.textContent=v; if(v===100) t.setAttribute('font-size',44);
-    el('circle',{cx:p.x,cy:p.y,r:7,class:'tn-trou'},gg);
-  }
-  for(let r=1;r<=10;r++){
-    const L=TMOTS[r], yc=TGY+r*TCH+TCH/2;
-    L.forEach((m,i)=>{ const t=el('text',{x:TGX-14,y:yc+((i-(L.length-1)/2)*34)+11,class:'tn-mot'},gg); t.textContent=m; });
-  }
-  const tt=el('text',{x:TGX+TCW+(9*TCW)/2,y:TGY+10*TCH+TCH/2+15,class:'tn-titre'},gg); tt.textContent='Les nombres de 0 à 100';
+  tCouches.plan=el('g',{},tsvg); dessinerPlan();
+  // tout en haut à droite : choisir la représentation (tableau ou serpent)
+  const gv=el('g',{class:'tn-vue'},tsvg);
+  el('rect',{x:1528,y:12,width:174,height:46,rx:12,class:'fond'},gv);
+  [['tableau','Tableau',1572],['serpent','Serpent',1658]].forEach(([k,l,x])=>{
+    const b=el('g',{class:'seg'+(TN.vue===k?' actif':''),'data-vue':k},gv);
+    el('rect',{x:x-42,y:16,width:84,height:38,rx:9},b);
+    el('text',{x,y:42},b).textContent=l;
+    b.addEventListener('pointerdown',ev=>{ ev.preventDefault(); ev.stopPropagation(); changerVue(k); });
+  });
   // la réserve des pions
   // en haut à droite : le grand nombre où l'on se trouve
   tCouches.grand=el('g',{style:'display:none'},tsvg);
-  el('rect',{x:1528,y:12,width:174,height:190,rx:20,class:'tn-grand'},tCouches.grand);
-  el('text',{x:1615,y:50,class:'tn-grand-l'},tCouches.grand).textContent='Je suis sur';
-  tCouches.grandN=el('text',{x:1615,y:165,class:'tn-grand-n'},tCouches.grand);
+  el('rect',{x:1528,y:66,width:174,height:150,rx:20,class:'tn-grand'},tCouches.grand);
+  el('text',{x:1615,y:96,class:'tn-grand-l'},tCouches.grand).textContent='Je suis sur';
+  tCouches.grandN=el('text',{x:1615,y:194,class:'tn-grand-n'},tCouches.grand);
   // la croix des déplacements
   tCouches.pad=el('g',{style:'display:none'},tsvg);
-  [[-10,'−10','↑',1615,254],[-1,'−1','←',1570,344],[1,'+1','→',1660,344],[10,'+10','↓',1615,434]].forEach(([d,l,f,x,y])=>{
+  [[-10,'−10','↑',1615,264],[-1,'−1','←',1570,346],[1,'+1','→',1660,346],[10,'+10','↓',1615,428]].forEach(([d,l,f,x,y])=>{
     const b=el('g',{class:'tn-pad','data-d':d},tCouches.pad);
-    el('rect',{x:x-42,y:y-42,width:84,height:84,rx:14},b);
-    el('text',{x,y:y-4,style:'font-size:34px'},b).textContent=f;
-    el('text',{x,y:y+30,style:'font-size:24px'},b).textContent=l;
+    el('rect',{x:x-39,y:y-39,width:78,height:78,rx:14},b);
+    el('text',{x,y:y-5,style:'font-size:32px'},b).textContent=f;
+    el('text',{x,y:y+28,style:'font-size:23px'},b).textContent=l;
     b.addEventListener('pointerdown',ev=>{ ev.preventDefault(); ev.stopPropagation(); croixBouger(d); });
   });
   // juste sous la croix : montrer ou cacher les pointillés des cases où l'on peut aller
   const bt=el('g',{class:'tn-pad tn-bascule'},tCouches.pad);
-  el('rect',{x:1534,y:486,width:162,height:44,rx:12},bt);
-  tCouches.basculeCase=el('rect',{x:1546,y:496,width:24,height:24,rx:5,class:'tn-case-coche'},bt);
-  tCouches.basculeV=el('path',{d:'M1551,508 l6,6 l10,-12',class:'tn-coche'},bt);
-  el('text',{x:1632,y:515,style:'font-size:19px'},bt).textContent='pointillés';
+  el('rect',{x:1534,y:478,width:162,height:44,rx:12},bt);
+  tCouches.basculeCase=el('rect',{x:1546,y:488,width:24,height:24,rx:5,class:'tn-case-coche'},bt);
+  tCouches.basculeV=el('path',{d:'M1551,500 l6,6 l10,-12',class:'tn-coche'},bt);
+  el('text',{x:1632,y:507,style:'font-size:19px'},bt).textContent='pointillés';
   bt.addEventListener('pointerdown',ev=>{ ev.preventDefault(); ev.stopPropagation(); TN.pointilles=!TN.pointilles; majBascule(); if(TN.pos!=null) croixAller(TN.pos,false); });
   majBascule();
   el('rect',{x:1530,y:540,width:170,height:500,rx:22,class:'tn-reserve'},tsvg);
@@ -3338,6 +3396,9 @@ async function tSaut(de,a,lab,coul){
     const x=p0.x+40;
     await tTrace(`M${x},${y0} Q${x+34},${(y0+y1)/2} ${x},${y1}`,coul,tDur(850));
     const lb=el('text',{x:x+40,y:(y0+y1)/2+8,class:'tn-saut-t'},tCouches.traces); lb.textContent=lab; lb.style.fill=coul;
+  } else if(r0!==r1&&TN.vue==='serpent'){
+    // sur le serpent : on suit le trait, de la fin de la ligne au début de la suivante
+    await tTrace(cheminRetour(Math.min(r0,r1),a<de),coul,tDur(1500));
   } else if(r0!==r1){
     // passage à la ligne : on sort par un bord du tableau et on rentre par l'autre
     const gauche=TGX-6, droite=TGX+10*TCW+6, mont=a>de;
@@ -3417,7 +3478,7 @@ $('#tnReponse').addEventListener('click',()=>{ if(!TN.op) return; tOperation(tru
 $('#tnRanger').addEventListener('click',rangerTout);
 function rangerTout(){ tArreter(); tEffacerTraces(); ['vert','rouge','fleche'].forEach(k=>placerPion(k,null,400)); tournerFleche(1,400); tMsg(''); croixEffacer(); grandNombre(null); }
 /* ---------- le grand nombre en haut à droite ---------- */
-function grandNombre(v){ if(!tCouches.grand) return; if(v==null){ tCouches.grand.style.display='none'; return; } tCouches.grand.style.display=''; tCouches.grandN.textContent=v; tCouches.grandN.setAttribute('font-size',v===100?92:110); }
+function grandNombre(v){ if(!tCouches.grand) return; if(v==null){ tCouches.grand.style.display='none'; return; } tCouches.grand.style.display=''; tCouches.grandN.textContent=v; tCouches.grandN.setAttribute('font-size',v===100?80:96); }
 /* ---------- choisir l'activité ---------- */
 function tnMode(m){
   tArreter(); TN.mode=m;
@@ -3454,7 +3515,8 @@ function croixAller(v,parler){
   [[1,'+1'],[-1,'−1'],[10,'+10'],[-10,'−10']].forEach(([d,l])=>{
     if(!croixPeut(v,d)||!TN.pointilles) return; const w=v+d, p=tCase(w), x0=TGX+(w===100?0:w%10)*TCW;
     const g=el('g',{style:'cursor:pointer'},tCouches.voisins);
-    el('rect',{x:x0+6,y:p.top+6,width:TCW-12,height:TCH-12,rx:8,class:'tn-voisin'},g);
+    if(TN.vue==='serpent') el('circle',{cx:p.x,cy:sCy(w),r:42,class:'tn-voisin'},g);
+    else el('rect',{x:x0+6,y:p.top+6,width:TCW-12,height:TCH-12,rx:8,class:'tn-voisin'},g);
     el('text',{x:p.x+36,y:p.top+80,class:'tn-voisin-t'},g).textContent=l;
     g.addEventListener('pointerdown',ev=>{ ev.preventDefault(); croixBouger(d); });
   });
