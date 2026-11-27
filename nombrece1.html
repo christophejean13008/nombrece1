@@ -358,6 +358,11 @@ canvas.miroir{position:absolute;left:0;top:0;pointer-events:none;display:none}
 .tn-place{fill:none;stroke:var(--trait);stroke-width:2.5;stroke-dasharray:8 6}
 .tn-pion{cursor:grab}
 .tn-tenu{cursor:grabbing}
+.tn-croix-cadre{fill:none;stroke:#E8590C;stroke-width:5}
+.tn-croix-bras{stroke:#FFFFFF;stroke-width:2.5;stroke-linejoin:round;cursor:pointer}
+.tn-croix-u{fill:#2F63D6} .tn-croix-d{fill:#C8362B}
+.tn-croix-t{font-size:19px;font-weight:800;fill:#FFFFFF;text-anchor:middle;pointer-events:none}
+.tn-croix-t.p{font-size:15px}
 .tn-feu{fill:#FFFFFF;stroke:#3B4256;stroke-width:3}
 .tn-visiere{fill:none;stroke:#3B4256;stroke-width:2.2;stroke-linecap:round}
 .tn-prise{fill:#FFFFFF;fill-opacity:.001;stroke:none}
@@ -3122,11 +3127,11 @@ $('#btnCalcul').addEventListener('click',()=>{ montrer('calcul'); phase(1); dess
    les chefs de famille écrits en lettres à gauche, un trou sous chaque nombre.
    Pions : feu vert (départ), feu rouge (arrivée), flèche +1 / −1 qu'on tourne. */
 const TN={op:null,tok:0,vitesse:1,pause:false,pas:false,attente:false,joue:false,
-  pions:{vert:null,rouge:null,fleche:null},sens:1};
+  pions:{vert:null,rouge:null,fleche:null,croix:null},sens:1};
 const tsvg=$('#tnSvg');
 const TCW=118, TCH=88, TGX=290, TGY=40, TVBW=1720, TVBH=1048;
 const TMOTS=[[],['dix'],['vingt'],['trente'],['quarante'],['cinquante'],['soixante'],['soixante-','dix'],['quatre-','vingts'],['quatre-','vingt-dix'],['cent']];
-const TRAY={vert:{x:1615,y:648},rouge:{x:1615,y:795},fleche:{x:1615,y:942}};
+const TRAY={vert:{x:1615,y:634},rouge:{x:1615,y:746},fleche:{x:1615,y:858},croix:{x:1615,y:970}};
 function tCase(v){ const r=Math.floor(v/10), c=v===100?0:v%10; return {x:TGX+c*TCW+TCW/2, top:TGY+r*TCH, y:TGY+r*TCH+72, yn:TGY+r*TCH+48}; }
 function tCaseSous(x,y){
   if(x<TGX||x>TGX+10*TCW||y<TGY||y>TGY+11*TCH) return null;
@@ -3178,6 +3183,7 @@ function changerVue(k){
   if(TN.vue===k) return;
   if(TN.joue) tArreter();
   TN.vue=k; dessinerPlan(); tEffacerTraces();
+  if(TN.pions.croix!=null){ placerPion('croix',TN.pions.croix,200); tMarquer(TN.pions.croix,'tn-allume'); }
   tsvg.querySelectorAll('.tn-vue .seg').forEach(b=>b.classList.toggle('actif',b.dataset.vue===k));
   if(TN.mode==='croix'&&TN.pos!=null) croixAller(TN.pos,false);
   if(TN.mode==='code'&&TN.pions.vert!=null) tMarquer(TN.pions.vert,'tn-depart');
@@ -3227,14 +3233,14 @@ function dessinerTableau(){
   majBascule();
   el('rect',{x:1530,y:540,width:170,height:500,rx:22,class:'tn-reserve'},tsvg);
   el('text',{x:1615,y:574,class:'tn-res-t',style:'font-size:28px'},tsvg).textContent='Pions';
-  [['vert','départ'],['rouge','arrivée'],['fleche','+1 / −1']].forEach(([k,l])=>{
-    el('rect',{x:TRAY[k].x-55,y:TRAY[k].y-56,width:110,height:108,rx:14,class:'tn-place'},tsvg);
-    const t=el('text',{x:TRAY[k].x,y:TRAY[k].y+76,class:'tn-res-l',style:'font-size:22px'},tsvg); t.textContent=l;
+  [['vert','départ'],['rouge','arrivée'],['fleche','+1 / −1'],['croix','croix ±1 ±10']].forEach(([k,l])=>{
+    el('rect',{x:TRAY[k].x-55,y:TRAY[k].y-44,width:110,height:88,rx:14,class:'tn-place'},tsvg);
+    const t=el('text',{x:TRAY[k].x,y:TRAY[k].y+62,class:'tn-res-l',style:'font-size:18px'},tsvg); t.textContent=l;
   });
   tCouches.voisins=el('g',{},tsvg);
   tCouches.traces=el('g',{},tsvg);
   tCouches.pions=el('g',{},tsvg);
-  TN.objets={vert:pionFeu('vert'),rouge:pionFeu('rouge'),fleche:pionFleche()};
+  TN.objets={croix:pionCroix(),vert:pionFeu('vert'),rouge:pionFeu('rouge'),fleche:pionFleche()};
   Object.keys(TN.objets).forEach(k=>{ TN.pions[k]=null; placerPion(k,null,0); });
   TN.sens=1; dessinerFaceFleche();
 }
@@ -3250,6 +3256,32 @@ function pionFeu(coul){
     el('path',{d:`M-8.5,${(dy-3.1).toFixed(1)} A9,9 0 0 1 8.5,${(dy-3.1).toFixed(1)}`,class:'tn-visiere'},c);
   });
   g._corps=c; brancherPion(g,coul); return g;
+}
+/* le pion croix : un cadre autour de la case et 4 bras (+1 →, −1 ←, +10 ↓, −10 ↑) ; on touche un bras pour se déplacer */
+function pionCroix(){
+  const g=el('g',{class:'tn-pion tn-pion-croix'},tCouches.pions), c=el('g',{},g);
+  el('rect',{x:-96,y:-70,width:192,height:140,rx:14,class:'tn-prise'},g);
+  el('rect',{x:-55,y:-41,width:110,height:82,rx:12,class:'tn-croix-cadre'},c);
+  const bras=[
+    ['M48,-17 H72 V-25 L94,0 L72,25 V17 H48 Z','+1',66,7,'tn-croix-u'],
+    ['M-48,-17 H-72 V-25 L-94,0 L-72,25 V-17 H-48 Z'.replace('V-17','V17'),'−1',-66,7,'tn-croix-u'],
+    ['M-21,40 V54 H-29 L0,72 L29,54 H21 V40 Z','+10',0,55,'tn-croix-d'],
+    ['M-21,-40 V-54 H-29 L0,-72 L29,-54 H21 V-40 Z','−10',0,-46,'tn-croix-d']];
+  bras.forEach(([d,l,x,y,cl])=>{ el('path',{d,class:'tn-croix-bras '+cl},c); el('text',{x,y,class:'tn-croix-t'+(l.length>2?' p':'')},c).textContent=l; });
+  g._corps=c; brancherPion(g,'croix'); return g;
+}
+/* déplacer le pion croix d'un bras */
+TN.croixAllume=null;
+function croixPionAllumer(v){
+  if(TN.croixAllume!=null&&TN.croixAllume!==v&&TN.croixAllume!==TN.pos) tMarquer(TN.croixAllume);
+  TN.croixAllume=v; if(v!=null){ tMarquer(v,'tn-allume'); grandNombre(v); }
+}
+async function croixPionBouger(d){
+  const v=TN.pions.croix; if(v==null||TN.joue) return;
+  const w=v+d; if(w<0||w>100){ tMsg(w>100?'On ne peut pas dépasser 100.':'On ne peut pas aller en dessous de 0.'); return; }
+  const lab=d>0?'+'+d:'−'+Math.abs(d);
+  croixPionAllumer(w); await placerPion('croix',w,Math.abs(d)===10?500:380); 
+  tMsg(`${v} ${lab[0]} ${Math.abs(d)} = ${w}`); dire(`${v} ${d>0?'plus':'moins'} ${Math.abs(d)}, ${w}`);
 }
 function pionFleche(){
   const g=el('g',{class:'tn-pion tn-pion-fleche'},tCouches.pions), c=el('g',{},g);
@@ -3276,7 +3308,8 @@ function dessinerFaceFleche(){
 function posPion(k,v){
   if(v==null) return TRAY[k];
   const p=tCase(v);
-  const partage=Object.keys(TN.pions).some(o=>o!==k&&TN.pions[o]===v);
+  if(k==='croix') return {x:p.x,y:TN.vue==='serpent'?sCy(v):p.top+TCH/2};
+  const partage=Object.keys(TN.pions).some(o=>o!==k&&o!=='croix'&&TN.pions[o]===v);
   if(!partage) return {x:p.x,y:p.y};
   // feu et flèche dans le même trou : le feu à gauche, la flèche à droite
   return k==='fleche'?{x:p.x+18,y:p.y}:{x:p.x-34,y:p.y};
@@ -3287,7 +3320,7 @@ function placerPion(k,v,ms){
   const relayer=()=>Object.keys(TN.pions).forEach(o=>{ const q=posPion(o,TN.pions[o]); const g=TN.objets[o]; if(o===k) return; if(g._x!==q.x||g._y!==q.y) deplacerG(g,q.x,q.y,250); });
   const q=posPion(k,v); relayer();
   // sur le tableau, les feux sont plus petits pour laisser lire les nombres
-  TN.objets[k]._s=v==null?(k==='fleche'?1.2:1.6):(k==='fleche'?1:0.68);
+  TN.objets[k]._s=k==='croix'?(v==null?0.48:1):v==null?(k==='fleche'?1.2:1.2):(k==='fleche'?1:0.68);
   return deplacerG(TN.objets[k],q.x,q.y,ms);
 }
 function deplacerG(g,x,y,ms,haut){
@@ -3330,11 +3363,18 @@ function brancherPion(g,k){
       window.removeEventListener('pointermove',mv); window.removeEventListener('pointerup',fin); window.removeEventListener('pointercancel',fin);
       try{ tsvg.releasePointerCapture(id); }catch(x){}
       g.classList.remove('tn-tenu');
+      if(!bouge&&e.type!=='pointercancel'&&k==='croix'&&TN.pions.croix!=null){
+        const lx=(p0.x-g._x)/(g._s||1), ly=(p0.y-g._y)/(g._s||1);
+        if(Math.abs(lx)>46&&Math.abs(lx)/96>=Math.abs(ly)/72) croixPionBouger(lx>0?1:-1);
+        else if(Math.abs(ly)>36) croixPionBouger(ly>0?10:-10);
+        return;
+      }
       if(e.type==='pointercancel'||!bouge){ if(!bouge&&e.type!=='pointercancel'&&k==='fleche') tournerFleche(TN.dix?TN.sens:-TN.sens); else placerPion(k,TN.pions[k],200); return; }
       const p=versSvgDe(tsvg,e.clientX,e.clientY), v=tCaseSous(p.x,p.y);
       placerPion(k,v,250);
       if(v!=null){ if(TN.mode==='calcul') tMarquer(v); if(k==='fleche') dire(v); }
       if(k==='vert') apresFeuVert(v);
+      if(k==='croix'){ if(v==null){ croixPionAllumer(null); grandNombre(TN.pos); } else { croixPionAllumer(v); dire(v); tMsg(`La croix est sur ${v} : touche un bras pour te déplacer.`); } }
     };
     tsvg.addEventListener('pointermove',mv); tsvg.addEventListener('pointerup',fin); tsvg.addEventListener('pointercancel',fin);
     window.addEventListener('pointermove',mv); window.addEventListener('pointerup',fin); window.addEventListener('pointercancel',fin);
@@ -3422,7 +3462,7 @@ async function tJouer(){
   const o=TN.op, P=plan(o,TN.strat);
   try{
     // on range les pions puis on pose le feu vert et la flèche
-    await Promise.all(['vert','rouge','fleche'].map(k=>placerPion(k,null,tDur(400))));
+    await Promise.all(['vert','rouge','fleche','croix'].map(k=>placerPion(k,null,tDur(400))));
     await tAtt(300);
     tMsg(`On pose le feu vert sur ${P.dep}.`); dire(`On part de ${P.dep}.`);
     await placerPion('vert',P.dep,tDur(900)); tMarquer(P.dep,'tn-depart'); grandNombre(P.dep); await tAtt(700);
@@ -3476,7 +3516,7 @@ $('#tnVitesse').addEventListener('input',e=>{ TN.vitesse=+e.target.value; });
 $('#tnPas').addEventListener('change',e=>{ TN.pas=e.target.checked; if(!TN.pas){ TN.attente=false; $('#tnSuivant').hidden=true; } });
 $('#tnReponse').addEventListener('click',()=>{ if(!TN.op) return; tOperation(true); const o=TN.op; dire(`${o.a} ${o.plus?'plus':'moins'} ${o.b} égale ${o.r}`); });
 $('#tnRanger').addEventListener('click',rangerTout);
-function rangerTout(){ tArreter(); tEffacerTraces(); ['vert','rouge','fleche'].forEach(k=>placerPion(k,null,400)); tournerFleche(1,400); tMsg(''); croixEffacer(); grandNombre(null); }
+function rangerTout(){ tArreter(); tEffacerTraces(); TN.croixAllume=null; ['vert','rouge','fleche','croix'].forEach(k=>placerPion(k,null,400)); tournerFleche(1,400); tMsg(''); croixEffacer(); grandNombre(null); }
 /* ---------- le grand nombre en haut à droite ---------- */
 function grandNombre(v){ if(!tCouches.grand) return; if(v==null){ tCouches.grand.style.display='none'; return; } tCouches.grand.style.display=''; tCouches.grandN.textContent=v; tCouches.grandN.setAttribute('font-size',v===100?80:96); }
 /* ---------- choisir l'activité ---------- */
